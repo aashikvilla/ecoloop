@@ -1,0 +1,62 @@
+# 18 - Detailed Stakeholder Journeys and Service Blueprints
+Source: https://docs.google.com/document/d/1OcikSZpbILYW9OgeFI7RoI7itv45F9TBPpgekaouCoo/edit?usp=drivesdk
+Snapshot: 2026-10-15
+
+﻿ECOLOOP AI — END-TO-END USER JOURNEYS, SERVICE BLUEPRINTS & ROLE FLOW
+15 October 2026 v0.2. Every proposed interface/action is a DESIGN hypothesis, not deployment. Mermaid and Whimsical architecture/flow references: https://whimsical.com/QKo8qzgjcJ7shTteykUCUq and https://whimsical.com/9ztMmgA68j23NcXpSVH3qs . Use Google-only AI/infrastructure, authorized external partner endpoints later. Web route design. Shared flow: Observe→Model candidate→Actor confirms→Policies/calculations→Proposal→Human approval→Action/Simulated→Independent measured outcome.
+
+
+SERVICE ECOSYSTEM — ACTORS AND AUTHORITY
+HOUSEHOLD: account owner controls invite/share consent; adult buyer confirms prices and inventory; cook controls actual cooking plan; diners report attendance only; domestic worker gets minimum stock/prep permission, no household spending surveillance. Young family members not required to register or disclose personal schedules. Kitchen: facility manager controls cost/policies, meal planner plans attendance, chef confirms prep, dietitian/clinician controls therapeutic diets, diner controls preference and privacy. Recovery: donor offers only safe unused/unserved potential batch with verified holding logs, qualified NGO/recovery agency decides eligibility and capacity, driver confirms pickup custody, receiving organization consents to food/diet/temperature and records receipt, compliance auditor can read necessary audit data. Organics: resident segregates according to local service, RWA approves budget, authorized collector logs wet waste and contamination, operator accepts/rejects/processes, municipal contractor manages rejects and final disposal. No AI authority over food microbiology, pay, recipient/clinical care or disposal legal licensing.
+
+
+JOURNEY A — METRO HOUSEHOLD / QUICK COMMERCE (END TO END)
+T0 Invite: one adult creates a synthetic or consented household, picks language and invites cook/family members. Default sharing limited. Existing substitute WhatsApp/Calendar.
+T1 Shopping intent: buy weekly vegetables from kirana or limited quick-commerce top-up, optionally uploads a receipt / types list. Gemini returns named candidate items and quantity evidence; user corrects unit and confirms. Partial fulfillment/substitution cannot be silently treated as delivered stock.
+T2 Stock: data is confirmed with quantity, observed_at, source and stale warning. Another buyer's purchase is not shared without consent; consumed stock must be updated or flagged unknown. Current incumbents NoWaste, Samsung Food, Panasonic KitchenPocket already cover much inventory functionality.
+T3 Changed situation: two diners report working late/eating outside AFTER ingredients were bought, before cooking cutoff. Gemini parses optional voice/text; an event log records who approved and which meal changed. Real data not available in test; synthetic demo disclosed.
+T4 Plan reconciliation: Cloud Run compares confirmed portions vs dining count and use-first rules; Gemini explains two safe and feasible options without overclaiming freshness. When stock uncertain, asks 1 targeted question.
+T5 Buying action: optional cart comparison and suggestions. Swiggy official MCP and Builders Club indicate potential approved integration but our account rights unknown. DEMO only shows a mock cart, clear full price, substitution restrictions and user approval; no real checkout.
+T6 Post-event: user records physically weighed edible discarded g and purchase/refund data, or explicitly 'Not measured'; system does not display fictional water/CO2e savings. Evaluation compares rules/shared list, ordinary Gemini and current incumbents with same inputs.
+Pain points: data entry; pantry truth; multiple buyers; wrong item sizes; cook authority; privacy; frequent notifications. Trigger if initial test fails: kill agent layer and propose low-effort habit design, not more features.
+
+
+JOURNEY B — INSTITUTIONAL CANTEEN OR HOSPITAL (END TO END)
+T0 Organization manager opens consented isolated workspace; no student/patient identifiers in demo; chef has kitchen control, attendance controller edit-only schedule.
+T1 Planning: menu and contracted meals, historical counts, ingredients in typed Google Sheets or uploaded source, normalized with Gemini but verified manually; nutritional standards kept as hard policies. Competitor Winnow/Leanpath/SmartQ plus simple QR headcounts and signage.
+T2 Exception: absentee group, exam cancellation, change of ward diet or stock substitution enters as text/voice note before cooking cutoff. Gemini extracts change and provenance; clinical nutrition changes require qualified staff approval.
+T3 Count: deterministic rules and optionally BigQuery time-series estimate meals, compare exact inputs to manual/QR baseline; option to stage cooking rather than blindly cut portions. Chef sees original, proposed, expected/actual servings, warning if change arrives too late.
+T4 Review: manager/chef approves versioned safe plan, cannot auto-change patient therapeutic requirements. Record whether adjusted batch was ACTUALLY cooked; simulated demo cannot pretend a hospital changed production.
+T5 Waste: operator separately weighs edible prep waste, unused safe production, exposed buffet, diner plate, inedible and packaging; divide by actual meals served. Record calories/nutrition adequacy and user satisfaction. Physical result requires a multiweek pilot.
+Failure/kill: most plate waste caused by taste/appetite, not attendance; basic QR list more accurate; changes arrive too late; no site data or authority. Do not equate all gross food waste with avoidable edible waste.
+
+
+JOURNEY C — SAFE FOOD SURPLUS / NGO / RECIPIENT (END TO END)
+T0 Donor account and qualified registered recovery/receiving agency linked by human-admin permission and suitability. In mock mode everything is fictitious and marked.
+T1 Possible unused safe surplus discovered at restaurant, school, retailer or event. Donor submits offered category, batch, weight, origin, packing, handling time, validated temp logs, allergen and deadline; Gemini may parse unstructured description but never pronounce safe.
+T2 Deterministic mandatory-field checker validates data completeness and locally approved eligibility policy; if served food or handling uncertain → REJECT or HUMAN REVIEW, NOT safe donation. FSSAI/partner staff make actual decision. Distinguish unopened produce policies and cooked-food policies by partner.
+T3 Verified NGO capacity and vehicle/time window checked, not inferred from map result. An agency can decline with reason and a later alternative operator is proposed only if suitable and independently verified. No orphanage, hospital or aged home auto-assigned.
+T4 Human donor + NGO + recipient approvals, custody status and ability to cancel; Workflows optional for multi-hour callbacks; Cloud Run handles idempotent storage; agent cannot repeat pickup payments.
+T5 Partner confirms pickup, weight, packaging, custody and temperature, recipient signs acceptance and records consumption only if actually measured; a lost/returned batch recorded with reason, not 'saved'. Audit/recall notice available with scoped roles and privacy. Compare phone+WhatsApp, forms+rules, existing IFSA networks vs Gemini intake.
+Kill if vans, cold storage, eligibility, charity finance dominate; if advanced existing vendor (e.g. RescueLens/IFSA) already solves failure; if no eligible-offer denominator or recipient consent.
+
+
+JOURNEY D — GENUINE ORGANIC WASTE / APARTMENT COMMUNITY (CHALLENGER)
+T0 RWA identifies regulated obligations and service contract with authorized waste operator; qualified bulk-generator rules/site applicability confirmed locally; not every apartment must install on-site compost equipment.
+T1 Household separates wet material that is genuinely inedible or unsuitable for recovery from safe edible surplus; user only sees approved local accepted-material instructions, no AI food safety inference.
+T2 Collector weighs source-segregated stream and records contamination; operator signs accepted vs rejected kg. Gemini may normalize multilingual notes, but simpler icons/signage may suffice. Worker PPE and consent matter.
+T3 Composter/biogas service logs material actually processed, residual reject load, energy/water inputs, matured compost and validated eventual end use. RWA sees raw collected vs accepted vs processed vs output, not fictitious diversion. Incentives reward correctly verified processing/reduced contamination and waste prevention, not raw kg thrown away.
+T4 Reconcile official waste rules, lawful disposal and local operator contract; audit generated with mass balance deterministic BigQuery/SQL, not invented AI emissions. India 2026 517-site observational study shows this already has practiced LCA and service providers, so residual gap unknown.
+Kill if Saahas/Hasiru Dala and simple logs provide adequate proof or if contamination/physical capacity is key issue.
+
+
+MULTI-TENANT SERVICE BLUEPRINT
+Frontstage: home dashboard (consented); organizational role switch; capture and edit extracted fields; uncertainty display; proposal and approvals; confirmed outcome evidence and small useful visual impact. Backstage: browser request with Firebase session → Cloud Run validates role/scope → Firestore reads canonical facts → Gemini+ADK optional interpretation and tool proposal → deterministic quantity/legal policy → human approves → mock partner or approved external integration → Firestore event audit → BigQuery aggregate → evaluation. Missing evidence defaults to 'unknown' not made-up. Each action includes data source, actor, version and timestamp. Errors: source lost→manual entry; conflicting versions→choose latest verified with prompt; unauthorized→deny; stale food storage→human refer; partner unavailable→pending/cancel; no scale→unmeasured outcome.
+
+
+INFORMATION ARCHITECTURE / KEY PAGES
+/ Welcome: explicit sustainability social/environment thesis; current demo privacy. /demo choose A B C seeded cases. /household inventory and 'plans changed' decision. /kitchen headcount and preparation exception. /recovery donor offers, NGO inbox, recipient approval and custody timeline. /organics research only, not launch. /impact separated physical categories, uncertain amounts. /eval compare baselines and agent traces. /settings roles, personal context and deletion. All primary screens mobile responsive and keyboard accessible. Avoid tabs promising functioning payment or automatic donation.
+
+
+MEASUREMENT AND SOURCE LINKS
+A primary: measured g avoidable edible discarded / household-week, and g / kg edible purchased. B: separately prepared, unserved and plate g edible waste / actually served meal, plus nutritional suitability. C: eligible human-approved offer count, successful handoffs and kg delivered/accepted, whether consumed known, and safety/transport failures. D: collected, rejected, actually processed, output kg and lawful destination. Social impacts: household INR net wasted, staff/volunteer hours, institutional meal adequacy, optional eligible people actually served. Environmental avoided CO2e/m3 water only via defensible counterfactual, food-specific factors and added transport/compute; otherwise do not report. Research https://docs.google.com/spreadsheets/d/1yibPtJ92Rv0t-vhGIpFrE8kBa2WpxA17yN1P0Ku64vs/edit ; user-flow board https://whimsical.com/QKo8qzgjcJ7shTteykUCUq

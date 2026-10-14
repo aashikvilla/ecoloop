@@ -1,0 +1,107 @@
+# 00 — Food Research Control Room
+Source: https://docs.google.com/document/d/1MehGj6GIkSryf-W_xoA61XvtFZpkYsE5Q76NDLzfU4A/edit?usp=drivesdk
+Snapshot: 2026-10-15
+
+﻿RESEARCH CONTROL ROOM — FOOD SYSTEMS
+AI Builder Cup | Created 14 October 2026 | Single source of truth / navigation
+
+
+MISSION
+Identify which food-system problems impose the greatest defensible environmental and social harm, persist despite established alternatives, and can be materially improved by AI. Favor impact over B2C and over one-week implementation complexity. Do not pick an idea before validation.
+
+
+SCHEDULED STREAMS — FIVE HOURLY (each a separate research run, not continuous real-time work)
+Lane 1 | Household decisions + metro quick commerce | https://docs.google.com/document/d/12tDg1kWjJPiwcScTewJt7J9LB8pSzBUz41DIElFX8Bc/edit
+Lane 2 | School, college, office, hospital and small kitchen waste | https://docs.google.com/document/d/1JJTvxgdBlF5YAi-yPsreoBdSXn2FSQDHIFhJ1-bgCKU/edit
+Lane 3 | Safe edible surplus, NGO handoffs, recipient requirements | https://docs.google.com/document/d/1UW2eEYj2AaAgCWQ05ZvdXEfgIMJmLH-R5VKU5EYTQrk/edit
+Lane 4 | Unexplored chain gaps + Gemini and Google Cloud capability audit | https://docs.google.com/document/d/1TXSbm-qa4AEvNCblsWwYlblhagFdgJLJQqK3Jt3fgxo/edit
+Lane 5 | Editorial synthesis, cross-lane challenge and presentation | https://docs.google.com/presentation/d/1_iOMceyzdrX5MG77W6-JYMbPjH29e5Qk06TX_3ErMPY/edit
+
+
+FOUNDATION / PUBLISHED WORK
+Executive one-page overview | https://docs.google.com/document/d/1jrkks_OtWY3S2pRwb1MD0C-Yg7eSvxs4V2esOkKCiSI/edit
+Complete seed-to-soil journey | https://docs.google.com/document/d/1ZityJ-yn_k3l1su2MGfHcszYARi-Qk-t20SbCuZcDEU/edit
+Competitors + quick commerce | https://docs.google.com/document/d/1LHYWiyjd-j92PRzih7CxnC1YiBUD9kCeL1eZP1HRqsU/edit
+Decision/rejection history | https://docs.google.com/document/d/1fckyaD7iQ_hKk6NER5DhsFg204X11BzTHPSFnV2Q9S0/edit
+Central research register | https://docs.google.com/spreadsheets/d/1yibPtJ92Rv0t-vhGIpFrE8kBa2WpxA17yN1P0Ku64vs/edit
+Workspace folder | https://drive.google.com/drive/folders/1n849YYx_3kxa2qV90BlXPhGiupPvYX0q
+
+
+PARALLEL WRITING PROTOCOL
+Each researcher edits ONLY their own lane document. They MAY read every shared document and register, but must not concurrently edit the central one-pager, central Google Sheet, decision log or slide deck. Lane 5 is the sole writer of the central Research Register, decision log, one-pager and slide deck, synthesizing substantiated changes after reading all four lane logs. Preserve dated history; add unique source IDs and never silently overwrite contradictory evidence. A failed source, missing API or inability to access data must be recorded as UNKNOWN or NOT RUN. A scheduled run should produce no new claim if research only repeats old evidence.
+
+
+PER RUN RECORD TEMPLATE — RESEARCH LANES
+Timestamp (Asia/Kolkata), hypothesis ID, user + stage + precise task, source publication date and direct link, geography/sampling denominator, finding vs interpretation, independent corroboration, counterevidence, competitor features + manual alternatives, root cause, why current approach fails, real harm and frequency or UNKNOWN, GenAI advantage over rules/ML/ordinary Gemini or UNKNOWN, data access and constraints, source confidence, strongest fatal weakness, next pass/fail test, verdict ADVANCE / NARROW / DEFER / REJECT. Cite claims inside the lane document.
+
+
+PROBLEM SCORE (100) — ONLY WHEN SUBSTANTIATED
+Urgency/consequences 15; frequency/intensity 10; exposure 10; workaround cost 10; independent evidence 15; unmet need after substitutes 15; why now 5; user/data access 5; outcome measurability 5; track alignment 10. Withhold or partially score unknown components, never fabricate point precision.
+
+
+HACKATHON RUBRIC — SEPARATE, SOLUTION READINESS NOT PROBLEM SCORE
+Technical / GenAI 40%; impact and alignment 25%; innovation 25%; UX 10%. Technical scope should include full available Gemini capability space only where needed: context/reasoning, grounded retrieval, structured outputs, function calling/tools, workflow orchestration/agents, multimodal documents/photos/audio, context reuse/state under consent, BigQuery, Vertex AI / ADK, Cloud Run, event flows. Models do NOT directly perform purchase/donation; authorized tools and user confirmations do. Some tasks favor rules/forecasting rather than GenAI.
+
+
+CURRENT EVIDENCE GATES (NOT YET PASSED)
+HOUSEHOLD: Does plan-change response save measurable edible food beyond NoWaste, Samsung Food and shared lists? NOT TESTED.
+INSTITUTIONAL: Is an important preparation/plate-waste failure still unresolved after headcounts, Winnow and Leanpath? NOT TESTED.
+RECOVERY: Do eligible safe offers fail because of missing information, rather than transport, cold chain, constraints or NGO availability? NOT TESTED.
+UPSTREAM: Is there one commodity-specific digitally actionable loss after existing cold-chain/forecasting/quality tools? NOT TESTED.
+AI TECH: Does any Gemini feature improve the decisive task beyond a basic LLM, rules or existing solutions without unsafe assumptions? NOT TESTED.
+
+
+CORE FACTS (REFERENCE, NOT A CLAIM OF RECOVERABLE IMPACT)
+UNEP 2024: 1.05bn tonnes retail/food service/household waste in 2022, 631m households, including inedible material. FAO 2023: about 13.3% global postharvest/pre-retail food loss (different measure). Delhi sample of 56 households / 7 days: 0.749kg avoidable food wasted per household-week. Redseer FY2024: ~6 India quick-commerce orders per monthly transacting user, ~90% metros; no causal waste link. See links in register.
+
+
+DECISION RESPONSIBILITY
+The streams may propose evidence-based advance/narrow/defer/reject to their sub-hypotheses. Lane 5 adjudicates contradictions and proposes a prioritized shortlist, but NO automatic final choice of hackathon concept, partner agreements, external purchases, publication, or destructive changes without the user's explicit approval. If fatal rejection gate is reached, stop spending research effort on rejected hypothesis unless genuinely new evidence reopens it. Keep alternate high-severity opportunities visible.
+
+
+PRESENTATION EDITORIAL RULE
+Deck must carry a coherent narrative: question → sourced answer → human consequence → lifecycle loss → candidate gap → existing alternatives → counterevidence → verification plan → conditional decision. Separate published estimates from original user measurements, scenarios and assumptions. No fabricated benchmarks, survey responses, partner access, avoided emissions, food donations or GenAI effectiveness. Include source URL/year on quantitative slides and speaker notes for clear verbal qualification. Refresh deck only when new evidence materially changes story. Color / images should serve evidence, not mask uncertainty.
+
+
+
+
+14 OCT 2026: Updated 15-slide research story v0.2 (editable PPTX with speaker notes) is in this folder: https://docs.google.com/presentation/d/1uoSySDOmajOEfc_p-BMSZaJVlK43k5bD/edit . The original 12-slide native deck remains unchanged.
+
+
+
+
+15 OCT 2026 — DESIGN STAGE UPDATE
+SLIDE WORK PAUSED by user. Research and comparative prototypes continue, but no deck editing unless user resumes.
+NEW DESIGN DOCS (shareable, editable):
+10 Three prototype common cases, baselines, Google-only backlogs: https://docs.google.com/document/d/1xnDoO6XX7pofuDoOJRxCG0Ltzdp3r6Nyzl8lAaLbXjc/edit
+11 Genuine wet waste, apartment compost, incentives, two operator portal roles: https://docs.google.com/document/d/18RqL4wI5RXoO3FZnApyIFPeVGj-zEVbboXFaYF2chtM/edit
+12 AI compute growth → energy/water/air/materials impacts → demand-side and direct compute resource efficiency; Whimsical map blueprint: https://docs.google.com/document/d/1vy5ZF1GVVxi7H5voXiTHwZBzls4krEAun1SFFfEbwrg/edit
+PRD v0.1 with 15 Oct addendum: https://docs.google.com/document/d/1n6JeH1l3uFsU0Q9ygkUcf586WD-dJ0LHtW4xeoXPHz4/edit
+Google-only TRD v0.1 with MCP and agent safety addendum: https://docs.google.com/document/d/1uuMH5bvMgFzV_NpW49RRsCoXUZG2tEILJKXp54cYwRs/edit
+RESEARCH STATUS: Household, institutional, safe recovery and environmental organics remain on independent hourly runs; editorial stream alone synthesizes evidence, but no slides. Whimsical plugin is available only after user chooses to connect; no board created. Official Swiggy Jan 27 2026 MCP announced integration (not developer rights to this project). India SWM 2026 rules effective Apr 1 2026. Comparison benchmarks NOT RUN; real partner data and Google Cloud project access unverified. No final selection, emission/water benefits claimed or unsafe automated transaction.
+
+
+15 OCT 2026 — GOOGLE AI CAPABILITY AUDIT & TECH DECISION REFERENCES
+Google AI Capability Atlas (13): https://docs.google.com/document/d/1eUIuhklRiRe0YgGl_fhXzz1I6U4fudJnAuNqZZZy6L4/edit — Google-only model/agent/MCP/RAG/ML/Ray/Workflows/Earth Engine taxonomy, sourced capability evidence and product gates.
+Google AI Comparison Matrix (14): https://docs.google.com/spreadsheets/d/1YaRTMk9-CpzctlLjWsEdQATlcTUrHl1JBphxv-0Q2wA/edit — 72 capability rows, 12 problems mapped to Google technology, 13 build/validation gates. Technical fit is a hypothesis, not measured performance.
+Editable Whimsical Technology Board: https://whimsical.com/6k1U1d9n9ZquC3U6VEMh51
+Technical product rule: Gemini/ADK/Firestore/Cloud Run are P0 candidate, specialized tools added only after real baseline gains. Swiggy published public MCP endpoints and Apr 2026 Builders Club for approved builders; user-specific authenticated tool use not verified. Ray distributed compute and Earth Engine only after scale/geospatial need. Slides remain paused pending user resumption. Existing workflow evidence gates and rejection history remain in force.
+
+
+15 OCT 2026 — WEB-FIRST PRE-BUILD DESIGN FREEZE / RESEARCH REVIEW
+STATUS: Browser-based responsive web app (React TypeScript + Firebase Hosting + Cloud Run + Gemini/ADK; PWA OPTIONAL), NO Android/iOS app distribution. The following deliverables are source-linked, with tests NOT RUN and real vendor integrations NOT AUTHORIZED. This research documentation is not a functioning deployed app.
+PRE-BUILD WORKSPACE: https://drive.google.com/drive/folders/1AGWKYw0Dp2-OYkoqWr4ATUkRvd5FbAeX
+15 — Executive reviewer gate and official 40/25/25/10 criteria: https://docs.google.com/document/d/14TtIZqd69KM_YiFtqMajwl7TXXtLydXyWoB9SW2hgwE/edit
+16 — Web-first PWA PRD v0.2: https://docs.google.com/document/d/1KVrXRreC8KQ_N7ams8pJlmKf_BndJAttAploHJLzuDk/edit
+17 — Google-only architecture TRD and ADR tradeoffs: https://docs.google.com/document/d/1Rq4oHM-h3bFaX_OfL0f7aZGqhyCWUuBsxP6m9YXvMk8/edit
+18 — Persona/user journeys including NGO and genuine compost: https://docs.google.com/document/d/1OcikSZpbILYW9OgeFI7RoI7itv45F9TBPpgekaouCoo/edit
+19 — Four-lane research synthesis, direct competitors and source caveats: https://docs.google.com/document/d/19yS-OQsZN7clk84vDIv0jhoRWvH7dcTV_cqjTvuQM_g/edit
+20 — Antigravity agentic-coding handoff and QA plan: https://docs.google.com/document/d/1V2ryZiN2LCCvXOQUgPTK0HpHD_uqjKG5oAzcsn2Nqv4/edit
+21 — Editable pre-build problem gates, Problem Value Score withheld, judge weights, ADRs and build QA: https://docs.google.com/spreadsheets/d/1JhtAXJ8rfC40Nk3RzvGbf6HrkUdT324AEfeSAk6aKjA/edit
+Whimsical architecture: https://whimsical.com/9ztMmgA68j23NcXpSVH3qs
+Whimsical end-to-end stakeholder service blueprint: https://whimsical.com/QKo8qzgjcJ7shTteykUCUq
+RESEARCH SYNTHESIS: recent independent Yokohama camera capture, Adelaide hospital waste, Beijing plate waste, FSSAI NGO traceability, 517-site India compost LCA and Swiggy MCP were checked against incumbents. No credible proof that any candidate's residual gap is solved by Gemini over simple rules, incumbent or ordinary Gemini. Keep all three prototype candidates, apartment organics a challenger, withhold Product /100 and judged /100 scores; red-team before selection. Slides on hold.
+
+
+15 OCT 2026 — NEW PRIMARY PRODUCT HANDOFF AND HACKATHON WINNER CROSS-CHECK
+User clarified integration of existing technologies/workflows can be innovation; official rubric prizes meaningful GenAI differentiation, not inventions of new models. Verified Savour first runner-up (2024 AI for Impact APAC food waste), Padayon Ko winner, 2025 Gen AI Exchange winners including professional cement optimization, compliance workflow, citizen routing, and student ArtisanGully/Legal SahAI. Details and source limits: https://docs.google.com/document/d/1EdD0dt38IYM52DPtjzbreCunNlp7CW8od9Cd8tPmsfM/edit . Canonical master product specification: https://docs.google.com/document/d/1vUPWozAbRPcEhdLW0Bd9gAhhLKYXsY8Kn3s0t8wiKHA/edit ; Next.js + FastAPI + Google ADK coding-agent contract: https://docs.google.com/document/d/1i0TU3ILttOPLd4rEjCEUJL7HBK0cADV2QBuC_jUAD68/edit ; editable architecture: https://whimsical.com/3JX2Pwej8GHWVrMcDjQhuo . Related folder https://drive.google.com/drive/folders/1AGWKYw0Dp2-OYkoqWr4ATUkRvd5FbAeX . Problem Value /100 and jury score WITHHELD because no live benchmark/physical savings. User can build common evaluation shell, not launch NGO/payment.

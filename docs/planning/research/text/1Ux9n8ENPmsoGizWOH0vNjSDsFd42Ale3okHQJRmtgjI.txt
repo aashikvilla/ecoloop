@@ -1,0 +1,70 @@
+# 01 — Official Rules and Rubric
+Source: https://docs.google.com/document/d/1Ux9n8ENPmsoGizWOH0vNjSDsFd42Ale3okHQJRmtgjI/edit?usp=drivesdk
+Snapshot: 2026-10-15
+
+﻿AI BUILDER CUP 2026 — OFFICIAL RULES & RUBRIC
+Verified/checked: 12 October 2026. The live official page controls if older project memo differs.
+
+
+EVENT
+Name: AI Builder Cup 2026 (JAPAC). Organizer: Hack2skill; sponsor: Google Cloud. Program independently operated by Hack2skill, not directly administered by Google Cloud.
+Official sources: https://aibuildercup.com/ and https://aibuildercup.com/themes.html
+
+
+ELIGIBILITY & TEAMS
+JAPAC-based; age 21+; working professionals, entrepreneurs/startups; students ineligible. Team size 2–4; up to two finale travelers. The live site lists registration Sep 1–Oct 11 and team formation Sep 1–Oct 14. Registration is currently closed.
+
+
+TIMELINE — CURRENT PUBLIC PAGE
+Registration: 1 Sep–11 Oct 2026.
+Team formation: 1 Sep–14 Oct 2026.
+Prototype building and submission: 7 Sep–18 Oct 2026.
+Prototype deadline: 18 Oct 2026.
+Evaluation: 19 Oct–6 Nov 2026.
+Finalists announced: 7 Nov 2026.
+Final: 4 Dec 2026, Singapore.
+IMPORTANT discrepancy: the pre-existing 11 Oct strategy memo described roster finalization as 11 Oct. Current official overview says 14 Oct for team formation. Confirm any account-specific or terms-specific roster limits in the portal. Do not assume existing registrations can be altered freely.
+
+
+THE SIX THEMES
+1. BFSI: Intelligent Risk, Fraud & Financial Experiences
+2. Retail & Commerce: Intelligent Customer and Business Experiences
+3. Manufacturing: Intelligent Operations & Industrial Efficiency
+4. Media, Content & Digital Experiences
+5. Future of Work & Enterprise Productivity
+6. Sustainability & Social Impact
+
+
+TECHNOLOGY AND PROTOTYPE
+A working prototype, not merely slides or a mockup. Official themes page requires Google AI models such as Gemini/Gemma or eligible agentic platforms and deployment on Google Cloud through Cloud Run/Firebase; the submission page also references GCP. Use Google Cloud as an actual implementation layer.
+Source: https://aibuildercup.com/themes.html
+
+
+SUBMISSION MATERIALS
+Proposal/presentation deck exported as PDF; functional deployed prototype; public demonstration video (three minutes); all submission materials in English. The project strategy memo also cites a public GitHub repository and fresh/original code/assets requirement from the published terms; reconfirm these in current terms and submission portal before submission.
+Published terms cited in existing framework: https://docs.google.com/document/d/e/2PACX-1vRm7ChZ6Ij9fG7uFDkxzUMpwgVeBmnQ6cMDnAIEEX84AiLBOOQ9cYbl3S5OzFBbcVb8TF55s-eVpiXb/pub
+
+
+OFFICIAL JUDGING RUBRIC
+40% — Technical Merit & Gen AI Implementation: meaningful role of GenAI, working/technically sound implementation, scalability/sustainability.
+25% — Problem Alignment & Impact: fit with chosen problem statement and clear stakeholder value.
+25% — Innovation & Creativity: differentiation from existing solutions and innovative GenAI application beyond superficial integration.
+10% — User Experience & Solution Design: usability, accessibility, coherent integration.
+Source: https://aibuildercup.com/themes.html
+
+
+PRIZE OVERVIEW
+Official overview currently shows USD 30,000 total cash prize pool. See https://aibuildercup.com/rewards.html for award-by-award details and potential changes.
+
+
+SOURCE/AMBIGUITY REGISTER
+R-01 | Current team formation deadline | 14 Oct, per official overview checked 12 Oct | Prior strategy memo says 11 Oct; verify in portal/terms.
+R-02 | Theme submission category mismatch | Themes page names six industry themes, but one 'Category Specification' section names Healthcare/Education/Sustainability/Accessibility/Social Good | Ask organizer if portal choices do not match six themes.
+R-03 | 'Three minutes' vs strictly under 3:00 | Themes page says video (3 minutes), strategy memo says strictly under 3 minutes based on terms | safest operational interpretation: target <3:00, confirm terms.
+R-04 | GitHub and fresh code | project strategy memo attributes requirement to terms; direct contemporary confirmation of every clause should be completed against the linked terms before final submission.
+R-05 | Deadline cutoff timezone | Date is 18 Oct; exact cutoff time/timezone not established here. Check portal.
+Contact: support+aibuildercup@hack2skill.com
+
+
+EVIDENCE CLASSIFICATION
+Official site text = verified public claim as of check date. Existing strategy memo = secondary internal synthesis, not independent source. Portal-specific conditions, changes and exact deadlines remain to be checked directly.

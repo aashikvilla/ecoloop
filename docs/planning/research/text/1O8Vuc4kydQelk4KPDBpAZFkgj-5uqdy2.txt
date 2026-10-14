@@ -1,0 +1,173 @@
+# AI_Builder_Cup_Idea_Evaluation_Workbook.xlsx
+Source: https://docs.google.com/spreadsheets/d/1O8Vuc4kydQelk4KPDBpAZFkgj-5uqdy2/edit?usp=drivesdk&ouid=103347656601428179619&rtpof=true&sd=true
+Snapshot: 2026-10-15
+
+,AI BUILDER CUP 2026 | IDEA DECISION SYSTEM,Unnamed: 1
+0,"Research-backed worksheet. Score ideas using evidence, preserve hard eligibility gates, and keep a one-week execution plan.",
+1,,
+2,Official facts to anchor the decision,
+3,Published judging criterion,Weight / note
+4,Technical merit & GenAI implementation,40%
+5,Problem alignment & impact,25%
+6,Innovation & creativity,25%
+7,User experience & solution design,10%
+8,Mandatory implementation,Fresh code/assets within timeline; primarily Google Cloud; Gemini/Gemma or eligible agent platform; deploy on Cloud Run/GCP/Firebase.
+9,Mandatory artifacts,Live deployed URL; video strictly under 3 minutes; public GitHub repo; comprehensive deck/PDF.
+10,Deadline,Official site says prototype submission by 18 Oct 2026. Check portal for exact timezone/time.
+11,Prize pool,"Listed awards add to $30,000: $10k winner, $7k first runner-up, $5k second runner-up, four $2k awards. Rewards page heading currently displays USD 0."
+12,Selection target,"Top 50 is the team's working goal; official pages reviewed do not specify the 2026 finalist count. Approx. 4,000 teams not independently verified."
+13,,
+14,How to use this workbook,
+15,1. Idea Matrix,"Rate up to three candidate ideas from 1 (weak) to 5 (strong). Enter evidence, then subtract risk penalties. Hard-gate failure overrides score."
+16,2. Problem Canvas,Answer the first-principles questions before picking a theme or writing features.
+17,3. Reviewer Mock,"Score the planned prototype against the official rubric, using only evidence a reviewer can actually see."
+18,4. Week Plan,"Give each deliverable an owner, status and due date. Protect testing, public deployment and submission packaging."
+19,5. Winner Signals,Extract mechanisms from historical winners; do not copy their exact idea or assume winner summaries prove causality.
+20,6. Submission QA,Run every requirement in a logged-out browser before submitting.
+21,,
+22,"Key formula: weighted points = (rating ÷ 5) × criterion weight. Decision thresholds are internal planning guidance, not official cutoffs.",
+,IDEA MATRIX | SCORE BEFORE YOU BUILD,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6,Unnamed: 7,Unnamed: 8,Unnamed: 9
+0,Keep three candidates alive until first-principles research and a technical spike identify the strongest risk-adjusted opportunity.,,,,,,,,,
+1,,,,,,,,,,
+2,Dimension,Weight,Score 1–5 means,Score 5 means,Idea A rating,A points,Idea B rating,B points,Idea C rating,C points
+3,Pain severity and urgency,12,Mild inconvenience; low frequency.,"Frequent, costly, risky or access-limiting; clear reason to solve now.",,0,,0,,0
+4,Specific user and workflow,8,Broad target; no clear start/end.,"One user, trigger, task and outcome are explicit.",,0,,0,,0
+5,Impact measurability,10,Only generic benefit claims.,Baseline and testable outcome metric exist.,,0,,0,,0
+6,Status quo / failure cause,10,No competitor or workaround research.,Alternatives mapped; structural failure mechanism known.,,0,,0,,0
+7,Differentiated wedge,12,Generic AI wrapper; adjective-led novelty.,Specific unmet step with a defensible mechanism.,,0,,0,,0
+8,AI necessity / technical novelty,10,Generic prompt; no evaluation.,"AI solves a non-trivial contextual, unstructured or multimodal task with controls.",,0,,0,,0
+9,Google Cloud architecture fit,12,Services are name-dropped.,"Each selected service performs a necessary, demonstrable role.",,0,,0,,0
+10,One-week feasibility,10,Critical data/integration unresolved.,Core workflow can work by Day 3–4; dependencies known.,,0,,0,,0
+11,Data and evaluation readiness,8,No sample inputs or expected outputs.,Representative labelled tests and edge cases exist.,,0,,0,,0
+12,Story / demo legibility,8,Long explanation before proof.,"Reviewer understands problem, mechanism and outcome quickly.",,0,,0,,0
+13,Raw score,,,,0,,0,,0,
+14,,,,,,,,,,
+15,Risk penalties: subtract these points from the raw score (0–10 each; trust risk 0–5). Be strict and evidence-based.,,,,Idea A penalty,,Idea B penalty,,Idea C penalty,
+16,Incumbent saturation / weak novelty,0–10,Higher penalty when alternatives are similar and no underserved step is identified.,,0,,0,,0,
+17,Data / integration uncertainty,0–10,Higher penalty when API/data access is unconfirmed or key data is scarce.,,0,,0,,0,
+18,Trust / consequence risk,0–5,Higher penalty when wrong output may harm someone and controls are weak.,,0,,0,,0,
+19,Build / deployment risk,0–10,Higher penalty if core AI/deploy path is untested by Day 2.,,0,,0,,0,
+20,Total risk penalty,,,,0,,0,,0,
+21,Risk-adjusted score (raw score minus penalties),,,,0,,0,,0,
+22,Decision if all hard gates pass (internal thresholds; not official cutoffs),,,,REJECT,,REJECT,,REJECT,
+,FIRST-PRINCIPLES PROBLEM CANVAS,Unnamed: 1,Unnamed: 2
+0,Answer these questions with evidence before selecting a theme or writing a feature list. Blank cells are designed for team notes.,,
+1,,,
+2,Question,What a strong answer contains,Team answer / evidence
+3,Who experiences the pain?,"A real user/role in a defined context; who uses, pays, approves and benefits.",
+4,What are they trying to get done?,"A verb-led job and clear start/end, not a product category.",
+5,When does it happen?,"Trigger, frequency, volume, time pressure and hand-offs.",
+6,How does the current workflow work?,"Actual steps, tools, waits, rework and failure points.",
+7,How costly is failure?,Time/cost/risk/access loss; frequency × impact; cost of false positive/negative.,
+8,Who benefits if solved?,"Direct user, beneficiary, buyer, operator, downstream party and who must change behavior.",
+9,Why now?,"New capability, data access, changing constraint, trend, regulation or urgent event; cost of waiting.",
+10,What alternatives already exist?,"Direct product, adjacent products, manual workarounds, internal tools, open-source and doing nothing.",
+11,Why do alternatives fail?,"Structural cause: data, integration, trust, local context, incentives, UX, economics or last-mile execution.",
+12,What is our narrow wedge?,One specific underserved user/workflow step and the mechanism that closes it.,
+13,Why AI?,Specific contextual/unstructured/multimodal task that is hard to encode with rules alone.,
+14,What must remain deterministic?,"Math, thresholds, eligibility, permissions, ranking constraints, state persistence and validation.",
+15,Why Google Cloud?,"Specific role for Gemini/Vertex, Cloud Run/Firebase, Storage, BigQuery, Pub/Sub, Earth Engine, etc.",
+16,What is the core demo?,Realistic input → AI/logic step → inspectable output → user action or measurable result.,
+17,How do we evaluate?,"5–15 labelled cases, expected behavior, edge cases, metrics, baseline and limitations.",
+18,Can we build in one week?,"Core loop by Day 3–4, data access, deployment, integrations, owner and kill switch.",
+19,Why is it memorable?,One sharp truth/mechanism/result a reviewer can repeat after one viewing.,
+20,One-sentence story,"For [user] who [pain], [solution] uses [AI + Google Cloud] to [action/outcome], unlike [alternative] because [wedge].",
+,REVIEWER SIMULATION | OFFICIAL RUBRIC,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+0,"Rate the actual planned prototype, not the ambition in the pitch. Weight allocations within each official category are a suggested self-review split, not official sub-weights.",,,,,,
+1,,,,,,,
+2,Official category / subtest,Weight,Reviewer's question,Rating 1–5,Weighted points,Evidence visible to reviewer,Fix before submission
+3,Technical: meaningful AI contribution,15,Does AI materially solve a hard part of the task?,,0,,
+4,Technical: functional implementation,15,Does the deployed end-to-end workflow actually work?,,0,,
+5,Technical: scalability/sustainability,10,Is the architecture credible and extensible beyond the demo?,,0,,
+6,Problem: theme alignment,15,Is the selected theme and problem fit unmistakable?,,0,,
+7,Problem: impact,10,Does it matter to a specific user and can value be measured?,,0,,
+8,Innovation: differentiation,15,What specific gap is closed vs alternatives?,,0,,
+9,Innovation: novel AI use,10,Is the GenAI use creative and substantive rather than superficial?,,0,,
+10,UX: usability/accessibility,5,Can a new user operate it with little explanation?,,0,,
+11,UX: cohesive experience,5,"Do UI, model, data and action work together as one product?",,0,,
+12,,,,,,,
+13,Projected self-score / 100,,,,0,,
+14,,,,,,,
+15,"Reviewer rejection test: if the answer is “no” to any of these, fix before polishing visuals.",,,,,,
+16,Can I understand the user and problem in 15 seconds?,,,,,,
+17,Can I see the AI do real work?,,,,,,
+18,Can I inspect evidence or validation behind an important output?,,,,,,
+19,Can I tell why Google Cloud is used?,,,,,,
+20,Can I name the exact differentiator vs alternatives?,,,,,,
+21,"Are claims labelled as measured, simulated or projected?",,,,,,
+22,Does the main flow work on the public URL?,,,,,,
+,FINAL WEEK | EXECUTION PLAN,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4,Unnamed: 5,Unnamed: 6
+0,"Default allocation for 11–18 October 2026. Adjust to team capacity but protect deployment, testing, evidence and submission time.",,,,,,
+1,,,,,,,
+2,Day / phase,Task / deliverable,Owner,Effort share,Due date,Status,Definition of done / notes
+3,Day 1 — choose,Lock 3 candidate one-pagers; complete competitor/failure analysis; pass all hard gates.,,0.15,2026-10-11 00:00:00,Not started,"One chosen problem, one-sentence story, test data plan."
+4,Day 1 — choose,"Confirm team roster, eligibility, official category mapping and submission rules.",,0.02,2026-10-11 00:00:00,Not started,No unresolved eligibility or deadline question.
+5,Day 2 — spike,Prove riskiest Gemini/Vertex/model behavior on representative data.,,0.15,2026-10-12 00:00:00,Not started,Structured output works on 3 representative cases.
+6,Day 2 — spike,Prove Cloud Run/Firebase deployment path and secret/config handling.,,0.05,2026-10-12 00:00:00,Not started,Minimal deployed endpoint works.
+7,Days 3–4 — build,Implement end-to-end core workflow: input → AI → validation → output/action.,,0.3,2026-10-14 00:00:00,Not started,Reviewer can complete happy path without developer assistance.
+8,Days 3–4 — build,Create seed data and one edge-case flow; add evidence/uncertainty display.,,0.1,2026-10-14 00:00:00,Not started,At least one ambiguous/contradictory case is handled.
+9,Day 5 — validate,"Run 5–15 labelled tests; record correctness, latency and failure cases.",,0.08,2026-10-15 00:00:00,Not started,Results are reproducible and claims are appropriately labelled.
+10,Day 5 — validate,"Deploy stable public version; review logs, error handling, repository, README.",,0.08,2026-10-15 00:00:00,Not started,URL and repo work when signed out.
+11,Day 6 — package,Write deck/PDF and 3-minute video around one proof-driven story.,,0.07,2026-10-16 00:00:00,Not started,Video <3:00; app shown; links public.
+12,Day 7 — submit,"Final QA in incognito; recheck video, repo, PDF, form and deadline timezone.",,0.05,2026-10-17 00:00:00,Not started,Submission complete before final hours; backup recording ready.
+13,,,,,,,
+14,Suggested 7-day principle,,,,,,
+15,"By end of Day 2, the riskiest technical capability must work. By end of Day 4, the main user flow must work end-to-end. If not, cut features; do not add agents or screens.",,,,,,
+,"WINNER SIGNALS | WHAT TO LEARN, NOT COPY",Unnamed: 1,Unnamed: 2,Unnamed: 3
+0,Historical projects reported by Google Cloud/Hack2skill. Use the mechanism as a hypothesis; do not assume published descriptions prove long-term impact.,,,
+1,,,,
+2,Competition / project,What was recognized,Reusable mechanism,Source URL
+3,AI for Impact 2024 — Padayon Ko,Scholarship discovery/application support tailored to Filipino high-school students.,Specific population + a high-friction access workflow; local context gives focus.,https://blog.hack2skill.com/teams-that-emerged-victorious-ai-for-impact-hackathon
+4,AI for Impact 2024 — Savour,Food inventory / expiry reminders and recipe suggestions to reduce waste.,Use existing user context to recommend a timely action with measurable waste impact.,https://blog.hack2skill.com/teams-that-emerged-victorious-ai-for-impact-hackathon
+5,AI for Impact 2024 — Ayu App,Privacy-focused medical-history record access; best use of Google GenAI award.,"Document AI becomes stronger when it improves continuity and sharing, not only summarization.",https://blog.hack2skill.com/teams-that-emerged-victorious-ai-for-impact-hackathon
+6,AI for Impact 2024 — Noodles / Case Crafter,Therapist note generation and progress tracking; UX award.,Automate a repeated professional task; pair AI output with an observable time-saving workflow.,https://blog.hack2skill.com/teams-that-emerged-victorious-ai-for-impact-hackathon
+7,Build Fest ’25 — FactCheck AI,Analyzed YouTube video content for misinformation/pseudoscience.,Multimodal input + evidence-aware result; narrow and easy-to-demo job.,https://blog.hack2skill.com/build-fest-25-a-journey-of-vision-innovation-and-impact
+8,Build Fest ’25 — NeuBiom,"Geotagged coffee farms, weather updates and localized crop advisory.",Local context must alter the recommendation; not just translate UI.,https://blog.hack2skill.com/spotlight-on-innovation-meet-the-winners-of-build-fest-25
+9,ADK Hackathon — SalesShortcut,"Multi-agent sales development across lead research, proposal and outreach.",Agent roles map to distinct stages/tools in a real process; composition creates end-to-end value.,https://cloud.google.com/blog/products/ai-machine-learning/adk-hackathon-results-winners-and-highlights/
+10,ADK Hackathon — GreenOps (APAC),"Cloud audits, forecasts and optimization for sustainability.","Use technical operational data to produce ranked actions, not just dashboards.",https://cloud.google.com/blog/products/ai-machine-learning/adk-hackathon-results-winners-and-highlights/
+11,GKE Turns 10 — Cart-to-Kitchen,Recommended recipes from a user's grocery cart.,Simple user story; Google stack supports the user experience rather than obscuring it.,https://cloud.google.com/blog/topics/developers-practitioners/winners-and-highlights-from-gke-hackathon
+12,Gemini Live Agent — ORION,Voice-directed operating-room co-pilot for robotic surgery.,Interaction modality earns its place when real context demands it; critical action should be immediate and clear.,https://cloud.google.com/blog/topics/developers-practitioners/winners-and-highlights-from-the-gemini-live-agent-challenge
+13,Google Cloud Singapore — Ambient Systems,Data-driven decarbonization and energy optimization.,Analytical insight linked to action and an economic/operational objective.,https://cloud.google.com/blog/topics/startups/learn-more-about-the-google-cloud-hackathon-singapore
+14,Gen AI Exchange 2025 — Legal SahAI / ArtisanGully,Legal-document intelligence; content generation for local artisans.,Domain-specific workflows transform generic model capabilities into jobs users already need to complete.,https://blog.hack2skill.com/gen-ai-exchange-hackathon-finale
+,SUBMISSION QA | PASS EVERY GATE,Unnamed: 1,Unnamed: 2,Unnamed: 3,Unnamed: 4
+0,Mark status and record the owner/link. These are mandatory requirements plus practical checks inferred from the event rules.,,,,
+1,,,,,
+2,Requirement / check,Mandatory?,Status,Owner,Proof / link / notes
+3,Team eligibility verified; all members 21+ and JAPAC based; no students,Yes,Not started,,
+4,Roster finalized by 11 Oct; no post-deadline roster change needed,Yes,Not started,,
+5,Fresh code base and original assets created during official timeline,Yes,Not started,,
+6,One solution and one theme only,Yes,Not started,,
+7,Google Cloud is primary stack; actual required service(s) implemented,Yes,Not started,,
+8,Gemini/Gemma or eligible agentic platform is meaningfully integrated,Yes,Not started,,
+9,Deployed live URL on Cloud Run/GCP/Firebase opens when signed out,Yes,Not started,,
+10,Prototype completes the main workflow end-to-end,Yes,Not started,,
+11,Video demo is strictly under 3 minutes and product shown,Yes,Not started,,
+12,Video link is public and plays with sound,Yes,Not started,,
+13,Public GitHub repository includes README/setup/architecture/tests,Yes,Not started,,
+14,"No secrets, tokens or private data exposed in repository/client code",Best practice,Not started,,
+15,"Deck/PDF describes problem, user, solution, AI role, architecture, impact and scale",Yes,Not started,,
+16,Theme/category field is valid and consistent with portal,Yes,Not started,,
+17,"Claims are backed by source, measured test, or labeled as assumptions/projections",Best practice,Not started,,
+18,Representative test cases include ambiguous and failure conditions,Best practice,Not started,,
+19,Backup demo path/recording ready,Best practice,Not started,,
+20,Final submission confirmed; exact deadline/time zone checked,Yes,Not started,,
+,RESEARCH SOURCES,Unnamed: 1,Unnamed: 2
+0,Source URLs used in the document and workbook; source pages checked 11 Oct 2026.,,
+1,,,
+2,#,Source,URL
+3,1,AI Builder Cup 2026 official overview,https://aibuildercup.com/
+4,2,"AI Builder Cup 2026 themes, requirements and judging criteria",https://aibuildercup.com/themes.html
+5,3,AI for Impact Hackathon winners (2024),https://blog.hack2skill.com/teams-that-emerged-victorious-ai-for-impact-hackathon
+6,4,GenAI APAC Hackathon recap (2024),https://blog.hack2skill.com/a-recap-of-the-genai-apac-hackathon-by-hack2skill
+7,5,Build Fest ’25 retrospective,https://blog.hack2skill.com/build-fest-25-a-journey-of-vision-innovation-and-impact
+8,6,Gen AI Exchange Hackathon 2025 finale,https://blog.hack2skill.com/gen-ai-exchange-hackathon-finale
+9,7,AI Builder Cup terms and conditions,https://docs.google.com/document/d/e/2PACX-1vRm7ChZ6Ij9fG7uFDkxzUMpwgVeBmnQ6cMDnAIEEX84AiLBOOQ9cYbl3S5OzFBbcVb8TF55s-eVpiXb/pub
+10,8,AI Builder Cup rewards and prizes,https://aibuildercup.com/rewards.html
+11,9,Google Cloud ADK Hackathon winners,https://cloud.google.com/blog/products/ai-machine-learning/adk-hackathon-results-winners-and-highlights/
+12,10,Google Cloud GKE Turns 10 winners,https://cloud.google.com/blog/topics/developers-practitioners/winners-and-highlights-from-gke-hackathon
+13,11,Google Cloud Gemini Live Agent Challenge winners,https://cloud.google.com/blog/topics/developers-practitioners/winners-and-highlights-from-the-gemini-live-agent-challenge
+14,12,Google Cloud Hackathon Singapore top teams (2022),https://cloud.google.com/blog/topics/startups/learn-more-about-the-google-cloud-hackathon-singapore
+15,13,AI Builder Cup intro video (user-provided; ≈ 28:07),https://www.youtube.com/watch?v=mhDd6qSBMg4&t=1687s
+16,14,AI for Impact APAC overview / selection funnel,https://blog.hack2skill.com/ai-for-impact-empowering-change-with-ai
+17,15,AukTalk / VoiceBridge AI accessibility project,https://blog.hack2skill.com/team-auktalk-empowering-the-hearing-impaired-with-ai
+

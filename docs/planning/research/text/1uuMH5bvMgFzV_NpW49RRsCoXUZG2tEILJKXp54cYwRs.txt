@@ -1,0 +1,112 @@
+# 07 — EcoLoop AI TRD Google-Only v0.1
+Source: https://docs.google.com/document/d/1uuMH5bvMgFzV_NpW49RRsCoXUZG2tEILJKXp54cYwRs/edit?usp=drivesdk
+Snapshot: 2026-10-15
+
+﻿ECOLOOP AI | TECHNICAL REQUIREMENTS DOCUMENT v0.1 — GOOGLE-ONLY
+15 October 2026 | Proposed architecture, NOT deployed or tested.
+Cloud project designated by user: project-7eb2c8c6-27da-46d0-827. Console context URL https://console.cloud.google.com/agent-platform/overview?project=project-7eb2c8c6-27da-46d0-827 . Project existence, billing, APIs, regions, quotas, permissions and model access NOT independently verified. Do not assume console access from a URL.
+
+
+1. ARCHITECTURAL PRINCIPLES
+Only Google Cloud/Gemini/Google developer technology in running application stack. External merchants, NGOs, safety regulators and academic data are information sources or external business interfaces when expressly authorized, not non-Google AI platforms.
+Model for ambiguous natural language/vision; deterministic validation for units, arithmetic, state mutation, authorization, eligibility, deadlines, decisions and purchase/donation side effects. Grounded evidence with dates/provenance; human approval for irreversible or financial action. Test whether each AI call actually beats cheaper baselines.
+Security by design: minimize personal/household data; no covert people monitoring; consent, audit trail and delete/export controls. Strong separation of consumer and institution tenants.
+
+
+2. SUGGESTED GOOGLE STACK (VERIFY REGION/QUOTA/PRICING BEFORE BUILD)
+Client: Flutter mobile/web (Google-backed framework) or Firebase Hosting web prototype; Firebase Authentication for identity.
+Core API: Cloud Run (HTTP backend with Python or TypeScript) + Cloud Endpoints/API Gateway if needed.
+AI: Gemini models accessed through Vertex AI / Gemini Enterprise Agent Platform; use model supported in chosen region and test speed/cost. Google Agent Development Kit (ADK) to orchestrate tool calls and agent evaluation. Use Agent Platform/Agent Engine runtime where supported; fallback to Cloud Run ADK service if runtime or quota unavailable.
+State: Firestore for household, item, consent, recipe/event and action records. Agent Platform Sessions for turn state; Memory Bank for explicit, consented preference memories, NOT authoritative inventory and NOT shared by default. Secrets via Secret Manager.
+Evidence: Cloud Storage for temporary receipt/media with retention; Google Document AI for suitable receipts/invoices when its incremental benefit is proven vs Gemini directly. Vertex AI grounding with approved Google Search or authorized search API/data, and controlled Food Rules knowledge base in Cloud Storage/Firestore/Agent Search when warranted. Do not treat web text as proof of safety.
+Computation: Cloud Run Functions / Cloud Run deterministic service for units, expiry interpretation by verified category rule, budget/portion math, duplicate SKU logic, tool permissions, simulated order draft. BigQuery analytics for deidentified event outcomes; Cloud Logging, Monitoring, Error Reporting, Audit Logs.
+Events: Pub/Sub / Cloud Tasks / Cloud Scheduler for opt-in reminder or stale fact checks; suppress if no consent and avoid excessive reminders.
+Evaluation: Vertex AI / Gemini Enterprise Agent Platform GenAI evaluation with gold cases (agent trace + response), plus deterministic validation and human review.
+Infrastructure: Google Cloud IAM service accounts least privilege, Firestore security rules, Cloud KMS where required, identity-aware controls; Google Cloud Billing budget and carbon-footprint dashboard for relevant resource accounting, recognizing cloud carbon allocations are estimates.
+Optional P1: Vertex AI Search/Agent Search for partner documents, Google Maps Platform for location/routes where rights and quotas permit, Google Sheets API for consented institutional logs; Google Earth Engine only if upstream agriculture/climate hypothesis actually requires it.
+
+
+3. TEXTUAL LOGICAL ARCHITECTURE
+Flutter/Firebase client → Firebase Auth → Cloud Run API (consent check & rate limiting)
+→ Firestore (canonical events, confirmed items, roles, action approvals)
+→ Gemini via Vertex AI + ADK orchestrator
+   ↳ intake_parser (Gemini structured JSON, candidate fields, confidence, citations)
+   ↳ retrieve_confirmed_context (Firestore queries with timestamps)
+   ↳ check_rules (deterministic food safety/permission/quantities)
+   ↳ generate_choices (Gemini explanation and clarification)
+   ↳ preview_order (simulated cart, no external execution)
+   ↳ record_waste (explicit manual weighed measurement)
+→ GenAI evaluation + Cloud Logging (redacted) + BigQuery aggregated outcomes.
+Forbidden shortcut: turn image into silent authoritative fridge inventory, infer donation safety, or call an external shopping API without written authorization and explicit transaction approval.
+
+
+4. EVENT & DATA SCHEMAS
+household(id, region, locale, owner, consent_policy, members[], created_at)
+membership(user_id, household_id, role, permission_scope, sharing_consent)
+inventory_observation(id, household_id, item_name, unit, quantity, source_type, source_reference, observed_at, confirmed_by, confirmed_at, confidence_status [candidate|confirmed|disputed|stale], expiry_label_text?, storage_claim?, allergens? [user-entered only])
+meal_event(id, household_id, scheduled_at, attendees_confirmed, changed_at, note, source, actor_id, consent_status)
+purchase_observation(id, household_id, platform_name, item, quantity, observed_at, manual_or_authorized_import, user_confirmed)
+action_proposal(id, context_refs[], decision, assumptions[], rule_checks[], status [draft|needs_confirmation|approved|cancelled|completed], expires_at, approver)
+waste_event(id, household_id, timestamp, item_category, avoidable_edible_kg_measured, inedible_kg_measured, measurement_method, notes, consent)
+partner_offer P1(id, donor_id, offer_type, quantity, time_temperature_evidence, human_eligibility_review, pickup_status, recipient_approval)
+audit_event(actor, tool, data_access_scope, event_at, outcome, approval_reference)
+Retention and storage durations unresolved pending user privacy decisions. Separate user-input sources from AI-derived inferences.
+
+
+5. GEMINI / AGENT ORCHESTRATION SPEC
+A. Parse: Gemini structured outputs for photos/receipts/voice; produce typed candidates, evidence spans, missing fields; validate server-side schema and units. Never trust a model confidence decimal as a calibrated probability.
+B. Resolve: ADK coordinator requests necessary tool data, constructs time-ordered facts; detects contradictory observations and asks the user to confirm rather than overwriting.
+C. Decide: rules compute amounts and hard constraints; Gemini proposes natural-language options with rationale and alternatives. Different agents (Intake, Context, Decision, Impact) MAY be useful, but default to one agent plus tools if lower latency/cost, avoid 'agent sprawl'.
+D. Act: ADK function calling to Google-owned backend tools; maintain idempotency, authorization boundaries, explicit transaction review screens. Model cannot grant itself new permission. Merchant checkout P1 only after official partner credentials + user authorization.
+E. Learn: Sessions for transient context, Firestore canonical state; Memory Bank only for preferences with opt-in and deletion workflow. Never allow retrieval memories to override updated item records.
+F. Evaluate: gold tests for multilingual receipts, ambiguous dates and quantities, duplicate SKUs, missing stock, two cooks, changed attendance, forbidden donation cases, unsafe recommendations and prompt injection in receipts.
+G. Model selection: evaluate affordable latency tier vs more advanced reasoning tier on declared cases; only use powerful models where measured quality improvement justifies cost/footprint.
+
+
+6. API / TOOL CONTRACTS (PROPOSED)
+POST /intake/parse → returns candidates for review, never commits automatically.
+POST /households/{id}/inventory/confirm → requires membership and confirmed fields.
+POST /events/meal-change → role and timestamp, reconciles current schedule.
+POST /decisions/suggest → returns ranked proposals, assumptions, evidence_ids, confidence_status.
+POST /actions/{id}/approve → explicit valid approval, idempotency key; prototype logs no live merchant action.
+POST /impact/waste-event → accepts measured kg, method; does not transform a hypothetical saving into actual.
+GET /audit/events and DELETE /personal-context (subject to agreed audit retention and legal obligations).
+Tool functions: get_household_facts, read_source_evidence, calculate_portions, check_food_rule, check_order_permission, draft_cart, record_disposal.
+
+
+7. FUNCTIONAL / NONFUNCTIONAL GUARANTEES
+Availability and latency targets TBD after benchmark. Track p50/p95 and budget with Cloud Monitoring; no untested SLA claims.
+Typed input validation, role checks, Firestore security rules, encrypted media, short retention, content redaction in logs, consent-gated notifications. Rate limits/quota via Cloud Run gateway. Retry only idempotent actions. Multi-user concurrency: versioned state / optimistic conflict handling.
+Safety: false “safe to eat” or “safe to donate” must be 0 in declared challenge test; if cannot show compliance, do not ship safety claims.
+Data lineage and measurement: every published kWh/L/CO2e estimate carries original measurement, region-specific factor, method and uncertainty. No numerical savings derived from the UI itself.
+Cloud-only codebase; no third-party foundation models/ML endpoints.
+
+
+8. DELIVERY SLICES AND DEPENDENCIES
+Slice A proof-of-concept: Google Cloud project IAM + billing verification; Flutter UI; Firestore canonical household; Gemini intake; ADK function calling; manual simulated receipts/plan changes; deterministic logic; impact journal; 10–20 gold cases. It should run on Cloud Run or authorized Agent Platform runtime.
+Slice B evaluation: compare rules/list, ordinary Gemini, selected incumbents, structured ADK workflow; error matrix/cost/latency and physical waste only if actual trial exists.
+Slice C conditional: institutional separate workspace OR FSSAI-compliant NGO journey, not both by default.
+External dependencies unresolved: merchant checkout partner/API rights, real household consented data, permissioned NGO data and medical/care facility nutrition policies.
+
+
+9. SECURITY / PRIVACY THREAT MODEL
+Malicious receipt text prompting agent to make purchase; cross-household inventory leakage; forged donor proof; inaccurate date/temperature advice; memory contamination; coercive family tracking; model inventing discounts or environmental savings; privilege escalation via tool calls; personally identifiable household schedule exposure. Controls: typed tools, explicit policy enforcement in API, separation of secrets, allowlisted tools, audit, data minimization, human review and red-team cases.
+
+
+10. TECHNICAL REFERENCES (DOCUMENTED CAPABILITIES; VERIFY SERVICE GA STATUS)
+ADK with Memory Bank: https://docs.cloud.google.com/gemini-enterprise-agent-platform/scale/memory-bank/adk-quickstart
+Gemini grounding with authorized search API: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/grounding/grounding-with-your-search-api
+GenAI evaluation: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/evaluation-overview
+Agent evaluation: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/agent-engine/evaluate
+ADK session/memory conceptual docs: https://github.com/google/adk-docs/blob/main/docs/sessions/memory.md
+Google Cloud services: https://cloud.google.com/run ; https://firebase.google.com/docs ; https://cloud.google.com/firestore ; https://cloud.google.com/bigquery .
+
+
+
+
+15 OCT 2026 — TECHNICAL ADDENDUM: THREE ADAPTERS, MCP, COMMUNITY PORTAL, EVALUATION
+Refine deployable skeleton as a Google-only application stack (Gemini via Vertex AI, Google ADK, Firestore, Cloud Run, Firebase, Cloud Storage, BigQuery, Maps where authorized). One source-of-truth/provenance store and scoped role policy, three discrete workflow packages: household order/meal events, institutional late headcounts, compliant NGO surplus batch intake. A fourth apartment compost/wet-waste operator branch is RESEARCH ONLY pending residual need. DO NOT implement 4 agent teams for appearance; one tool-driven agent can serve gold cases and measure the need for specialization.
+MCP: Google ADK supports McpToolset https://adk.dev/mcp/ ; Gemini also documents remote MCP for supported interfaces https://ai.google.dev/gemini-api/docs/function-calling . Swiggy's official Jan 27 2026 MCP release names Swiggy Food, Instamart and Dineout and conversational carts/orders https://www.swiggy.com/corporate/press-release/swiggy-now-lets-you-order-food-dineout-and-shop-on-instamart-directly-inside-chatgpt-and-claude/ . A provider announcing MCP does not grant our Cloud project credentials or permission to transact. Adapter interface should expose capabilities (search_catalog, build_draft, check_availability, preview_costs, request_user_approval, execute_if_authorized, retrieve_status), supported=false by default, and SIMULATION watermark for local demos. Transaction execution must be server-side, scoped to explicit user/customer consent and reviewed final price/address/substitutions; refuse if rights unknown. No secret credentials in model text or prompts; enforce idempotency and audit.
+Two role-isolated partner portals: food donor/verified NGO/receiver with eligibility HUMAN review, custody and temperature data; wet-waste building RWA/collection worker/compost operator with source-separated kg, contamination/rejects and processing receipts. Different collections and policy rule sets; no leakage. Food-safety classifications from images are CANDIDATE descriptions only. Avoid real addresses and vulnerable-recipient data in demo.
+Shared evaluation harness pre-register per-lane gold cases, same raw artifacts for baseline rule workflow, ordinary Gemini, incumbent where accessible, and ADK integrated prototype. Score correctness, actual human steps/minutes, false confidence, authorization/safety violations, Gemini latency/calls/cost, and for real pilots weighed edible kg or accepted eligible surplus/wet processed kg. Environmental factors and actual AI footprint must be traceable; no UI-estimated savings treated as factual.
+Solid Waste Management Rules 2026 effective Apr 1 2026: wet/dry/sanitary/special-care source segregation and qualifying bulk-generator obligations; check local operator rules at https://swm.cpcb.gov.in/ . Do not make model authoritative over regulated waste processing. See full backlog https://docs.google.com/document/d/1xnDoO6XX7pofuDoOJRxCG0Ltzdp3r6Nyzl8lAaLbXjc/edit and circular partner portal https://docs.google.com/document/d/18RqL4wI5RXoO3FZnApyIFPeVGj-zEVbboXFaYF2chtM/edit .

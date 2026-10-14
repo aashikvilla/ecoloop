@@ -1,0 +1,49 @@
+# AI Builder Cup Themes
+Source: https://docs.google.com/document/d/1foHEli3aKI-9QfZiT7MIKGN-tDYTUMylufoABSSw_TU/edit?usp=drivesdk
+Snapshot: 2026-10-15
+
+﻿Themes
+Every team builds against one of the following themes. Choose the one closest to the problem you want to solve.
+
+
+1. BFSI: Intelligent Risk, Fraud & Financial Experiences
+Problem Statement
+Build an AI-powered solution that addresses meaningful challenges across banking, financial services, insurance, or related industries. Solutions may focus on detecting and mitigating fraud or risk, automating complex processes, improving customer interactions, or delivering more personalized and informed financial experiences.
+Suggested Solution Directions
+Fraud detection, transaction anomaly analysis, document intelligence, financial assistance, personalized recommendations, compliance automation, risk assessment
+Suggested Google Cloud Technologies
+Gemini on Vertex AI for reasoning and conversational experiences, BigQuery for transaction and risk analytics, Vertex AI for predictive or classification models, Document AI for financial and non-traditional documents, Vertex AI Search / Agent Search for policy and knowledge retrieval, Cloud Run for application services, Cloud SQL or AlloyDB for application data, Pub/Sub for event-driven transaction processing
+2. Retail & Commerce: Intelligent Customer and Business Experiences
+Problem Statement
+Build an AI-powered solution that transforms how businesses understand, engage, and serve customers while improving operational efficiency across physical and digital commerce. Solutions may address discovery, personalization, conversational shopping, demand planning, inventory, customer insights, or fraud.
+Suggested Solution Directions
+Hyper-personalization, conversational commerce, product discovery, demand forecasting, basket analysis, customer segmentation, inventory intelligence
+Suggested Google Cloud Technologies
+Gemini on Vertex AI, Vertex AI Search / Agent Search for intelligent product and information discovery, BigQuery for customer and transaction analytics, BigQuery AI for AI-assisted analysis, Cloud Run for commerce applications and APIs, Cloud Storage for product assets, AlloyDB or Cloud SQL for operational data, Looker for business insights
+3. Problem Statement
+Build an AI-powered solution that addresses challenges related to efficiency, quality, reliability, supply and demand, or sustainability across manufacturing and industrial operations. Solutions should demonstrate how AI can transform operational data into meaningful insights, recommendations, or actions.
+Suggested Solution Directions
+Predictive maintenance, visual quality inspection, production optimization, supply-chain intelligence, demand forecasting, waste reduction, operational copilots
+Suggested Google Cloud Technologies
+Gemini on Vertex AI for reasoning and operational assistance, Vertex AI for predictive and machine-learning workloads, BigQuery for sensor and operational data analysis, Cloud Storage for images, sensor data, and files, Vision AI or image/video analysis capabilities where relevant, Pub/Sub for streaming or event-driven data, Dataflow for data pipelines, Cloud Run for application and processing services
+4. Media, Content & Digital Experiences
+Problem Statement
+Build an AI-powered solution that transforms how content is created, discovered, personalized, understood, or experienced. Solutions may address challenges across media, entertainment, publishing, education, communication, or other digital content ecosystems.
+Suggested Solution Directions
+Personalized content recommendations, interactive storytelling, content creation, misinformation analysis, audience insights, sentiment analysis, personalized learning
+Suggested Google Cloud Technologies
+Gemini on Vertex AI, Imagen for image generation, Veo for video generation, Speech-to-Text and Text-to-Speech for audio experiences, Cloud Translation for multilingual experiences, BigQuery for audience analytics, Cloud Storage for media assets, Cloud Run for content applications and APIs
+5. Future of Work & Enterprise Productivity
+Problem Statement
+Build an AI-powered solution that transforms how individuals and organizations access knowledge, collaborate, make decisions, and complete everyday work. Solutions should demonstrate meaningful improvements in productivity, efficiency, knowledge accessibility, or workflow execution.
+Suggested Solution Directions
+Enterprise knowledge assistants, AI copilots, document intelligence, meeting intelligence, workflow automation, research assistants, intelligent search
+Suggested Google Cloud Technologie
+Gemini on Vertex AI, Vertex AI Search / Agent Search for enterprise search and knowledge retrieval, Document AI for document processing, Vertex AI Agent Engine and ADK for agentic workflows, Cloud Run for application deployment, BigQuery for enterprise data analysis, AlloyDB or Firestore for application and contextual data
+6. Sustainability & Social Impact
+Problem Statement
+Build an AI-powered solution that addresses a meaningful environmental or societal challenge. Solutions may focus on improving resource efficiency, increasing accessibility, strengthening resilience, supporting communities, or enabling more informed and sustainable decision-making.
+Suggested Solution Directions
+Climate and environmental intelligence, disaster preparedness, sustainable agriculture, resource optimization, accessibility, community services, waste reduction
+Suggested Google Cloud Technologies
+Gemini on Vertex AI for reasoning and natural-language interfaces, BigQuery for analysing large environmental or social datasets, Vertex AI for predictive models, Earth Engine for geospatial and environmental analysis where applicable, Cloud Storage for datasets and imagery, Vision AI or image analysis capabilities, Cloud Run for deploying applications, Pub/Sub for event-driven alerts or workflows

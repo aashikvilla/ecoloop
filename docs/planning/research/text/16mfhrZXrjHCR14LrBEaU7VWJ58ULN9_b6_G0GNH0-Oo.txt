@@ -1,0 +1,103 @@
+# 00 — Research Operating Instructions
+Source: https://docs.google.com/document/d/16mfhrZXrjHCR14LrBEaU7VWJ58ULN9_b6_G0GNH0-Oo/edit?usp=drivesdk
+Snapshot: 2026-10-15
+
+﻿AI BUILDER CUP 2026 — MASTER RESEARCH OPERATING INSTRUCTIONS
+Updated 12 October 2026. Scope: all six tracks; JAPAC first, global second.
+
+
+MISSION
+Identify evidence-backed consequential problems before proposing solutions or choosing a preferred theme.
+
+
+RESEARCH PRIORITIES
+1 Severity, urgency and consequences of inaction.
+2 Independent corroboration and evidence quality.
+3 Root causes and reasons existing solutions have not closed the gap.
+4 Direct competitors, adjacent tools, open-source projects, internal tools, manual workarounds and the status quo.
+5 Measurable customer, business, societal or environmental impact.
+6 Originality and credible meaningful AI differentiation.
+7 Bottom-up TAM/SAM/SOM or population reach and measurable public impact.
+8 Official hackathon judging criteria.
+9 Data access and technical feasibility, with a one-week prototype check only as a light constraint.
+
+
+EIGHT RESEARCH STAGES
+1. Map all tracks into domains, stakeholder groups, workflows and source avenues.
+2. Collect secondary pain signals from first-party reports, research papers, regulators, public datasets, credible industry analysis, app/software reviews, forums, GitHub issue trackers and user discussions. Cluster without proposing solutions.
+3. Test severity, frequency, affected population, costs of failure and root cause.
+4. Investigate all substitutes and the structural reasons users remain underserved; seek counterevidence.
+5. Estimate TAM/SAM/SOM or reach/impact with documented formulas, assumptions and ranges.
+6. Score Problem Value independently of the official rubric. Record feasibility separately.
+7. Red-team each leader and record rejection reasons, confidence and evidence needed to change decisions.
+8. Shortlist only after comparable all-track review. Recommend primary user research only for advanced problems.
+
+
+PROBLEM VALUE SCORE / 100
+Urgency and consequences 15
+Frequency and intensity 10
+Affected population/exposure 10
+Workaround cost/willingness to pay 10
+Evidence quality and independent corroboration 15
+Unmet need after alternatives 15
+Why now 5
+Access to users/data/artifacts 5
+Ability to measure outcomes 5
+Track alignment 10
+Score each dimension 0–5, weighted points = rating × weight / 5. Blank means unassessed, not zero.
+
+
+OFFICIAL RUBRIC, SEPARATE
+Technical merit and GenAI implementation 40%; problem alignment and impact 25%; innovation and creativity 25%; UX and solution design 10%.
+
+
+FATAL REJECTION GATES
+Rule violation or wrong official theme; unsupported core claim; no defensible competitive gap; no meaningful GenAI role; no credible way to demonstrate the essential mechanism. A high score never overrides a fatal weakness.
+
+
+EVIDENCE POLICY
+Record link, publisher, publication/check dates, geography, claim and claim type for every material fact. Separate official facts, first-person reports, independent studies, vendor marketing, interpretation, assumption and unknown. Deduplicate syndicated claims and actively seek counterevidence. Never turn a few reviews into prevalence estimates or invent interviews/data.
+
+
+STAGE OUTPUT CONTRACT
+Executive findings; clickable evidence register; specific users and problem hypotheses; current workflow; severity/frequency/consequences; root causes and alternatives; size/impact assumptions; confidence and objections; advance/narrow/defer/reject; next research action.
+
+
+WORKFLOW COMMANDS
+MAP TRACKS; DISCOVER [TRACK]; VALIDATE [PROBLEM ID]; COMPETITORS [PROBLEM ID]; SIZE [PROBLEM ID]; SCORE [PROBLEM ID]; RED TEAM [PROBLEM ID]; COMPARE [IDS]; PRIMARY RESEARCH [ID]; SCOPE [ID].
+
+
+STABLE IDS
+BFSI, RET, MFG, MED, WORK, SUS for tracks; RET-01 for problem hypotheses; E-0001 for sources; C-0001 for competitors. Research queue is not validated evidence. Leave scores empty until investigated.
+
+
+REFERENCES
+https://aibuildercup.com/
+https://aibuildercup.com/themes.html
+Existing project framework: AI_Builder_Cup_2026_Research_and_Idea_Selection_Framework.docx
+
+
+RESEARCH EXECUTION PROTOCOL — UPDATE 12 OCTOBER 2026
+
+
+A research stream is a logical track (BFSI, Retail, Manufacturing, Media, Future of Work, Sustainability, or Google Cloud capabilities), not an autonomous agent. Work and Google Drive changes happen during active ChatGPT execution; do not claim asynchronous background progress without a scheduled automation.
+
+
+Completion levels:
+L0 Domain mapped; L1 evidence of broad burden; L2 defined affected user and observed workflow signal; L3 independent corroboration + root-cause investigation; L4 direct competitors, substitutes, counterevidence, and a remaining unmet gap tested; L5 measurement/sizing and primary validation. No problem is 'validated' at L0-L2.
+
+
+Every dossier MUST record (a) exact user and job, (b) observed denominator/geography/date, (c) source type and independence (including duplicates), (d) frequency/severity/consequences, (e) plausible versus observed root cause, (f) incumbent and manual alternatives, (g) strongest rejection reason, (h) sizing formula with missing input values, (i) status and next falsifiable check.
+
+
+Do not use a source count as a quality metric. Dashboard separate metrics: queued questions, raw source records, independently corroborated cases, named competitor coverage, completed preliminary dossiers, demonstrated residual unmet needs, problem-value scores only when justified, and actual last edit timestamp. Snapshot counts must explicitly state last verified date. Never treat zero validated as work not attempted when a preliminary research pass has been completed.
+
+
+Competition capability stream stays separate: document actual Gemini/Google Cloud functionality, limitations, region/price/preview/access, and non-Google alternatives; require measured technical evidence before claiming unique advantage or technical wow factor. The official 40% technical merit category is scored on a demonstrable future solution, not used to bias problem evidence.
+
+
+Current reference deliverables:
+05 Deep Problem Dossiers https://docs.google.com/document/d/1nkko0fBciFtZR771YAoKUCSbOKepp8rfDpefmpN1xjw/edit
+03 Evidence Register https://docs.google.com/spreadsheets/d/1SdCc1vvdLsyEsUH3mlzYFGfQifhfZmFVL3Mu043lQgE/edit
+04 Dossier Screening Audit and Decision Log https://docs.google.com/spreadsheets/d/1LXAIUcgBaVqR56wLNjuaMk_eXTOzONa4nxeJv-r_bi0/edit
+02 Progress Dashboard, Execution Ledger and Google Capability Radar https://docs.google.com/spreadsheets/d/17LuCUDcy1iHFmovo_NNyOSvI5G9jqGe1gywhs0dBgGs/edit

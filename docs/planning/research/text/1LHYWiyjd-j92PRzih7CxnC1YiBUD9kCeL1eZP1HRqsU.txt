@@ -1,0 +1,71 @@
+# 03 — Competition and Quick Commerce Landscape
+Source: https://docs.google.com/document/d/1LHYWiyjd-j92PRzih7CxnC1YiBUD9kCeL1eZP1HRqsU/edit?usp=drivesdk
+Snapshot: 2026-10-15
+
+﻿FOOD SYSTEM COMPETITIVE LANDSCAPE & QUICK-COMMERCE RESEARCH
+AI Builder Cup 2026 | Version 0.1 | 14 October 2026
+Research rule: product pages document CLAIMED FEATURES, not independent outcomes; absence of a public API does not prove a partnership cannot exist.
+
+
+1. SUMMARY — WHAT IS ALREADY SERVED
+Household inventory, barcode/photo/receipt entry, sharing, meal planning and AI recipe suggestions already exist. School/commercial waste tracking, computer vision and production forecasts already exist. Surplus matching and food rescue already exist. Indian platforms already support rapid grocery delivery and some group orders. Therefore a generic AI inventory, recipe, delivery/price comparison, waste dashboard or donation marketplace is not sufficient differentiation.
+
+
+2. HOUSEHOLD AND SHOPPING COMPETITORS
+NoWaste | Direct household inventory incumbent. Current website advertises shared household inventory, barcode/photo/receipt capture, shopping lists, recipes, meal plans, expiry calendars, multi-device sync and waste tracking. Residual gap to TEST: does adaptation to unplanned circumstances outperform existing features with less user effort? Source https://www.nowasteapp.com/home/
+Samsung Food / Food+ | Direct planning incumbent. Shared meal plans, personalized AI recommendations, shopping lists and meal-planning collaboration; integration with Samsung ecosystem varies. Residual gap to TEST: does observed food waste change when plans shift? Sources https://support.samsungfood.com/hc/en-us/articles/18689681101716-Sharing-Collaboration-on-Samsung-Food and https://support.samsungfood.com/hc/en-us/articles/35369657798548-Getting-Started-with-Meal-Planner
+General LLMs (Gemini/ChatGPT) | Can explain recipes, interpret images/text, prepare shopping lists, often at very low incremental friction. Residual gap must be demonstrated by state, provenance, measurement or user workflow, not another conversational recipe.
+Shared calendar, WhatsApp, grocery lists, physical notebooks | Pervasive zero/low-cost substitutes. Frequent communication does not guarantee inventory accuracy, but no quantitative residual failure measured.
+
+
+3. QUICK COMMERCE AND DELIVERY LANDSCAPE
+Blinkit | Rapid grocery marketplace with dark-store/partner network; merchant partnership page documents store and seller opportunities, NOT an unrestricted public consumer-checkout API. https://blinkit.com/pages/partner
+Zepto | Large quick-commerce operator. Exact order history, SKU/availability, checkout API rights and food waste reporting UNKNOWN without documented partnership.
+Swiggy Instamart | Rapid grocery ordering; Swiggy FY2026 investor reporting public. Swiggy food delivery publicly highlights group ordering (2025 growth claimed 841% YoY); do not claim collaborative ordering is absent. https://www.swiggy.com/corporate/investor-relations/reports-and-publications/ and https://www.swiggy.com/corporate/press-release/how-india-swiggyd-2025-a-feast-for-the-fast-the-foodie-and-the-future/
+BigBasket/bbnow, JioMart, Flipkart Minutes | Grocery purchasing and delivery alternatives; independently confirm city-level serviceability, item sizes, substitutions, prices and data rights for selected metro.
+Swiggy/Zomato restaurant ordering | Prepared meal ordering, group orders and restaurant ecosystem. Order count ≠ delivered nutrient amount ≠ food waste.
+Third-party QuickCommerce API vendor | A commercial intermediary advertises authorized-key price/catalogue searches across quick-commerce platforms. Terms, accuracy, provenance, partner authorization and CHECKOUT capability not established. Do not build dependent on it without legal/technical assessment. https://quickcommerceapi.com/docs
+
+
+Evidence on behavior: Redseer (FY2024) reports q-commerce monthly ordering frequency nearly six per monthly transacting user (vs 4.4 FY2021), ~90% of market activity from metros; this is not a household-level frequency distribution and DOES NOT prove extra waste. https://redseer.com/articles/indias-q-commerce-ascent-a-new-era-in-shopping/
+Eternal Q1 FY27 company figures reported by Moneycontrol July 22 2026: ~331m Blinkit orders in Apr–Jun 2026, ~3.6m/day; volume ≠ unique users and product wastage. https://www.moneycontrol.com/news/business/earnings/blinkit-q1fy27-36-lakh-daily-orders-aov-slips-to-rs-518-dark-store-count-at-over-2-400-13980696.html
+Important counterevidence: instant top-ups might prevent bulk overbuying and spoilage in some households; promotions or delivery packaging might worsen impacts elsewhere. Competing effects require direct empirical measurement.
+
+
+4. COMMERCIAL KITCHENS, SCHOOLS AND FOOD SERVICE
+Winnow | Visual AI weighing/recording of discard, kitchen dashboards, now forecasting and process coaching. Claims 3,500+ sites across >90 countries and reported client waste reduction; these are vendor-sourced claims and not experimental population evidence. Critically, automatic identification and forecasting already exist. https://www.winnowsolutions.com/
+Leanpath | AI-assisted waste categorization, kitchen/plate/donation waste and guided operational workflows for enterprise foodservice and institutions. https://www.leanpath.com/solutions/
+School canteens | Established plate-waste feedback interventions and kitchen planning, also ordinary weighing. Original 2024 study reports feedback via waste tracking reduced school plate waste vs controls; not India-specific. https://www.sciencedirect.com/science/article/pii/S095965262403645X
+Small institutional kitchens | Potential gap is affordability, device footprint, workflow disruption and proprietary data, but not yet evidenced. School/care food must meet nutrition and food safety policies; never casually redistribute served leftovers.
+
+
+5. SURPLUS RECOVERY / SOCIAL IMPACT
+FSSAI Indian Food Sharing Alliance (IFSA) | Existing network connecting donors, regulated food recovery agencies and NGOs. Don't claim no recovery network. https://sharefood.eatrightindia.gov.in/
+FSSAI 2019 Food Safety and Standards (Recovery and Distribution of Surplus Food) Regulations | Defines surplus food as safe, unused and not served to customers, among other requirements; donor and distributor recordkeeping/handling obligations. https://www.fssai.gov.in/upload/uploadfiles/files/Gazette_Notification_Surplus_Food_06_08_2019.pdf
+Robin Hood Army | Volunteer-led local food rescue, including partnerships serving homeless people, orphanages, public-hospital patients and old-age homes. Their scale claims are organization-reported. https://www.robinhoodarmy.in/
+Feeding India, No Food Waste, food banks and local kitchens | Already operate different food recovery mechanisms. Before describing a gap, audit one city's actual pickup and acceptance workflow; logistics, cold chain, safe handling, verification and recipient fit may be bottlenecks.
+Too Good To Go | Surplus food discount marketplace in supported countries; claims 120m+ users and 180k partners, but verify country coverage before using in India market assumptions. https://www.toogoodtogo.com/en-us/surplus-food-marketplace
+Goodr | US-based recovery logistics and reporting for businesses; evidence a “food donation platform + pickup + impact dashboard” already exists in other markets. https://goodr.co/
+OLIO/other local sharing tools | Geographical availability and safe food protocol require confirmation. Donation ≠ servings consumed.
+
+
+6. AFTER-WASTE RECOVERY AND DISPOSAL
+EPA Wasted Food Scale | Priority: prevention, donation, upcycling; animal feed where safe/legal; composting and digestion; landfilling/incineration lower preference. Not itself a commercial competitor. https://www.epa.gov/sustainable-management-food/wasted-food-scale
+Local municipal programs, composters, anaerobic digesters | Actual value depends on collection routes, contamination and end-market demand. GenAI image classification does not create a composting service.
+
+
+7. COMPETITOR GAP TEST MATRIX
+H01: Can household members coordinate changed plans with less effort than NoWaste + Samsung Food + WhatsApp? Evidence: NOT TESTED. Kill if ordinary calendar/list is as good.
+H02: Can actual pantry stock be kept accurate without user work? Existing photo/receipt capture already there. Evidence: NOT TESTED. Kill if inventory maintenance remains effortful or imprecise.
+H03: Are quick-commerce orders a cause of avoidable waste? Evidence: NOT ESTABLISHED. Must compare frequent/top-up ordering to counterfactual shopping while adjusting for household traits; do not infer from 6 orders/month.
+H04: Can small kitchens reduce overproduction beyond cheap headcounts and Winnow/Leanpath offerings? Evidence: NOT TESTED. Need site cooperation and weighed waste.
+H05: Can FSSAI-compliant food transfers fail for avoidable informational reasons after NGO infrastructure? Evidence: NOT TESTED. Need documented donor-pickup-return outcomes.
+H06: Can GenAI genuinely improve against baseline task, not simply create a fluent recommendation? Evidence: NOT TESTED. Use identical test cases and timed comparisons.
+
+
+8. RISKS FOR INTEGRATION OR AUTOMATED PURCHASING
+An authorized merchant checkout is an external transaction with payment, substitutions, returns, authentication, delivery address and consent. No verified official unrestricted integration or permission has been obtained for any provider. For now treat “automatic buying” as a concept requiring partnership, NOT an existing development capability. Avoid scraping unauthorized credentials, exposing order histories, manipulating discounts, hidden affiliate incentives or ordering without explicit checkout confirmation. Nutritional claims need verified labels/food composition and cautious presentation; “sustainable” product claims require lifecycle criteria, not intuitive guesses.
+
+
+9. SOURCES AND CONFIDENCE LABELS
+See full source register in Google Sheet. Evidence levels: A original measurement (UNEP, FAO, Delhi audits, controlled interventions); B sector estimate/report (Redseer, government); C product capabilities from official vendors (NoWaste, Samsung, Winnow, Leanpath, Swiggy, FSSAI, NGOs); D unverified research hypotheses (all residual gaps and integrations). Recheck October 2026 deployment and pricing at moment of implementation.

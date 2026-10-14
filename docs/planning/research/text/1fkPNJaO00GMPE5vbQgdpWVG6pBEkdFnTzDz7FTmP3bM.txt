@@ -1,0 +1,49 @@
+# 00 — Food Systems Executive One-Page Summary
+Source: https://docs.google.com/document/d/1fkPNJaO00GMPE5vbQgdpWVG6pBEkdFnTzDz7FTmP3bM/edit?usp=drivesdk
+Snapshot: 2026-10-15
+
+﻿FOOD SYSTEMS | OPPORTUNITY MAP
+AI Builder Cup 2026 · Sustainability & Social Impact · 14 October 2026 · Research v0.1
+CURRENT DECISION: Advance focused validation; no solution or score selected.
+
+
+THE CHALLENGE
+Food can be lost between planting and harvest, storage and distribution, retail and quick commerce, household/institutional purchasing and consumption, or surplus recovery and final disposal. The central opportunity is to prevent avoidable edible food loss before it becomes waste—while safely redirecting eligible surplus and recovering unavoidable scraps.
+
+
+THE ENVIRONMENTAL AND SOCIAL STAKES
+UNEP: 1.05 billion tonnes food waste at retail, food service and household levels globally in 2022; households 631 million tonnes (including inedible scraps). FAO: 13.3% food loss between harvest and pre-retail in 2023. Food loss/waste contributes an estimated 8–10% of global greenhouse-gas emissions. People also lose food spending, labor and possible access to usable nutrition. These totals are NOT the AI-addressable market.
+
+
+WHERE TO SEARCH FOR GAPS
+FOOD-01 Families: changes in attendance, shopping and cooking leave usable ingredients and prepared meals wasted.
+FOOD-02 India's metro quick commerce: multiple top-up orders across household members could fragment decisions, but causal waste evidence is MISSING.
+FOOD-03 Schools, offices, hostels and care kitchens: actual diners and portions diverge, leaving preparation and plate waste.
+FOOD-04 Retail and dark stores: perishables, stock rotation and markdowns require private data to validate.
+FOOD-05 Safe surplus: documented handoff failure between donor, regulated food-recovery agency and accepting recipient.
+FOOD-06 Farms and cold chain: highly consequential losses, but often infrastructure-driven.
+
+
+ALREADY SOLVED IN PART
+NoWaste and Samsung Food offer shared inventories, meal planning, scanning and recipes. Swiggy supports group ordering; Blinkit, Zepto and Instamart fulfill purchases. Winnow and Leanpath track commercial kitchen waste with AI. FSSAI's IFSA, Feeding India and Robin Hood Army support food rescue. We must prove a residual unmet need against these alternatives, not duplicate them.
+
+
+WHERE GENAI MIGHT EARN ITS PLACE
+Messy household updates, food labels, receipts, meal changes, menu/attendance notes and multilingual recovery records. Quantity arithmetic, safety eligibility, purchasing permissions and impact calculations require verified data and deterministic controls. No model can confirm food safety from a photo.
+
+
+DECISIVE RESEARCH TESTS
+1. Compare 10–20 real or representative changed-meal episodes against NoWaste, Samsung Food, a shared list and ordinary Gemini.
+2. Obtain one kitchen's real diner counts and WEIGHED preparation/plate waste; compare with simple attendance forecasts.
+3. Audit safe surplus postings through FSSAI-compliant recovery partners; track actual safe pickups, not listing counts.
+
+
+JUDGE CASE
+Technical GenAI 40%: inspectable multimodal reasoning + guardrails + reproducible tests. Impact 25%: weighed avoided edible waste and carefully bounded social benefit. Innovation 25%: demonstrated gap after incumbents. UX 10%: lower effort. Withhold scores until the unmet need and benefit are validated.
+
+
+SOURCE TRAIL
+UNEP (2024): https://wedocs.unep.org/handle/20.500.11822/45230
+FAO (2023): https://www.fao.org/sustainable-development-goals-data-portal/data/indicators/1231-global-food-losses
+Delhi physical audit (2026): https://www.sciencedirect.com/science/article/pii/S0950329325003064
+Research register and deeper mapping are in this Drive folder.

@@ -1,0 +1,61 @@
+# 11 - Circular Food and Community Workflows
+Source: https://docs.google.com/document/d/18RqL4wI5RXoO3FZnApyIFPeVGj-zEVbboXFaYF2chtM/edit?usp=drivesdk
+Snapshot: 2026-10-15
+
+﻿CIRCULAR FOOD, GENUINE ORGANIC WASTE, COMMUNITY INCENTIVES & PARTNER PORTAL
+EcoLoop AI design/research v0.1 | 15 Oct 2026 | Concepts and validation tests; not an operational waste service, partner agreement or nutrition safety certification.
+
+
+1. THE FIVE-PATHWAY DECISION TREE
+Food / byproduct condition is verified by responsible person and authoritative rules; do not label food edible from a photo.
+Path P0 PREVENT: reduce preventable procurement, over-preparation and spoiled inventory BEFORE becoming waste. KPI kg avoided edible discard (measured vs counterfactual); priority highest when credible.
+Path P1 CONSUME: continue intended household/institutional use with verified storage/label advice and user judgment. KPI kg actually eaten, not imagined prevented waste.
+Path P2 SAFE SURPLUS: if genuinely eligible, unused/unserved, recipient approves and logistics work, route through FSSAI-compliant donor/recovery/receiving system. KPI eligible accepted offer fraction; weighed kg safely delivered; traceability/recall; where possible actually used.
+Path P3 ORGANIC RECOVERY: if NOT safe/eligible to eat and local collection accepts, segregate appropriate wet/organic streams for authorized apartment community compost, biogas/anaerobic digestion or municipal processing. KPI kg collected and processed, contamination/rejected kg, usable compost/biogas actually produced; do not claim every rotten/animal product is safe for home compost.
+Path P4 FINAL HANDLING: residuals go through permitted municipal collection/disposal, with hazardous/sanitary/special-care wastes in separate approved streams. Always check municipal operator accepted materials.
+Donation is NOT the destination for served food, badly stored food or inedible scraps. Feeding animals and industrial upcycling are locally rule-governed options that require authorized receiving partners; not default home advice.
+
+
+2. WHY APARTMENT COMPOST IS A LEGITIMATE RESEARCH BRANCH
+India MoEFCC Solid Waste Management Rules 2026 became effective 1 April 2026, mandating source segregation into wet, dry, sanitary and special-care streams and adding extended bulk-generator obligations. CPCB portal states qualifying BWG thresholds (such as 100 kg/day waste, among alternate metrics): verify applicability and local implementing rules for an exact apartment complex, no blanket requirement for every flat.
+Saahas Bhoomitra community-compost page reports Bengaluru's earlier 100-household/100 kg/day local expectation and cites INR 4–6 lakh initial setups and INR 15–25k monthly consumables as an operator-reported illustration; this is NOT a national installed-cost average. Hasiru Dala Innovations already provides vendor-agnostic on-premise solutions, equipment/operational support and livelihoods for waste workers, alongside Daily Dump and others. An HSR Layout Bengaluru project was reported in Dec 2025 processing around 500 kg/day across 750 households with 20 aerobic composters; newspaper reporting, not an audited experiment or an estimate transferable to all complexes.
+Gap hypothesis, NOT proven: households, societies, collection workers and compost operators may lack correct, low-effort segregation, measured handoff and contamination alerts. However, bins/signage, operational maintenance, budget and capacity may dominate; AI image guidance alone is weak differentiation.
+Sources: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2219676 ; https://swm.cpcb.gov.in/ ; https://saahas.org/resource/bhoomitra/ ; https://hasirudalainnovations.com/in-situ-composting/ ; https://timesofindia.indiatimes.com/city/bengaluru/hsr-layout-residents-turn-500kg-of-waste-into-compost-every-day-in-bengaluru/articleshow/125964571.cms
+
+
+3. APARTMENT COMPOST AND ORGANIC RECOVERY PERSONAS
+Resident: chooses wet/dry/sanitary/special-care segregation according to local service; does not need new scanning steps for every peel.
+Household/cook: can report or correct food scraps classification; must keep edible vs inedible waste separate for impact accounting.
+Housekeeping/collection worker: checks segregation and handles pickups, protective equipment and daily mass; avoid outsourcing unsafe work to vulnerable workers.
+Resident welfare association (RWA) admin: decides contracted operator, oversight, budgets, contamination policy, service SLAs and incentives; may not personally operate processing equipment.
+Compost technician/operator: decides feedstocks, contamination rejection, equipment, moisture/aeration, appropriate pests/odor controls and mature compost acceptance; should be the verified authority for processing rather than Gemini.
+Municipal hauler/authorized processor: accepts rejects/residual streams where local rules and contracts permit.
+End user of compost: gardeners, farmers or parks use quality-tested compost only where suitable; soil safety and market demand cannot be assumed.
+
+
+4. ORGANIZATIONAL PORTAL — TWO SEPARATE OPERATOR VIEWS
+Portal A: FOOD RECOVERY PARTNER (FSSAI eligible). Inputs: donor/batch identity, quantity, category, safe handling logs, prep/packing time, verified storage conditions, destination limits, allergies and recipient approval. Views: new offers awaiting review; blocked/needs-proof; safe eligibility reviewed by authorized human; offer accepted/rejected reason; pickup scheduling/capacity; time/temperature chain; recipient acceptance; recall notice / custody logs. KPIs: eligible offers, fulfilled offers, kg delivered/accepted, cancellations and why, unsafe attempts halted. A dashboard is NOT a food-safety certification or legal compliance guarantee.
+Portal B: WET-WASTE OPERATOR / APARTMENT COMPOST. Inputs: building/collection route, source-separated wet kg, contamination, collection schedule, compost batch, operator acceptance, processing method and final destination. Views: demand, capacity, scheduled pickup, rejected/contaminated loads, equipment status if operator-reported, compost batch progress, feedback to RWA. KPIs: kg wet input received, processed output, rejects, contamination, costs, distance, availability. Waste operator accepts only materials compatible with its process. This is DIFFERENT from NGO surplus and must not share a generic dispatch eligibility formula.
+Both: Google Firebase Auth roles, Firestore document permissions, Gemini for messy report normalization and explanations, ADK/Cloud Run permissioned tools, human approval, audit logs and optional Maps travel estimation. Critical missing: real partner permissions, verified disposal addresses/routes, tariff agreements, authorized recipient capacity. Demo uses synthetic partners clearly labeled.
+
+
+5. INCENTIVE HYPOTHESES — TEST FOR REBOUND, NOT GAMIFY THE PLANET
+I1 Household monetary feedback: show estimated or measured money not wasted, with explicit unit prices/denominator; an estimate is not savings until verified.
+I2 Practical convenience: remove friction; integrate at decision moment rather than demand daily manual logging.
+I3 Family/shared goals: opt-in, no compulsory rankings of family members; never shame house help, children or vulnerable residents.
+I4 Apartment collective metric: kg correctly separated / actually processed by operator, include participation and contamination denominator. Avoid rewarding raw kilograms donated or composted because that could incentivize creating MORE waste.
+I5 Reward partnerships: merchant discounts for smaller correct quantities, repair/compost credits or council recognition ONLY if contracts and fraud controls exist. Discounts can create extra purchases; control net consumption and packaging effects.
+I6 NGOs and operators: guaranteed pickup windows and transparent service economics may matter more than gamification; rewards that create unsafe donations forbidden.
+I7 Community leaderboard: compare facilities only when service types and denominators comparable and users opt in; avoid greenwashing and pressure to manipulate weigh logs.
+Test incentive vs no-incentive randomized/small crossover after technical feasibility: actual kg edible discarded or correctly processed, baseline drift, 4–8 week persistence, added spend, privacy, perceived burden. No results exist.
+Fair incentives: reward verified prevention/adoption/appropriate segregation, not photo uploads, purchases, or unsupported carbon points.
+
+
+6. SPECIFIC PROTOTYPE D (OPTIONAL): APARTMENT SCRAPS OPERATOR
+RESEARCH CHALLENGER not fourth competing core prototype until secondary evidence clears a residual gap. Example: 100-household Bengaluru complex, all numbers imaginary for software demo. A cook reports inedible vegetable peels; deterministic local rule list says wet stream. Operator marks building pickup; collection staff weighs 12 kg source-separated waste and rejects 2 kg contaminated; RWA sees 10 kg accepted into facility. Processing operator records actual treated mass later. No inferred compost output from input weight; no auto-hazardous classification from AI. Compare printed bilingual sorting chart + signage/WhatsApp vs Gemini chat vs authenticated workflow. Reject AI if rules and worker training suffice. Track worker labor and cost.
+
+
+7. RECOVERY & INCENTIVE SAFETY
+India FSSAI surplus food 2019 regs require safe unused/unserved and regulated recovery conditions; care homes, orphanages, schools and hospitals are not automatic recipients. NGO and recipients must be independently verified and consent. Local solid waste rules and provider contracts govern compost/wet waste; model must not direct spoiled food to vulnerable groups or recommend unsafe home composting. Do not make donation/processing claims from a pretty mockup. A physical handoff and independent evidence are required.
+Official FSSAI: https://www.fssai.gov.in/upload/uploadfiles/files/Gazette_Notification_Surplus_Food_06_08_2019.pdf
+2026 SWM Govt: https://www.pib.gov.in/PressReleasePage.aspx?PRID=2219676

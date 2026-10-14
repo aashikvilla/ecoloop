@@ -38,44 +38,36 @@ All agents, workflows, and automated tools working on EcoLoop MUST strictly enfo
 
 ---
 
-## 2. Monorepo Structure & Workflow
+## 2. Monorepo Customizations & Available Skills
 
-```text
-ecoloop/
-├── .agents/                      # Workspace Customizations
-│   ├── rules/                    # Hierarchical guidelines and constraints
-│   ├── skills/                   # Modular runbooks & workflows
-│   └── agents/                   # Agent configurations & prompts
-├── frontend/                     # Next.js 15+ App Router, React 19, Tailwind CSS
-├── backend/                      # Python 3.12+, FastAPI, Google ADK, Pydantic v2
-├── docs/                         # Canonical product specifications and research
-└── package.json                  # Root monorepo orchestration
-```
+The workspace includes 10 production-grade skills and 7 operational rules under `.agents/`:
 
----
+### Specialized Skills (`.agents/skills/`)
+1. **`fastapi-cloudrun-service`**: FastAPI 0.115+, Pydantic v2, Cloud Run stateless deployment, Firebase ID token auth.
+2. **`google-adk-orchestration`**: Single orchestrator loop, allowlisted Python tools, HIL approvals, trajectory tracing.
+3. **`gemini-multimodal-structured`**: Official `google-genai` SDK, Pydantic `response_schema`, receipt OCR, injection defense.
+4. **`firebase-fullstack-integration`**: Firebase App Hosting (`apphosting.yaml`), Firestore versioned state, signed Cloud Storage.
+5. **`ecoloop-domain-engine`**: 3 scenario lanes, FSSAI 2019 compliance, 23 gold benchmark cases with `eval_runner.py`.
+6. **`nextjs-app-router-mastery`**: Next.js 15 App Router, React 19 Server Actions, Server/Client component boundaries, streaming.
+7. **`vertex-ai-search-agent-garden`**: Grounded RAG over FSSAI policy datastores and Model Garden foundation model management.
+8. **`gcp-cloud-observability`**: GCP-native single-line JSON logging, Cloud Monitoring metrics, Cloud Trace OpenTelemetry correlation.
+9. **`systems-thinking-domain-modeling`**: Physical mass balance conservation equations, stocks and flows, category carbon factors.
+10. **`continuous-verification-cicd`**: Multi-step Cloud Build pipeline (`cloudbuild.yaml`), automated pre-push verification gates.
 
-## 3. Technology Guidelines
-
-### Backend (`/backend`)
-- **Runtime**: Python 3.12+ managed with `uv`.
-- **Framework**: FastAPI with async route handlers, Pydantic v2 schemas (`pydantic-settings`).
-- **Google Cloud Run**: Keep backend stateless; use Firestore for persistent state, Cloud Storage for media.
-- **Google GenAI SDK**: Use the official `google-genai` SDK (`from google import genai`) with Vertex AI / API keys.
-- **Authentication**: Validate Firebase ID tokens on every protected endpoint (`firebase-admin.auth.verify_id_token`).
-
-### Frontend (`/frontend`)
-- **Framework**: Next.js 15 App Router with TypeScript.
-- **Styling**: Tailwind CSS with rich, accessible components, dark-mode first, and visible mock indicators.
-- **Hosting**: Firebase App Hosting (`apphosting.yaml`).
-- **API Communication**: Type-safe REST client communicating with the FastAPI backend.
+### Hierarchical Rules (`.agents/rules/`)
+- `01_hard_invariants.md`: Safety, uncommitted candidates, simulation transparency, tenant isolation.
+- `02_stack_and_deployment.md`: Cloud Run containerization, App Hosting settings, Gemini ADC credentials.
+- `03_evaluation_and_benchmarks.md`: 3-way evaluation protocol (Rules vs Plain LLM vs EcoLoop ADK).
+- `04_coding_standards_and_architecture.md`: Function length (<30-50 lines), naming, SRP, systems thinking.
+- `05_nextjs_react19_standards.md`: Server components default, React 19 `useActionState`, mobile-first 360px a11y.
+- `06_agent_driven_development_harness.md`: Spec & assertion-first development, Living Knowledge Items, minimal test harness.
+- `07_gcp_cloud_observability_ci_cd.md`: Cloud Logging JSON envelopes, Cloud Trace headers, zero-downtime rollouts.
 
 ---
 
-## 4. Scenario Testing & Gold Cases
+## 3. Systems Thinking & Coding Standards
 
-When developing or modifying features, validate against the three core scenario lanes:
-1. **Lane H (Household)**: Plan changes, duplicate grocery items, receipt OCR, mock cart top-up.
-2. **Lane K (Kitchen)**: Headcount changes, batch cooking cutoff enforcement, separate edible/inedible waste weighing.
-3. **Lane R (Recovery)**: Packaged eligible surplus, human food-safety review, chain of custody logs.
-
-Refer to `.agents/skills/` for step-by-step procedures and specialized runbooks.
+- **Think in Feedback Loops**: Identify whether a component functions as a stock, flow, or sensor.
+- **Function Design**: Max 30-50 lines per function. Single responsibility. Early returns over nested if-statements.
+- **Strict Typing**: Type hints on all Python functions; strict TypeScript types with no `any`.
+- **Continuous Verification**: Run `npm run build` and `python eval_runner.py` before committing changes.
