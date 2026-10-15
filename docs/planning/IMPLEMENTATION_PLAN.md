@@ -1,0 +1,226 @@
+# Household MVP — phase-wise implementation checklist
+
+15 October 2026 · Planning baseline · 6 phases, 12 tasks, 36 granular units including 6 review gates.
+
+This replaces the 156-unit platform plan. Every box starts unchecked: documentation is not implementation. The live MVPTasks Sheet is the status authority; this file is a baseline snapshot. Each unit has an owner, prerequisite and observable acceptance condition. A review gate counts once as a unit, not once per parent task.
+
+## How to execute
+
+1. Read the current specification section for the unit, relevant Stitch export and active guidance only.
+2. Open the live task, name the owner and set In progress. Work in one bounded domain; parallelize independent shell/schema tasks only after contracts agree.
+3. Make a small reviewable change. For future implementation, gather actual evidence against the unit acceptance; do not import historical pass counts.
+4. Attach evidence, reviewer and ISO update date; choose Complete and check Done. Calculated Verified also requires verified prerequisites.
+5. Update session knowledge and stop at the next meaningful review boundary. If a prerequisite reopens, dependent progress reopens.
+
+No application changes or application tests are part of this documentation replan. The verification steps below are future implementation requirements, not runs performed today.
+
+## Critical path and token budget
+
+Cloud access → identity/transactions → candidate confirmation → real managed agent/memory → typed approved action → recorded outcome → deployed full flow. Visual shell can overlap backend foundation after M0; memory and card work can overlap after M2. Deployment preparation M5.02.01 precedes deployed whole-flow proof M5.01.01; task IDs are stable, not a strict row execution order. Do not start ten parallel page builds.
+
+Suggested context per coding session: 1–2k tokens of root/knowledge, 3–5k of the relevant spec/contract, 2–4k of current code/design, and a 1k handoff reserve. Keep a 20% context buffer; these are operational targets, not provider limits. Start with one unit per turn; split if evidence shows more than a few focused edits. Do not reload the full research archive. A second agent is useful for an independent design/security review, not duplicate research. Record actual model token usage before setting monetary caps.
+
+Planning estimate: roughly 10–18 engineering days plus 2–4 integration/review days, with parallel work and credentials available. Per-phase ranges below are effort guidance and overlap; do not sum them into a promised calendar deadline. Do not substitute mock memory for a blocked core requirement.
+
+## M0 — Freeze the smaller contract and prove access
+
+Indicative effort: 1–2 engineering days. Entry: current source/design packet. Exit: M0.02.03 accepted.
+
+### M0.01 Scope and contracts
+
+- [ ] **M0.01.01 — Reconcile scope, source conflicts and screen authority**
+  - Owner: Product lead. Prerequisites: None.
+  - Acceptance: Owner review cites current Stitch map, exclusions and supersession; no unresolved contradictory active scope.
+
+- [ ] **M0.01.02 — Define the first complete dinner-change slice**
+  - Owner: Product + design. Prerequisites: M0.01.01.
+  - Acceptance: Annotated Home→capture→confirm→Ask→approve→outcome journey includes all error/empty/conflict states.
+
+- [ ] **M0.01.03 — Freeze schemas and mutation semantics**
+  - Owner: Technical lead. Prerequisites: M0.01.02.
+  - Acceptance: Reviewed candidate/date/unit/proposal/card contracts include unknowns, versions and idempotency.
+
+### M0.02 Technical feasibility
+
+- [ ] **M0.02.01 — Validate managed runtime, Sessions, Memory Bank and Gemini access**
+  - Owner: Technical lead. Prerequisites: None.
+  - Acceptance: Recorded project/region/IAM/quota and actual service response; explicit blocker ADR if fallback needed.
+
+- [ ] **M0.02.02 — Set privacy, consent, retention and cost boundaries**
+  - Owner: Technical + product. Prerequisites: M0.01.03, M0.02.01.
+  - Acceptance: Chosen retention durations, scoped preference consent/deletion policy and per-user cost limits documented.
+
+- [ ] **M0.02.03 — Review M0 exit evidence**
+  - Owner: Reviewer. Prerequisites: M0.01.03, M0.02.02.
+  - Acceptance: Scope, schemas and access proof reviewed; no implementation dependency rests on an unverified service claim.
+
+## M1 — Build the shell and trusted household boundary
+
+Indicative effort: 2–3 engineering days. Entry: M0 reviewed exit gate. Exit: M1.02.03 accepted.
+
+### M1.01 Identity and authority
+
+- [ ] **M1.01.01 — Establish solo household identity and membership**
+  - Owner: Backend. Prerequisites: M0.02.03.
+  - Acceptance: Valid identity resolves explicit membership; absent/foreign membership denied without default tenant.
+
+- [ ] **M1.01.02 — Implement versioned facts and idempotent command boundary**
+  - Owner: Backend. Prerequisites: M1.01.01.
+  - Acceptance: Transaction checks base version and request hash; duplicate retry has one effect, changed payload conflicts.
+
+- [ ] **M1.01.03 — Constrain media and direct data access**
+  - Owner: Backend. Prerequisites: M1.01.02.
+  - Acceptance: Private signed upload/read, bounded file validation, canonical client-write denial and retention handling demonstrated.
+
+### M1.02 Stitch shell
+
+- [ ] **M1.02.01 — Implement four-tab responsive Stitch shell**
+  - Owner: Frontend. Prerequisites: M0.02.03.
+  - Acceptance: Home/Kitchen/Ask/Shop match light tokens; 360px and desktop states include keyboard/focus/touch behavior.
+
+- [ ] **M1.02.02 — Provide honest empty, loading, error and demo states**
+  - Owner: Frontend. Prerequisites: M1.02.01.
+  - Acceptance: Synthetic demo is visibly isolated; errors preserve drafts and unknown integrations are not labeled connected.
+
+- [ ] **M1.02.03 — Review M1 exit evidence**
+  - Owner: Reviewer. Prerequisites: M1.01.03, M1.02.02.
+  - Acceptance: Shell review plus authenticated cross-scope denial and conflict/retry evidence available.
+
+## M2 — Capture, confirm and maintain kitchen observations
+
+Indicative effort: 2–3 engineering days. Entry: M1 reviewed exit gate. Exit: M2.02.03 accepted.
+
+### M2.01 Intake
+
+- [ ] **M2.01.01 — Add manual and text intake with candidate-only persistence**
+  - Owner: Full stack. Prerequisites: M1.02.03.
+  - Acceptance: Unconfirmed entries cannot change canonical Kitchen; bounds and cancel/retry work.
+
+- [ ] **M2.01.02 — Connect real structured photo extraction**
+  - Owner: Backend. Prerequisites: M2.01.01.
+  - Acceptance: Real model response validates candidate schema; injection text is ignored as instructions; manual fallback works.
+
+- [ ] **M2.01.03 — Implement correction and explicit confirmation sheet**
+  - Owner: Full stack. Prerequisites: M2.01.02.
+  - Acceptance: User edits names/amount/date type; one confirmation writes selected facts once and reports conflict safely.
+
+### M2.02 Kitchen and dates
+
+- [ ] **M2.02.01 — Implement Kitchen observation editing and uncertainty**
+  - Owner: Full stack. Prerequisites: M2.01.03.
+  - Acceptance: Unknown/stale stock is visible; incompatible units and negative quantities rejected; confirmed dates retain type/source.
+
+- [ ] **M2.02.02 — Add truthful Home/use-soon prompts**
+  - Owner: Full stack. Prerequisites: M2.01.03, M2.02.01.
+  - Acceptance: Confirmed date reminders differ from last-checked prompts; no photo-derived safety/expiry assertion.
+
+- [ ] **M2.02.03 — Review M2 exit evidence**
+  - Owner: Reviewer. Prerequisites: M2.01.03, M2.02.02.
+  - Acceptance: Capture correction→confirm→Kitchen persists; no mutation before consent, retries/conflicts and missing fields covered.
+
+## M3 — Prove real assistance, managed context and typed actions
+
+Indicative effort: 3–4 engineering days. Entry: M2 reviewed exit gate. Exit: M3.02.03 accepted.
+
+### M3.01 Managed agent and memory
+
+- [ ] **M3.01.01 — Connect one real ADK orchestrator and scoped managed Sessions**
+  - Owner: Backend. Prerequisites: M2.02.03.
+  - Acceptance: Recorded actual Gemini/ADK tool trace with owned managed session IDs; foreign session lookup denied.
+
+- [ ] **M3.01.02 — Implement approved-preference memory write and controls**
+  - Owner: Backend. Prerequisites: M3.01.01.
+  - Acceptance: Only consented preference event reaches managed Memory Bank; view/edit/revoke/delete states exposed without raw transcripts.
+
+- [ ] **M3.01.03 — Prove recall across two sessions and memory isolation**
+  - Owner: Technical lead. Prerequisites: M3.01.02.
+  - Acceptance: Two distinct sessions recall approved preference; second user cannot; revoke excludes it immediately and provider deletion verified.
+
+### M3.02 Typed decisions
+
+- [ ] **M3.02.01 — Render the five validated card types**
+  - Owner: Frontend + backend. Prerequisites: M2.02.03.
+  - Acceptance: Discriminated schemas/components handle invalid card fallback; no arbitrary markup/endpoints or hidden writes.
+
+- [ ] **M3.02.02 — Implement dinner adjustment and explicit proposal approval**
+  - Owner: Full stack. Prerequisites: M3.01.01, M3.02.01.
+  - Acceptance: 4→2 scaling deterministic; prepared-stage behavior sensible; stale/expired/malicious approvals denied; no inferred consumption.
+
+- [ ] **M3.02.03 — Review M3 exit evidence**
+  - Owner: Reviewer. Prerequisites: M3.01.03, M3.02.02.
+  - Acceptance: Real agent+memory proof and card approval transaction demonstrated; local substitutes cannot satisfy managed-service gate.
+
+## M4 — Complete share, shopping and recorded outcomes
+
+Indicative effort: 2–3 engineering days. Entry: M3 reviewed exit gate. Exit: M4.02.03 accepted.
+
+### M4.01 Circular household actions
+
+- [ ] **M4.01.01 — Record used, stored, discarded and compost observations**
+  - Owner: Full stack. Prerequisites: M3.02.03.
+  - Acceptance: Known compatible quantity updates once; unknown remains unknown; compost route is user-observed/local-policy-aware.
+
+- [ ] **M4.01.02 — Implement share-before-waste sheet and handover states**
+  - Owner: Full stack. Prerequisites: M3.02.03.
+  - Acceptance: Owner-private handover log needs no second account; owner-reported offer/accept/handover/cancel states distinct; community interest simulated; prohibited recipient routes blocked.
+
+- [ ] **M4.01.03 — Implement Shop list, stock check and permitted handoff**
+  - Owner: Full stack. Prerequisites: M3.02.03.
+  - Acceptance: Stale stock prompts confirmation; list edits approved; external link never claims purchase/live price/account sync.
+
+### M4.02 Honest activity
+
+- [ ] **M4.02.01 — Implement recorded activity with measurement basis**
+  - Owner: Full stack. Prerequisites: M4.01.01, M4.01.02, M4.01.03.
+  - Acceptance: Measured/estimated/unknown shown; duplicates/reversals excluded; no invented savings or undefined ratios.
+
+- [ ] **M4.02.02 — Connect Home and Ask to outcome follow-up**
+  - Owner: Frontend. Prerequisites: M4.01.03, M4.02.01.
+  - Acceptance: Plan acceptance differs from actual use; user can return and record/correct outcome without losing context.
+
+- [ ] **M4.02.03 — Review M4 exit evidence**
+  - Owner: Reviewer. Prerequisites: M4.01.03, M4.02.02.
+  - Acceptance: Ten Stitch states covered through four destinations/shared flows; sharing/shopping/activity claims remain truthful.
+
+## M5 — Prove the full flow and prepare a reviewable release
+
+Indicative effort: 2–4 engineering days. Entry: M4 reviewed exit gate. Exit: M5.02.03 accepted.
+
+### M5.01 Whole-journey proof
+
+- [ ] **M5.01.01 — Verify end-to-end household loop and mobile usability**
+  - Owner: Full stack + reviewer. Prerequisites: M5.02.01.
+  - Acceptance: Real capture→confirm→Ask→approved adjustment→recorded outcome across deployed boundaries; screenshots and latency sample recorded.
+
+- [ ] **M5.01.02 — Verify hostile, concurrent and unavailable-service cases**
+  - Owner: Backend + reviewer. Prerequisites: M5.01.01.
+  - Acceptance: Foreign scope/session, injected intake, malformed cards, retries/conflicts, no model/memory/network covered with actual outcomes.
+
+- [ ] **M5.01.03 — Measure token, latency, cost and privacy behavior**
+  - Owner: Technical lead. Prerequisites: M5.01.02.
+  - Acceptance: Bounded representative sample names model/device/network; redacted trace and retention/deletion audit; no fabricated score.
+
+### M5.02 Release and handoff
+
+- [ ] **M5.02.01 — Stage the authorized cloud deployment with rollback**
+  - Owner: Technical lead. Prerequisites: M4.02.03.
+  - Acceptance: Reviewed config/IAM/secrets and rollback; actual authorized staging deployment has HTTPS, version and health evidence before deployed E2E. If authorization/access unavailable, deployed gate stays blocked.
+
+- [ ] **M5.02.02 — Record three-minute demo and operational handoff**
+  - Owner: Product + technical. Prerequisites: M5.01.03, M5.02.01.
+  - Acceptance: Shows real versus simulated labels, two-session preference, before/after facts and evidence links; remaining gaps explicit.
+
+- [ ] **M5.02.03 — Review release gate and resolve open blockers**
+  - Owner: Product + reviewer. Prerequisites: M5.01.03, M5.02.02.
+  - Acceptance: All prerequisite evidence reviewed; only then mark release-ready. No autonomous production rollout or invented completion.
+
+## Deferred queue — outside release progress
+
+Optional family invites and visibility controls; push notifications; authorized merchant OAuth/history; A2UI renderer package; authored dark theme; public/trusted-circle matching; qualified recipient operations; measured impact research. No deferred item is a hidden prerequisite or part of the completion denominator. Promote one only through an explicit scope/decision update.
+
+## Live harness operating rules
+
+MVPTasks inputs: Owner, Status, Done, Evidence, Reviewer, Updated. IDs/dependencies/acceptance change only through a reviewed plan revision. Formula columns are result and dependency readiness; do not type over them. Use filters, not physical sorting; dependency formulas use referenced rows. Complete + Done + evidence + reviewer + ISO date + all prerequisites verified yields Verified. A checkbox alone never passes.
+
+MVPOverview rolls up Verified counts by phase. MVPDecisions contains the compact register. Archive tabs preserve prior work and are hidden to reduce clutter. Native collaboration updates immediately within the Sheet; Markdown and JSON do not sync automatically. At handoff, record a dated snapshot if needed. Do not count this artifact creation as product progress.
+

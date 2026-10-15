@@ -1,0 +1,31 @@
+digraph status_state_machines {
+	graph [bgcolor=white dpi=160 fontcolor="#173e32" fontname="DejaVu Sans" fontsize=14 label="Status State Machines" labelloc=t nodesep=0.25 pad=0.27 rankdir=LR ranksep=0.45 splines=spline]
+	node [color="#c7d7cc" fillcolor="#f3fbf6" fontcolor="#173e32" fontname="DejaVu Sans" fontsize=11 margin="0.17,0.13" penwidth=1.05 shape=box style="rounded,filled"]
+	CAND [label="Observed / parsed
+CANDIDATE" color="#c7d7cc" fillcolor="#fff0d8" fontcolor="#173e32"]
+	CONF [label="User confirms
+CONFIRMED" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	STALE [label="Record ages
+NEEDS CHECK" color="#c7d7cc" fillcolor="#fff0d8" fontcolor="#173e32"]
+	USE [label="Used / stored /
+discarded recorded" color="#c7d7cc" fillcolor="#e8f0f6" fontcolor="#173e32"]
+	OFFER [label="Share offer
+OFFERED" color="#c7d7cc" fillcolor="#e8f0f6" fontcolor="#173e32"]
+	ACCEPT [label="Recipient accepts
+ACCEPTED" color="#c7d7cc" fillcolor="#e8f0f6" fontcolor="#173e32"]
+	GIVEN [label="Actual handoff
+HANDED OVER" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	BIN [label="Organic waste
+COLLECTED" color="#c7d7cc" fillcolor="#e8f0f6" fontcolor="#173e32"]
+	PROC [label="Actual processor proof
+PROCESSED" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	edge [arrowsize=0.72 color="#557164" fontcolor="#aa5a2c" fontname="DejaVu Sans" fontsize=9 penwidth=1.15]
+	CAND -> CONF
+	CONF -> STALE
+	CONF -> USE
+	CONF -> OFFER
+	OFFER -> ACCEPT
+	ACCEPT -> GIVEN
+	USE -> BIN [label="if scraps"]
+	BIN -> PROC [label="requires proof"]
+}

@@ -1,0 +1,19 @@
+# Past mistakes and prevention patterns
+
+## 2026-10-15 — Scope reduction must reach active instructions
+Newer consumer sources retained managed Sessions/Memory Bank and typed cards while older guidance prescribed operator workflows. Some archived benchmarks fabricated passes. Reconcile source precedence, archive stale packages together and update discovery descriptions. Simpler UI does not cancel explicit technical decisions; screenshots do not prove live integrations or impact.
+
+## 2026-10-15 — Separate native function proof from renderer compatibility
+A title merge crossing frozen columns caused an atomic Sheet batch rejection; retry used frozen rows only. Native formula checks passed, while local XLSX rendering does not support all Google formula/control behavior. Record those limits. Bundled skill validation could not import PyYAML; do not claim it ran.
+
+## 2026-10-15 — Procedure examples promoted into facts
+Observation: local examples contain default-tenant behavior and universal food/cooking constants unsupported by the cited original rule context. The application was not changed in this session.
+Pattern: procedural guidance and snippets are not authoritative policy or authorization. Before reuse, verify the boundary, source applicability, owner and denial behavior. New design documents require fail-closed membership and reviewed policy bundles; implementation proof is future work.
+
+## 2026-10-15 — Repeated research and multiple live status copies
+Observation: 42 source files contain successive/overlapping proposals and repeated studies. Re-reading all of them per unit wastes context and can revive superseded choices.
+Prevention: preserve dated source inventory, record explicit supersession/conflicts, load only the current unit's contract, and keep one live status authority. Google Sheet owns task status; local JSON/Markdown remain snapshots. No automatic sync is claimed.
+
+## 2026-10-15 — Checkboxes without evidence
+Prevention verified in native Sheets: completion checkbox plus status, evidence, reviewer/date and verified prerequisites are all required. Removing upstream evidence reopens dependent work. IDs must be unique and dependencies precede dependents. Use filters, not physical row sorting.
+

@@ -1,0 +1,32 @@
+flowchart LR
+  WEB["Next.js / TypeScript<br/>Firebase App Hosting"]
+  AUTH["Firebase Auth +<br/>role/tenant checks"]
+  API["FastAPI on Cloud Run<br/>policy + approvals"]
+  AG["Agent Platform Runtime<br/>Google ADK + Gemini"]
+  MEM["Memory Bank: opt-in<br/>preferences"]
+  SESSION["Managed Sessions<br/>short-term context"]
+  FACT["Firestore: confirmed<br/>kitchen events"]
+  PHOTO["Cloud Storage:<br/>consented media"]
+  UI["Trusted React cards<br/>optional A2UI"]
+  MCP["Merchant MCP adapter<br/>DISABLED until authorized"]
+  TRACE["Cloud Logging / Trace<br/>Agent evaluation"]
+  BQ["BigQuery metrics<br/>actual observations"]
+  WEB --> AUTH
+  AUTH --> API
+  API --> AG
+  AG --> MEM
+  AG --> SESSION
+  AG --> FACT
+  API --> PHOTO
+  AG --> UI
+  UI --> WEB
+  API -->|conditional| MCP
+  API --> TRACE
+  API --> BQ
+  classDef core fill:#173e32,color:#fff,stroke:#173e32
+  classDef action fill:#dff2e6,color:#173e32,stroke:#85b299
+  classDef caution fill:#fff0d8,color:#47311a,stroke:#bd8e43
+  class WEB core
+  class API action
+  class UI action
+  class MCP caution

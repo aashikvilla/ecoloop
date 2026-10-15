@@ -1,0 +1,33 @@
+digraph prevention_sharing_and_disposal {
+	graph [bgcolor=white dpi=160 fontcolor="#173e32" fontname="DejaVu Sans" fontsize=14 label="Prevention Sharing And Disposal" labelloc=t nodesep=0.25 pad=0.27 rankdir=LR ranksep=0.45 splines=spline]
+	node [color="#c7d7cc" fillcolor="#f3fbf6" fontcolor="#173e32" fontname="DejaVu Sans" fontsize=11 margin="0.17,0.13" penwidth=1.05 shape=box style="rounded,filled"]
+	REM [label="Use-soon / may not
+use before trip" color="#173e32" fillcolor="#173e32" fontcolor=white]
+	COND [label="Person verifies
+condition + availability" color="#c7d7cc" fillcolor="#fff0d8" fontcolor="#173e32"]
+	US [label="Cook or store
+while suitable" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	SHARE [label="Offer eligible items
+early (not waste)" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	AC [label="Trusted/family user
+accepts and handoff" color="#c7d7cc" fillcolor="#e8f0f6" fontcolor="#173e32"]
+	UNSAFE [label="No longer suitable
+for eating / scraps" color="#c7d7cc" fillcolor="#fff0d8" fontcolor="#173e32"]
+	MAT [label="Check local material
+acceptance rules" color="#c7d7cc" fillcolor="#fff0d8" fontcolor="#173e32"]
+	DISP [label="Home compost / verified
+service / wet waste bin" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	EVENT [label="Record what actually
+happened and evidence" color="#173e32" fillcolor="#173e32" fontcolor=white]
+	edge [arrowsize=0.72 color="#557164" fontcolor="#aa5a2c" fontname="DejaVu Sans" fontsize=9 penwidth=1.15]
+	REM -> COND
+	COND -> US [label=usable]
+	COND -> SHARE [label="usable surplus"]
+	SHARE -> AC
+	COND -> UNSAFE [label=unsuitable]
+	UNSAFE -> MAT
+	MAT -> DISP
+	US -> EVENT
+	AC -> EVENT
+	DISP -> EVENT
+}

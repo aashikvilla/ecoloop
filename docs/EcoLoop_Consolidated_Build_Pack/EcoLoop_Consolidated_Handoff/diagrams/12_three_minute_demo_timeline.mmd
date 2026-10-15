@@ -1,0 +1,18 @@
+flowchart LR
+  PROB["00:00–00:20<br/>Problem + Home"]
+  CAP["00:20–00:48<br/>Capture + correction"]
+  CHAT["00:48–01:28<br/>Memory + interactive cards"]
+  SHOP["01:28–02:05<br/>Photo: Should I buy?"]
+  SHARE["02:05–02:37<br/>Offer early / record"]
+  PROOF["02:37–03:00<br/>Google tools + eval proof"]
+  PROB --> CAP
+  CAP --> CHAT
+  CHAT --> SHOP
+  SHOP --> SHARE
+  SHARE --> PROOF
+  classDef core fill:#173e32,color:#fff,stroke:#173e32
+  classDef action fill:#dff2e6,color:#173e32,stroke:#85b299
+  classDef caution fill:#fff0d8,color:#47311a,stroke:#bd8e43
+  class CAP action
+  class SHOP action
+  class PROOF core

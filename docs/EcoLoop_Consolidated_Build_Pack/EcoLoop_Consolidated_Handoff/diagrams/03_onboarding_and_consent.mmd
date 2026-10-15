@@ -1,0 +1,29 @@
+flowchart LR
+  W["Welcome<br/>Try demo / Sign in"]
+  S["Firebase Auth<br/>Google / email"]
+  H["Select kitchen mode"]
+  SO["Solo<br/>no invitations"]
+  CR["Create family<br/>invite optional"]
+  JO["Join by invitation<br/>requires approval"]
+  PREF["Optional preferences<br/>consent to remember"]
+  ADD["Add a few items<br/>or skip"]
+  FIRST["First useful action<br/>cook / check / buy"]
+  W --> S
+  S --> H
+  H -->|solo| SO
+  H -->|create| CR
+  H -->|join| JO
+  SO --> PREF
+  CR --> PREF
+  JO --> PREF
+  PREF --> ADD
+  ADD --> FIRST
+  classDef core fill:#173e32,color:#fff,stroke:#173e32
+  classDef action fill:#dff2e6,color:#173e32,stroke:#85b299
+  classDef caution fill:#fff0d8,color:#47311a,stroke:#bd8e43
+  class W core
+  class SO action
+  class CR action
+  class JO action
+  class PREF caution
+  class FIRST core

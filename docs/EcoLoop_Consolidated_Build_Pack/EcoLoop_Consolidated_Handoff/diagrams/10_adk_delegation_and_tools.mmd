@@ -1,0 +1,25 @@
+flowchart LR
+  ROOT["Coordinator agent<br/>intent + context"]
+  KIT["Kitchen agent<br/>recipes, substitutions"]
+  SHOP["Shopping agent<br/>compare packs, draft list"]
+  REC["Food Action tools<br/>use, share, disposal"]
+  M["Memory Bank + Sessions<br/>only scoped context"]
+  DB["Firestore facts<br/>queried via tools"]
+  GUARD["FastAPI validators<br/>permissions and math"]
+  UI["Structured typed<br/>interactive response"]
+  ROOT --> KIT
+  ROOT --> SHOP
+  ROOT -->|tools first| REC
+  KIT --> GUARD
+  SHOP --> GUARD
+  REC --> GUARD
+  ROOT --> M
+  ROOT --> DB
+  GUARD --> UI
+  classDef core fill:#173e32,color:#fff,stroke:#173e32
+  classDef action fill:#dff2e6,color:#173e32,stroke:#85b299
+  classDef caution fill:#fff0d8,color:#47311a,stroke:#bd8e43
+  class ROOT core
+  class REC caution
+  class GUARD action
+  class UI action

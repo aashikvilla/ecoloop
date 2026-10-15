@@ -1,0 +1,626 @@
+{
+  "schemaVersion": 1,
+  "baselineDate": "2026-10-15",
+  "scope": "household-mvp",
+  "statusAuthority": "Google Sheet MVPTasks",
+  "automaticSync": false,
+  "phases": [
+    {
+      "id": "M0",
+      "name": "Freeze the smaller contract and prove access",
+      "estimatedEngineeringDays": "1–2"
+    },
+    {
+      "id": "M1",
+      "name": "Build the shell and trusted household boundary",
+      "estimatedEngineeringDays": "2–3"
+    },
+    {
+      "id": "M2",
+      "name": "Capture, confirm and maintain kitchen observations",
+      "estimatedEngineeringDays": "2–3"
+    },
+    {
+      "id": "M3",
+      "name": "Prove real assistance, managed context and typed actions",
+      "estimatedEngineeringDays": "3–4"
+    },
+    {
+      "id": "M4",
+      "name": "Complete share, shopping and recorded outcomes",
+      "estimatedEngineeringDays": "2–3"
+    },
+    {
+      "id": "M5",
+      "name": "Prove the full flow and prepare a reviewable release",
+      "estimatedEngineeringDays": "2–4"
+    }
+  ],
+  "units": [
+    {
+      "id": "M0.01.01",
+      "phase": "M0",
+      "task": "M0.01 Scope and contracts",
+      "title": "Reconcile scope, source conflicts and screen authority",
+      "owner": "Product lead",
+      "acceptance": "Owner review cites current Stitch map, exclusions and supersession; no unresolved contradictory active scope.",
+      "dependencies": [],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M0.01.02",
+      "phase": "M0",
+      "task": "M0.01 Scope and contracts",
+      "title": "Define the first complete dinner-change slice",
+      "owner": "Product + design",
+      "acceptance": "Annotated Home→capture→confirm→Ask→approve→outcome journey includes all error/empty/conflict states.",
+      "dependencies": [
+        "M0.01.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M0.01.03",
+      "phase": "M0",
+      "task": "M0.01 Scope and contracts",
+      "title": "Freeze schemas and mutation semantics",
+      "owner": "Technical lead",
+      "acceptance": "Reviewed candidate/date/unit/proposal/card contracts include unknowns, versions and idempotency.",
+      "dependencies": [
+        "M0.01.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M0.02.01",
+      "phase": "M0",
+      "task": "M0.02 Technical feasibility",
+      "title": "Validate managed runtime, Sessions, Memory Bank and Gemini access",
+      "owner": "Technical lead",
+      "acceptance": "Recorded project/region/IAM/quota and actual service response; explicit blocker ADR if fallback needed.",
+      "dependencies": [],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M0.02.02",
+      "phase": "M0",
+      "task": "M0.02 Technical feasibility",
+      "title": "Set privacy, consent, retention and cost boundaries",
+      "owner": "Technical + product",
+      "acceptance": "Chosen retention durations, scoped preference consent/deletion policy and per-user cost limits documented.",
+      "dependencies": [
+        "M0.01.03",
+        "M0.02.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M0.02.03",
+      "phase": "M0",
+      "task": "M0.02 Technical feasibility",
+      "title": "Review M0 exit evidence",
+      "owner": "Reviewer",
+      "acceptance": "Scope, schemas and access proof reviewed; no implementation dependency rests on an unverified service claim.",
+      "dependencies": [
+        "M0.01.03",
+        "M0.02.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M1.01.01",
+      "phase": "M1",
+      "task": "M1.01 Identity and authority",
+      "title": "Establish solo household identity and membership",
+      "owner": "Backend",
+      "acceptance": "Valid identity resolves explicit membership; absent/foreign membership denied without default tenant.",
+      "dependencies": [
+        "M0.02.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M1.01.02",
+      "phase": "M1",
+      "task": "M1.01 Identity and authority",
+      "title": "Implement versioned facts and idempotent command boundary",
+      "owner": "Backend",
+      "acceptance": "Transaction checks base version and request hash; duplicate retry has one effect, changed payload conflicts.",
+      "dependencies": [
+        "M1.01.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M1.01.03",
+      "phase": "M1",
+      "task": "M1.01 Identity and authority",
+      "title": "Constrain media and direct data access",
+      "owner": "Backend",
+      "acceptance": "Private signed upload/read, bounded file validation, canonical client-write denial and retention handling demonstrated.",
+      "dependencies": [
+        "M1.01.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M1.02.01",
+      "phase": "M1",
+      "task": "M1.02 Stitch shell",
+      "title": "Implement four-tab responsive Stitch shell",
+      "owner": "Frontend",
+      "acceptance": "Home/Kitchen/Ask/Shop match light tokens; 360px and desktop states include keyboard/focus/touch behavior.",
+      "dependencies": [
+        "M0.02.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M1.02.02",
+      "phase": "M1",
+      "task": "M1.02 Stitch shell",
+      "title": "Provide honest empty, loading, error and demo states",
+      "owner": "Frontend",
+      "acceptance": "Synthetic demo is visibly isolated; errors preserve drafts and unknown integrations are not labeled connected.",
+      "dependencies": [
+        "M1.02.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M1.02.03",
+      "phase": "M1",
+      "task": "M1.02 Stitch shell",
+      "title": "Review M1 exit evidence",
+      "owner": "Reviewer",
+      "acceptance": "Shell review plus authenticated cross-scope denial and conflict/retry evidence available.",
+      "dependencies": [
+        "M1.01.03",
+        "M1.02.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M2.01.01",
+      "phase": "M2",
+      "task": "M2.01 Intake",
+      "title": "Add manual and text intake with candidate-only persistence",
+      "owner": "Full stack",
+      "acceptance": "Unconfirmed entries cannot change canonical Kitchen; bounds and cancel/retry work.",
+      "dependencies": [
+        "M1.02.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M2.01.02",
+      "phase": "M2",
+      "task": "M2.01 Intake",
+      "title": "Connect real structured photo extraction",
+      "owner": "Backend",
+      "acceptance": "Real model response validates candidate schema; injection text is ignored as instructions; manual fallback works.",
+      "dependencies": [
+        "M2.01.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M2.01.03",
+      "phase": "M2",
+      "task": "M2.01 Intake",
+      "title": "Implement correction and explicit confirmation sheet",
+      "owner": "Full stack",
+      "acceptance": "User edits names/amount/date type; one confirmation writes selected facts once and reports conflict safely.",
+      "dependencies": [
+        "M2.01.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M2.02.01",
+      "phase": "M2",
+      "task": "M2.02 Kitchen and dates",
+      "title": "Implement Kitchen observation editing and uncertainty",
+      "owner": "Full stack",
+      "acceptance": "Unknown/stale stock is visible; incompatible units and negative quantities rejected; confirmed dates retain type/source.",
+      "dependencies": [
+        "M2.01.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M2.02.02",
+      "phase": "M2",
+      "task": "M2.02 Kitchen and dates",
+      "title": "Add truthful Home/use-soon prompts",
+      "owner": "Full stack",
+      "acceptance": "Confirmed date reminders differ from last-checked prompts; no photo-derived safety/expiry assertion.",
+      "dependencies": [
+        "M2.01.03",
+        "M2.02.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M2.02.03",
+      "phase": "M2",
+      "task": "M2.02 Kitchen and dates",
+      "title": "Review M2 exit evidence",
+      "owner": "Reviewer",
+      "acceptance": "Capture correction→confirm→Kitchen persists; no mutation before consent, retries/conflicts and missing fields covered.",
+      "dependencies": [
+        "M2.01.03",
+        "M2.02.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M3.01.01",
+      "phase": "M3",
+      "task": "M3.01 Managed agent and memory",
+      "title": "Connect one real ADK orchestrator and scoped managed Sessions",
+      "owner": "Backend",
+      "acceptance": "Recorded actual Gemini/ADK tool trace with owned managed session IDs; foreign session lookup denied.",
+      "dependencies": [
+        "M2.02.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M3.01.02",
+      "phase": "M3",
+      "task": "M3.01 Managed agent and memory",
+      "title": "Implement approved-preference memory write and controls",
+      "owner": "Backend",
+      "acceptance": "Only consented preference event reaches managed Memory Bank; view/edit/revoke/delete states exposed without raw transcripts.",
+      "dependencies": [
+        "M3.01.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M3.01.03",
+      "phase": "M3",
+      "task": "M3.01 Managed agent and memory",
+      "title": "Prove recall across two sessions and memory isolation",
+      "owner": "Technical lead",
+      "acceptance": "Two distinct sessions recall approved preference; second user cannot; revoke excludes it immediately and provider deletion verified.",
+      "dependencies": [
+        "M3.01.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M3.02.01",
+      "phase": "M3",
+      "task": "M3.02 Typed decisions",
+      "title": "Render the five validated card types",
+      "owner": "Frontend + backend",
+      "acceptance": "Discriminated schemas/components handle invalid card fallback; no arbitrary markup/endpoints or hidden writes.",
+      "dependencies": [
+        "M2.02.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M3.02.02",
+      "phase": "M3",
+      "task": "M3.02 Typed decisions",
+      "title": "Implement dinner adjustment and explicit proposal approval",
+      "owner": "Full stack",
+      "acceptance": "4→2 scaling deterministic; prepared-stage behavior sensible; stale/expired/malicious approvals denied; no inferred consumption.",
+      "dependencies": [
+        "M3.01.01",
+        "M3.02.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M3.02.03",
+      "phase": "M3",
+      "task": "M3.02 Typed decisions",
+      "title": "Review M3 exit evidence",
+      "owner": "Reviewer",
+      "acceptance": "Real agent+memory proof and card approval transaction demonstrated; local substitutes cannot satisfy managed-service gate.",
+      "dependencies": [
+        "M3.01.03",
+        "M3.02.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M4.01.01",
+      "phase": "M4",
+      "task": "M4.01 Circular household actions",
+      "title": "Record used, stored, discarded and compost observations",
+      "owner": "Full stack",
+      "acceptance": "Known compatible quantity updates once; unknown remains unknown; compost route is user-observed/local-policy-aware.",
+      "dependencies": [
+        "M3.02.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M4.01.02",
+      "phase": "M4",
+      "task": "M4.01 Circular household actions",
+      "title": "Implement share-before-waste sheet and handover states",
+      "owner": "Full stack",
+      "acceptance": "Owner-private handover log needs no second account; owner-reported offer/accept/handover/cancel states distinct; community interest simulated; prohibited recipient routes blocked.",
+      "dependencies": [
+        "M3.02.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M4.01.03",
+      "phase": "M4",
+      "task": "M4.01 Circular household actions",
+      "title": "Implement Shop list, stock check and permitted handoff",
+      "owner": "Full stack",
+      "acceptance": "Stale stock prompts confirmation; list edits approved; external link never claims purchase/live price/account sync.",
+      "dependencies": [
+        "M3.02.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M4.02.01",
+      "phase": "M4",
+      "task": "M4.02 Honest activity",
+      "title": "Implement recorded activity with measurement basis",
+      "owner": "Full stack",
+      "acceptance": "Measured/estimated/unknown shown; duplicates/reversals excluded; no invented savings or undefined ratios.",
+      "dependencies": [
+        "M4.01.01",
+        "M4.01.02",
+        "M4.01.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M4.02.02",
+      "phase": "M4",
+      "task": "M4.02 Honest activity",
+      "title": "Connect Home and Ask to outcome follow-up",
+      "owner": "Frontend",
+      "acceptance": "Plan acceptance differs from actual use; user can return and record/correct outcome without losing context.",
+      "dependencies": [
+        "M4.01.03",
+        "M4.02.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M4.02.03",
+      "phase": "M4",
+      "task": "M4.02 Honest activity",
+      "title": "Review M4 exit evidence",
+      "owner": "Reviewer",
+      "acceptance": "Ten Stitch states covered through four destinations/shared flows; sharing/shopping/activity claims remain truthful.",
+      "dependencies": [
+        "M4.01.03",
+        "M4.02.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M5.01.01",
+      "phase": "M5",
+      "task": "M5.01 Whole-journey proof",
+      "title": "Verify end-to-end household loop and mobile usability",
+      "owner": "Full stack + reviewer",
+      "acceptance": "Real capture→confirm→Ask→approved adjustment→recorded outcome across deployed boundaries; screenshots and latency sample recorded.",
+      "dependencies": [
+        "M5.02.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M5.01.02",
+      "phase": "M5",
+      "task": "M5.01 Whole-journey proof",
+      "title": "Verify hostile, concurrent and unavailable-service cases",
+      "owner": "Backend + reviewer",
+      "acceptance": "Foreign scope/session, injected intake, malformed cards, retries/conflicts, no model/memory/network covered with actual outcomes.",
+      "dependencies": [
+        "M5.01.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M5.01.03",
+      "phase": "M5",
+      "task": "M5.01 Whole-journey proof",
+      "title": "Measure token, latency, cost and privacy behavior",
+      "owner": "Technical lead",
+      "acceptance": "Bounded representative sample names model/device/network; redacted trace and retention/deletion audit; no fabricated score.",
+      "dependencies": [
+        "M5.01.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M5.02.01",
+      "phase": "M5",
+      "task": "M5.02 Release and handoff",
+      "title": "Stage the authorized cloud deployment with rollback",
+      "owner": "Technical lead",
+      "acceptance": "Reviewed config/IAM/secrets and rollback; actual authorized staging deployment has HTTPS, version and health evidence before deployed E2E. If authorization/access unavailable, deployed gate stays blocked.",
+      "dependencies": [
+        "M4.02.03"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M5.02.02",
+      "phase": "M5",
+      "task": "M5.02 Release and handoff",
+      "title": "Record three-minute demo and operational handoff",
+      "owner": "Product + technical",
+      "acceptance": "Shows real versus simulated labels, two-session preference, before/after facts and evidence links; remaining gaps explicit.",
+      "dependencies": [
+        "M5.01.03",
+        "M5.02.01"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    },
+    {
+      "id": "M5.02.03",
+      "phase": "M5",
+      "task": "M5.02 Release and handoff",
+      "title": "Review release gate and resolve open blockers",
+      "owner": "Product + reviewer",
+      "acceptance": "All prerequisite evidence reviewed; only then mark release-ready. No autonomous production rollout or invented completion.",
+      "dependencies": [
+        "M5.01.03",
+        "M5.02.02"
+      ],
+      "status": "Not started",
+      "done": false,
+      "evidence": "",
+      "reviewer": "",
+      "updated": ""
+    }
+  ]
+}

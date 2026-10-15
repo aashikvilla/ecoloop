@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoLoop AI — Circular Resource Decision Copilot (Interactive Prototype)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-base: #04120D;
+      --bg-surface: #0A2218;
+      --bg-card: #0F2E21;
+      --bg-card-hover: #143C2C;
+      --border-subtle: rgba(16, 185, 129, 0.15);
+      --border-accent: rgba(16, 185, 129, 0.4);
+      --brand-primary: #10B981;
+      --brand-glow: rgba(16, 185, 129, 0.25);
+      --brand-light: #6EE7B7;
+      --accent-amber: #F59E0B;
+      --accent-rose: #EF4444;
+      --accent-cyan: #06B6D4;
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --text-dim: #64748B;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.05) 0%, transparent 45%);
+    }
+
+    /* Top Navigation */
+    header {
+      background: rgba(10, 34, 24, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0.85rem 1.5rem;
+    }
+
+    .nav-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #10B981, #047857);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #FFFFFF;
+      box-shadow: 0 0 15px var(--brand-glow);
+    }
+
+    .brand-text h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .brand-text p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .nav-pills {
+      display: flex;
+      gap: 0.35rem;
+      background: rgba(4, 18, 13, 0.7);
+      padding: 0.3rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      overflow-x: auto;
+    }
+
+    .nav-pill {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.5rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+    }
+
+    .nav-pill:hover {
+      color: var(--text-main);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .nav-pill.active {
+      background: var(--brand-primary);
+      color: #04120D;
+      box-shadow: 0 0 12px var(--brand-glow);
+    }
+
+    .header-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .sim-badge {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: var(--accent-amber);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.35rem 0.65rem;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .sim-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent-amber);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    /* Screen Views */
+    .view-screen {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .view-screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Invariant Notice Banner */
+    .notice-banner {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 4px solid var(--accent-amber);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 0.75rem 1.1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
+
+    .notice-banner.danger {
+      background: rgba(239, 68, 68, 0.08);
+      border-left-color: var(--accent-rose);
+    }
+
+    .notice-banner.success {
+      background: rgba(16, 185, 129, 0.08);
+      border-left-color: var(--brand-primary);
+    }
+
+    .notice-text h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.15rem;
+    }
+
+    .notice-text p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Layout Grids */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    .grid-3col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .grid-4col {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 1024px) {
+      .grid-2col, .grid-3col, .grid-4col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .badge-primary { background: rgba(16, 185, 129, 0.15); color: var(--brand-light); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-amber { background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-rose { background: rgba(239, 68, 68, 0.15); color: var(--accent-rose); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-cyan { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); border: 1px solid rgba(6, 182, 212, 0.3); }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.15rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--brand-primary);
+      color: #04120D;
+    }
+
+    .btn-primary:hover {
+      background: var(--brand-light);
+      box-shadow: 0 0 16px var(--brand-glow);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-accent);
+      color: var(--text-main);
+    }
+
+    .btn-outline:hover {
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: var(--accent-rose);
+    }
+
+    .btn-sm {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.78rem;
+    }
+
+    /* Screen 1: Dropzone */
+    .dropzone {
+      border: 2px dashed var(--border-accent);
+      border-radius: var(--radius-md);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      background: rgba(15, 46, 33, 0.4);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .dropzone:hover {
+      border-color: var(--brand-primary);
+      background: rgba(15, 46, 33, 0.7);
+    }
+
+    .preset-strip {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.9rem;
+      color: var(--text-main);
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--brand-primary);
+      background: var(--bg-card-hover);
+    }
+
+    /* Screen 2: Candidate Review */
+    .candidate-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .candidate-table th {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+      font-weight: 600;
+    }
+
+    .candidate-table td {
+      padding: 0.85rem 0.75rem;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.08);
+      vertical-align: middle;
+    }
+
+    .candidate-input {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      width: 80px;
+    }
+
+    .candidate-select {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.35rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+    }
+
+    /* Screen 3: Expiry Radar */
+    .radar-stat-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+    }
+
+    .radar-stat-box .val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--brand-light);
+      margin: 0.2rem 0;
+    }
+
+    .radar-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem;
+      background: var(--bg-card);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.6rem;
+      border-left: 4px solid var(--brand-primary);
+    }
+
+    .radar-item.critical {
+      border-left-color: var(--accent-rose);
+      background: rgba(239, 68, 68, 0.06);
+    }
+
+    .radar-item.warning {
+      border-left-color: var(--accent-amber);
+      background: rgba(245, 158, 11, 0.06);
+    }
+
+    /* Screen 4: Headcount Slider */
+    .slider-container {
+      margin: 1.5rem 0;
+      background: var(--bg-card);
+      padding: 1.25rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .headcount-slider {
+      width: 100%;
+      accent-color: var(--brand-primary);
+      height: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .scale-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .batch-box {
+      padding: 1rem;
+      border-radius: var(--radius-sm);
+      background: rgba(4, 18, 13, 0.5);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .batch-box.active {
+      border-color: var(--brand-primary);
+      background: rgba(16, 185, 129, 0.06);
+    }
+
+    /* Screen 5: FSSAI Checklist */
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.85rem 0;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.08);
+    }
+
+    .checklist-item input[type="checkbox"] {
+      margin-top: 0.2rem;
+      accent-color: var(--brand-primary);
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* Screen 6: Dispatch Tracker */
+    .dispatch-step {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+
+    .step-indicator {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--brand-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--brand-primary);
+      z-index: 2;
+    }
+
+    .step-indicator.done {
+      background: var(--brand-primary);
+      color: #04120D;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 1rem 1.5rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-align: center;
+      background: var(--bg-base);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header & Navigation -->
+  <header>
+    <div class="nav-container">
+      <a href="#" class="brand" onclick="navigateTo('intake')">
+        <div class="brand-icon">∞</div>
+        <div class="brand-text">
+          <h1>EcoLoop AI</h1>
+          <p>Resource Decision Copilot · AI Builder Cup</p>
+        </div>
+      </a>
+
+      <!-- Flow Navigation Tabs -->
+      <nav class="nav-pills">
+        <button class="nav-pill active" id="tab-intake" onclick="navigateTo('intake')">
+          <span>1.</span> Intake Capture
+        </button>
+        <button class="nav-pill" id="tab-review" onclick="navigateTo('review')">
+          <span>2.</span> Candidate Review
+        </button>
+        <button class="nav-pill" id="tab-pantry" onclick="navigateTo('pantry')">
+          <span>3.</span> Pantry Radar
+        </button>
+        <button class="nav-pill" id="tab-decision" onclick="navigateTo('decision')">
+          <span>4.</span> Pre-Cooking Window
+        </button>
+        <button class="nav-pill" id="tab-recovery" onclick="navigateTo('recovery')">
+          <span>5.</span> FSSAI Recovery
+        </button>
+        <button class="nav-pill" id="tab-impact" onclick="navigateTo('impact')">
+          <span>6.</span> Impact Ledger
+        </button>
+      </nav>
+
+      <div class="header-badges">
+        <div class="sim-badge">
+          <div class="sim-dot"></div>
+          <span>Simulated Mode</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Areas -->
+  <main>
+
+    <!-- SCREEN 1: MULTIMODAL INTAKE -->
+    <section id="screen-intake" class="view-screen active">
+      <div class="notice-banner">
+        <div class="notice-text">
+          <h4>Hard Invariant #2: Extraction Produces Uncommitted Candidates</h4>
+          <p>Model outputs are provisional suggestions. They NEVER become verified pantry ground truth without explicit human confirmation on the review screen. OCR and computer vision never certify biological food safety.</p>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Capture Upload Column -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Multimodal Ingestion Terminal</h2>
+            <span class="badge badge-primary">Gemini 2.5 Structured</span>
+          </div>
+
+          <div class="dropzone" onclick="loadSamplePreset('receipt')">
+            <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📸</div>
+            <h3 style="font-size: 1rem; margin-bottom: 0.3rem;">Drag & Drop Supermarket Receipt or Pantry Image</h3>
+            <p style="font-size: 0.78rem; color: var(--text-muted);">Supports JPG, PNG, PDF, or Voice Dictation Memo</p>
+            <div style="margin-top: 1rem;">
+              <span class="btn btn-outline btn-sm">Browse Local Files</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.25rem;">
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
+              Quick Load Sample Presets (Click to Test):
+            </p>
+            <div class="preset-strip">
+              <button class="preset-btn" onclick="loadSamplePreset('receipt')">
+                🧾 <strong>Reliance Smart Point Receipt</strong><br>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">Tomatoes, Paneer, Cow Milk, Coriander</span>
+              </button>
+              <button class="preset-btn" onclick="loadSamplePreset('market')">
+                🥬 <strong>Local Sabzi Mandi Paper Slip</strong><br>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">Spinach, Potatoes, Green Chillies</span>
+              </button>
+              <button class="preset-btn" onclick="loadSamplePreset('voice')">
+                🎙️ <strong>Household Audio Memo</strong><br>
+                <span style="font-size: 0.7rem; color: var(--text-muted);">"We opened a 500g curd pack yesterday"</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extraction Feed & Boundary Column -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Real-Time Ingestion Pipeline</h2>
+            <span class="badge badge-cyan" id="pipeline-status">Standby</span>
+          </div>
+
+          <div id="ingestion-preview" style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
+            <div style="font-size: 1.8rem; margin-bottom: 0.5rem; opacity: 0.5;">⚡</div>
+            <p style="font-size: 0.85rem;">Select a preset or upload an artifact to observe candidate extraction with bounding boxes and schema validation.</p>
+          </div>
+
+          <div id="ingestion-result" style="display: none;">
+            <div style="background: rgba(4, 18, 13, 0.6); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 0.4rem;">
+                <span style="color: var(--text-muted);">Parsed Document:</span>
+                <strong id="ingestion-doc-title">Reliance_Receipt_Oct15.jpg</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 0.4rem;">
+                <span style="color: var(--text-muted);">Candidate Count:</span>
+                <span class="badge badge-primary" id="ingestion-item-count">4 Items Extracted</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.78rem;">
+                <span style="color: var(--text-muted);">Commit Status:</span>
+                <span class="badge badge-amber">Uncommitted Candidate</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%;" onclick="navigateTo('review')">
+              Proceed to Verification Review (4 Candidates) →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SCREEN 2: CANDIDATE REVIEW & VERIFICATION -->
+    <section id="screen-review" class="view-screen">
+      <div class="notice-banner">
+        <div class="notice-text">
+          <h4>Human Verification Gate (POST /v1/facts/confirm)</h4>
+          <p>Review and edit quantities, units, and storage tiers before committing to canonical pantry records. An unconfirmed item will be dropped after the review window.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Extracted Candidates Verification</h2>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Artifact: Reliance Smart Point #99281 · Ingested 12 minutes ago</p>
+          </div>
+          <span class="badge badge-amber" id="unconfirmed-badge">4 Uncommitted</span>
+        </div>
+
+        <table class="candidate-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Extracted Item</th>
+              <th>Quantity</th>
+              <th>Unit</th>
+              <th>Storage Location</th>
+              <th>Estimated Cutoff</th>
+              <th>Confidence</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="candidate-rows">
+            <!-- Row 1 -->
+            <tr id="cand-row-1">
+              <td><span class="badge badge-amber">Candidate</span></td>
+              <td><strong>Fresh Country Tomatoes</strong></td>
+              <td><input type="number" class="candidate-input" value="1.2" step="0.1" id="qty-1"></td>
+              <td><span class="mono">kg</span></td>
+              <td>
+                <select class="candidate-select">
+                  <option selected>Crisper Drawer</option>
+                  <option>Pantry Shelf</option>
+                </select>
+              </td>
+              <td>3 Days</td>
+              <td><span class="badge badge-primary">96% High</span></td>
+              <td><button class="btn btn-outline btn-sm" onclick="removeCandidate('cand-row-1')">✕</button></td>
+            </tr>
+            <!-- Row 2 -->
+            <tr id="cand-row-2">
+              <td><span class="badge badge-amber">Candidate</span></td>
+              <td><strong>Amul Fresh Paneer</strong></td>
+              <td><input type="number" class="candidate-input" value="400" step="50" id="qty-2"></td>
+              <td><span class="mono">g</span></td>
+              <td>
+                <select class="candidate-select">
+                  <option selected>Dairy Shelf</option>
+                  <option>Freezer</option>
+                </select>
+              </td>
+              <td><strong style="color: var(--accent-rose);">1.5 Days (Urgent)</strong></td>
+              <td><span class="badge badge-primary">94% High</span></td>
+              <td><button class="btn btn-outline btn-sm" onclick="removeCandidate('cand-row-2')">✕</button></td>
+            </tr>
+            <!-- Row 3 -->
+            <tr id="cand-row-3">
+              <td><span class="badge badge-amber">Candidate</span></td>
+              <td><strong>Toned Fresh Milk</strong></td>
+              <td><input type="number" class="candidate-input" value="2" step="0.5" id="qty-3"></td>
+              <td><span class="mono">L</span></td>
+              <td>
+                <select class="candidate-select">
+                  <option selected>Main Refrigerator</option>
+                </select>
+              </td>
+              <td>2 Days</td>
+              <td><span class="badge badge-primary">92% High</span></td>
+              <td><button class="btn btn-outline btn-sm" onclick="removeCandidate('cand-row-3')">✕</button></td>
+            </tr>
+            <!-- Row 4 -->
+            <tr id="cand-row-4">
+              <td><span class="badge badge-amber">Candidate</span></td>
+              <td><strong>Fresh Coriander Leaves</strong></td>
+              <td><input type="number" class="candidate-input" value="1" step="1" id="qty-4"></td>
+              <td><span class="mono">bunch</span></td>
+              <td>
+                <select class="candidate-select">
+                  <option selected>Crisper Drawer</option>
+                </select>
+              </td>
+              <td>24 Hours</td>
+              <td><span class="badge badge-amber">71% Med</span></td>
+              <td><button class="btn btn-outline btn-sm" onclick="removeCandidate('cand-row-4')">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+          <div style="font-size: 0.8rem; color: var(--text-muted);">
+            Actor: <strong style="color: var(--text-main);">Shopper (Aashik)</strong> · Tenant: <span class="mono">tenant-hh-401</span>
+          </div>
+          <div style="display: flex; gap: 0.75rem;">
+            <button class="btn btn-outline" onclick="navigateTo('intake')">Discard All</button>
+            <button class="btn btn-primary" id="btn-confirm-facts" onclick="confirmAllFacts()">
+              ✓ Confirm & Commit Verified Facts (4 Items)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SCREEN 3: PANTRY EXPIRY RADAR -->
+    <section id="screen-pantry" class="view-screen">
+      <div class="grid-4col" style="margin-bottom: 1.5rem;">
+        <div class="radar-stat-box">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Confirmed Stock</div>
+          <div class="val" id="radar-total-stock">3.8 kg</div>
+          <div style="font-size: 0.72rem; color: var(--brand-light);">14 Verified Items</div>
+        </div>
+        <div class="radar-stat-box" style="border-color: rgba(239, 68, 68, 0.4);">
+          <div style="font-size: 0.75rem; color: var(--accent-rose); text-transform: uppercase;">Critical Cutoff (<24h)</div>
+          <div class="val" style="color: var(--accent-rose);">2 Items</div>
+          <div style="font-size: 0.72rem; color: var(--accent-rose);">Cook Tonight Recommended</div>
+        </div>
+        <div class="radar-stat-box" style="border-color: rgba(245, 158, 11, 0.4);">
+          <div style="font-size: 0.75rem; color: var(--accent-amber); text-transform: uppercase;">High Priority (<48h)</div>
+          <div class="val" style="color: var(--accent-amber);">3 Items</div>
+          <div style="font-size: 0.72rem; color: var(--text-muted);">Schedule in Weekly Meal Plan</div>
+        </div>
+        <div class="radar-stat-box">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Prevention Efficiency</div>
+          <div class="val">92.4%</div>
+          <div style="font-size: 0.72rem; color: var(--brand-light);">Zero Spoilage This Week</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Pantry Expiry Radar & Stock Status</h2>
+            <p style="font-size: 0.75rem; color: var(--text-muted);">Deterministic cutoff countdowns based on verified storage metadata</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="navigateTo('decision')">
+            Launch Pre-Cooking Copilot →
+          </button>
+        </div>
+
+        <!-- Tier 1: Critical -->
+        <h3 style="font-size: 0.82rem; color: var(--accent-rose); text-transform: uppercase; letter-spacing: 0.05em; margin: 1rem 0 0.5rem 0;">
+          ⚠️ Critical Cutoff — Expiring within 24 Hours
+        </h3>
+
+        <div class="radar-item critical">
+          <div>
+            <strong>Amul Fresh Paneer</strong>
+            <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 0.5rem;">400g · Dairy Shelf</span>
+            <div style="font-size: 0.72rem; color: var(--accent-rose); margin-top: 0.2rem;">
+              ⏳ Cutoff in 14 hours · Provenance: Verified Receipt #402
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="navigateTo('decision')">Cook in Dinner</button>
+        </div>
+
+        <div class="radar-item critical">
+          <div>
+            <strong>Fresh Coriander Leaves</strong>
+            <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 0.5rem;">1 bunch · Crisper</span>
+            <div style="font-size: 0.72rem; color: var(--accent-rose); margin-top: 0.2rem;">
+              ⏳ Cutoff in 18 hours · Provenance: Verified Receipt #402
+            </div>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="navigateTo('decision')">Garnish / Chutney</button>
+        </div>
+
+        <!-- Tier 2: High Priority -->
+        <h3 style="font-size: 0.82rem; color: var(--accent-amber); text-transform: uppercase; letter-spacing: 0.05em; margin: 1.25rem 0 0.5rem 0;">
+          ⏰ High Priority — Expiring in 24 to 48 Hours
+        </h3>
+
+        <div class="radar-item warning">
+          <div>
+            <strong>Country Tomatoes</strong>
+            <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 0.5rem;">1.2 kg · Crisper</span>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Cutoff: 36 hours · Provenance: Verified Receipt #402
+            </div>
+          </div>
+          <span class="badge badge-amber">Planned for Curry</span>
+        </div>
+
+        <div class="radar-item warning">
+          <div>
+            <strong>Toned Cow Milk</strong>
+            <span style="font-size: 0.78rem; color: var(--text-muted); margin-left: 0.5rem;">2.0 L · Refrigerator</span>
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem;">
+              Cutoff: 40 hours · Provenance: Verified Receipt #402
+            </div>
+          </div>
+          <span class="badge badge-primary">Stable</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SCREEN 4: PRE-COOKING DECISION WINDOW -->
+    <section id="screen-decision" class="view-screen">
+      <div class="notice-banner">
+        <div class="notice-text">
+          <h4>Deterministic Arithmetic Boundary (J-H01)</h4>
+          <p>Language models interpret changes, but portion scalings and batch cutoffs are calculated strictly by deterministic formulas. AI cannot certify safety or authorize purchasing transactions.</p>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Exception Controller -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Dinner Decision Window</h2>
+            <span class="badge badge-primary">Cooking in 45m</span>
+          </div>
+
+          <p style="font-size: 0.82rem; color: var(--text-muted);">
+            Simulate a household attendance change right before cooking begins to avoid kitchen batch leftovers.
+          </p>
+
+          <div class="slider-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.85rem; font-weight: 700;">Tonight's Eating Attendance:</span>
+              <strong style="font-size: 1.2rem; color: var(--brand-light);" id="headcount-display">2 People</strong>
+            </div>
+            <input type="range" min="1" max="6" value="2" class="headcount-slider" id="headcount-slider" oninput="updateBatchCalculation(this.value)">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem;">
+              <span>1 Person</span>
+              <span>2 (Current: 2 eating out)</span>
+              <span>4 (Original)</span>
+              <span>6 (Guests)</span>
+            </div>
+          </div>
+
+          <div id="attendance-alert" class="notice-banner" style="margin-bottom: 0;">
+            <div class="notice-text">
+              <h4>Headcount Exception Detected (-50% demand)</h4>
+              <p>Two household members are eating out. Batch scaled down to prevent ~450g of prepared plate leftovers.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recipe & Batch Scaler -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Batch Scaler & Pantry Utilization</h2>
+            <span class="badge badge-cyan">Zero Waste Match</span>
+          </div>
+
+          <div style="background: rgba(16, 185, 129, 0.06); border: 1px solid var(--border-accent); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
+            <div style="display: flex; justify-content: space-between;">
+              <strong style="color: var(--brand-light); font-size: 0.95rem;">Paneer Tomato Makhani</strong>
+              <span class="badge badge-primary">25 mins prep</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem;">
+              Tailored to utilize 100% of expiring Paneer (400g) and ripe Tomatoes.
+            </p>
+          </div>
+
+          <div class="scale-comparison">
+            <div class="batch-box" id="box-original">
+              <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Original 4-Person Batch</div>
+              <ul style="font-size: 0.78rem; list-style: none; margin-top: 0.5rem; line-height: 1.6;">
+                <li>• Rice: 600g</li>
+                <li>• Paneer: 400g</li>
+                <li>• Tomatoes: 6 pcs</li>
+                <li style="color: var(--accent-rose); font-weight: 600; margin-top: 0.4rem;">⚠️ Over-prep: ~500g leftover</li>
+              </ul>
+            </div>
+
+            <div class="batch-box active" id="box-scaled">
+              <div style="font-size: 0.72rem; color: var(--brand-light); text-transform: uppercase; font-weight: 700;">Scaled 2-Person Batch</div>
+              <ul style="font-size: 0.78rem; list-style: none; margin-top: 0.5rem; line-height: 1.6;">
+                <li>• Rice: <strong id="scaled-rice">300g</strong></li>
+                <li>• Paneer: <strong id="scaled-paneer">200g</strong></li>
+                <li>• Tomatoes: <strong id="scaled-tomatoes">3 pcs</strong></li>
+                <li style="color: var(--brand-light); font-weight: 600; margin-top: 0.4rem;">✓ Saved from pan: 200g Paneer</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem;">
+            <button class="btn btn-primary" style="flex: 1;" onclick="approveBatchDecision()">
+              ✓ Approve 2-Person Batch (Cook Role)
+            </button>
+            <button class="btn btn-outline" onclick="navigateTo('recovery')">
+              Surplus Recovery Route →
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SCREEN 5: FSSAI FOOD RECOVERY & SAFETY GATE -->
+    <section id="screen-recovery" class="view-screen">
+      <div class="notice-banner danger">
+        <div class="notice-text">
+          <h4>Hard Invariant #1: Biological Food Safety Invariant</h4>
+          <p>No model or multimodal photo certifies microbiological safety. Unused/unserved food requires mandatory human food-safety review, temperature verification, and recipient capacity check before donation dispatch.</p>
+        </div>
+      </div>
+
+      <div class="grid-2col">
+        <!-- Safety Questionnaire -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">FSSAI Surplus Recovery Eligibility Gate</h2>
+            <span class="badge badge-amber">Human Sign-off Required</span>
+          </div>
+
+          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Batch: <strong style="color: var(--text-main);">Surplus Steamed Rice & Dal (12 kg)</strong> · Prepared at 13:00 IST
+          </div>
+
+          <div class="checklist-item">
+            <input type="checkbox" id="check-1" onchange="evaluateSafetyChecklist()">
+            <div>
+              <label for="check-1" style="font-size: 0.82rem; font-weight: 600; cursor: pointer;">
+                1. Untouched / Unserved Check
+              </label>
+              <p style="font-size: 0.74rem; color: var(--text-muted);">
+                Food remained in kitchen holding vessels and was NEVER served onto plates or touched by consumers.
+              </p>
+            </div>
+          </div>
+
+          <div class="checklist-item">
+            <input type="checkbox" id="check-2" onchange="evaluateSafetyChecklist()">
+            <div>
+              <label for="check-2" style="font-size: 0.82rem; font-weight: 600; cursor: pointer;">
+                2. Temperature Verification Log
+              </label>
+              <p style="font-size: 0.74rem; color: var(--text-muted);">
+                Maintained consistently above 60°C (Hot-holding) or rapidly chilled below 5°C.
+              </p>
+            </div>
+          </div>
+
+          <div class="checklist-item">
+            <input type="checkbox" id="check-3" onchange="evaluateSafetyChecklist()">
+            <div>
+              <label for="check-3" style="font-size: 0.82rem; font-weight: 600; cursor: pointer;">
+                3. Four-Hour Regulatory Window
+              </label>
+              <p style="font-size: 0.74rem; color: var(--text-muted);">
+                Redistribution and consumption will be completed within 4 hours of preparation.
+              </p>
+            </div>
+          </div>
+
+          <div class="checklist-item">
+            <input type="checkbox" id="check-4" onchange="evaluateSafetyChecklist()">
+            <div>
+              <label for="check-4" style="font-size: 0.82rem; font-weight: 600; cursor: pointer;">
+                4. Food-Grade Sealed Packaging
+              </label>
+              <p style="font-size: 0.74rem; color: var(--text-muted);">
+                Packed in clean, tamper-evident food-grade containers.
+              </p>
+            </div>
+          </div>
+
+          <div style="margin-top: 1.25rem;">
+            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem;">
+              Certified Safety Supervisor Name:
+            </label>
+            <input type="text" value="Rajesh Kumar (FSSAI Lic. #21418)" style="width: 100%; background: var(--bg-base); border: 1px solid var(--border-subtle); color: var(--text-main); padding: 0.5rem; border-radius: 6px; font-size: 0.82rem;">
+          </div>
+        </div>
+
+        <!-- Simulated Dispatch Console -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Simulated Partner Dispatch</h2>
+            <span class="sim-badge"><span class="sim-dot"></span> Simulated: True</span>
+          </div>
+
+          <div id="dispatch-locked-state">
+            <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
+              <h3 style="font-size: 0.95rem; margin-bottom: 0.3rem;">Dispatch Authorization Locked</h3>
+              <p style="font-size: 0.78rem;">Complete all 4 human food-safety checklist requirements on the left to unlock simulated logistics dispatch.</p>
+            </div>
+          </div>
+
+          <div id="dispatch-unlocked-state" style="display: none;">
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid var(--border-accent); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                <span style="color: var(--text-muted);">Recipient Match:</span>
+                <strong>Asha Kiran Children Shelter</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 0.3rem;">
+                <span style="color: var(--text-muted);">Confirmed Capacity:</span>
+                <span class="badge badge-primary">35 Meals (Capacity Verified)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 0.3rem;">
+                <span style="color: var(--text-muted);">Assigned Carrier:</span>
+                <span>Feeding India Chapter #BLR-4</span>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+              <div class="dispatch-step">
+                <div class="step-indicator done">✓</div>
+                <div>
+                  <strong style="font-size: 0.82rem;">Donor Safety Sign-off</strong>
+                  <p style="font-size: 0.72rem; color: var(--text-muted);">Completed by Supervisor Rajesh</p>
+                </div>
+              </div>
+              <div class="dispatch-step">
+                <div class="step-indicator" id="step-carrier">2</div>
+                <div>
+                  <strong style="font-size: 0.82rem;">Volunteer Pickup (Simulated)</strong>
+                  <p style="font-size: 0.72rem; color: var(--text-muted);" id="step-carrier-desc">Awaiting human dispatch approval</p>
+                </div>
+              </div>
+              <div class="dispatch-step">
+                <div class="step-indicator" id="step-recipient">3</div>
+                <div>
+                  <strong style="font-size: 0.82rem;">Recipient Acceptance Check</strong>
+                  <p style="font-size: 0.72rem; color: var(--text-muted);">Right to refuse at doorstep retained</p>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%;" id="btn-trigger-dispatch" onclick="triggerSimulatedDispatch()">
+              🚀 Authorize & Trigger Simulated Dispatch
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- SCREEN 6: IMPACT & MASS BALANCE LEDGER -->
+    <section id="screen-impact" class="view-screen">
+      <div class="notice-banner success">
+        <div class="notice-text">
+          <h4>Honest Measurement Standard (Rule 6)</h4>
+          <p>Never claim unmeasured environmental savings. EcoLoop strictly separates physically weighed diversion (kg) from IPCC Tier-1 category emission factors and transparently marks missing data as 'Unknown'.</p>
+        </div>
+      </div>
+
+      <div class="grid-3col" style="margin-bottom: 1.5rem;">
+        <div class="card" style="border-left: 4px solid var(--brand-primary);">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Direct Physical Weighing</div>
+          <div style="font-size: 2rem; font-weight: 800; color: var(--brand-light); margin: 0.3rem 0;" id="kpi-weighed">24.2 kg</div>
+          <div style="font-size: 0.74rem; color: var(--brand-light);">100% Weighed on Digital Tare Scales</div>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--accent-cyan);">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Estimated GHG Methane Avoided</div>
+          <div style="font-size: 2rem; font-weight: 800; color: var(--accent-cyan); margin: 0.3rem 0;">46.0 kg CO₂e</div>
+          <div style="font-size: 0.74rem; color: var(--text-muted);">IPCC 1.9 kg CO₂e/kg Organic Factor Cited</div>
+        </div>
+
+        <div class="card" style="border-left: 4px solid var(--accent-amber);">
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Water Footprint Savings</div>
+          <div style="font-size: 2rem; font-weight: 800; color: var(--accent-amber); margin: 0.3rem 0;">Unknown</div>
+          <div style="font-size: 0.74rem; color: var(--accent-amber);">Unmeasured (Lacks primary supply data)</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Audited Mass Balance Ledger</h2>
+          <span class="badge badge-primary">Cryptographically Signed Log</span>
+        </div>
+
+        <table class="candidate-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Resource Event</th>
+              <th>Lifecycle Stream</th>
+              <th>Measured Mass</th>
+              <th>Measurement Method</th>
+              <th>Verification Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Today 14:15</td>
+              <td><strong>Surplus Rice & Dal Recovery</strong></td>
+              <td><span class="badge badge-primary">Donation to Shelter</span></td>
+              <td>12.0 kg</td>
+              <td>Scale Tare (Kitchen Station 2)</td>
+              <td><span class="badge badge-primary">Dual-Party Verified</span></td>
+            </tr>
+            <tr>
+              <td>Today 18:45</td>
+              <td><strong>Pre-Cooking Headcount Batch Scale</strong></td>
+              <td><span class="badge badge-cyan">In-Source Prevention</span></td>
+              <td>0.45 kg</td>
+              <td>Recipe Mass Arithmetic</td>
+              <td><span class="badge badge-primary">Cook Approved</span></td>
+            </tr>
+            <tr>
+              <td>Yesterday 21:00</td>
+              <td><strong>Vegetable Peelings & Inedible Scraps</strong></td>
+              <td><span class="badge badge-amber">Home Composting</span></td>
+              <td>1.8 kg</td>
+              <td>Direct Weighing</td>
+              <td><span class="badge badge-primary">Recorded</span></td>
+            </tr>
+            <tr>
+              <td>Oct 13 19:30</td>
+              <td><strong>Plate Waste Scrape</strong></td>
+              <td><span class="badge badge-rose">Municipal Solid Waste</span></td>
+              <td>0.25 kg</td>
+              <td>Audit Tare</td>
+              <td><span class="badge badge-rose">Landfill Discard</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>EcoLoop AI · Pure HTML5 / CSS3 / Vanilla JS Interactive Prototype · AI Builder Cup 2026</p>
+    <p style="margin-top: 0.25rem; font-size: 0.7rem;">Simulated environment for stakeholder review · All actions comply with Master Product Specification invariants.</p>
+  </footer>
+
+  <!-- Interactive Prototype Logic -->
+  <script>
+    // Navigation Router
+    function navigateTo(screenId) {
+      document.querySelectorAll('.view-screen').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-pill').forEach(el => el.classList.remove('active'));
+
+      const targetScreen = document.getElementById('screen-' + screenId);
+      const targetTab = document.getElementById('tab-' + screenId);
+
+      if (targetScreen) targetScreen.classList.add('active');
+      if (targetTab) targetTab.classList.add('active');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Preset Loading
+    function loadSamplePreset(type) {
+      const preview = document.getElementById('ingestion-preview');
+      const result = document.getElementById('ingestion-result');
+      const statusPill = document.getElementById('pipeline-status');
+      const docTitle = document.getElementById('ingestion-doc-title');
+      const itemCount = document.getElementById('ingestion-item-count');
+
+      statusPill.textContent = 'Parsing...';
+      statusPill.className = 'badge badge-amber';
+
+      setTimeout(() => {
+        preview.style.display = 'none';
+        result.style.display = 'block';
+        statusPill.textContent = 'Candidates Extracted';
+        statusPill.className = 'badge badge-primary';
+
+        if (type === 'receipt') {
+          docTitle.textContent = 'Reliance_Smart_Point_Receipt_99281.jpg';
+          itemCount.textContent = '4 Items Extracted';
+        } else if (type === 'market') {
+          docTitle.textContent = 'Sabzi_Mandi_Vegetable_Slip.png';
+          itemCount.textContent = '3 Items Extracted';
+        } else {
+          docTitle.textContent = 'Voice_Memo_Pantry_Opening.m4a';
+          itemCount.textContent = '2 Items Extracted';
+        }
+      }, 350);
+    }
+
+    // Candidate Removal
+    function removeCandidate(rowId) {
+      const row = document.getElementById(rowId);
+      if (row) {
+        row.style.transition = 'opacity 0.2s';
+        row.style.opacity = '0';
+        setTimeout(() => row.remove(), 200);
+      }
+    }
+
+    // Confirm Facts
+    function confirmAllFacts() {
+      const badge = document.getElementById('unconfirmed-badge');
+      const btn = document.getElementById('btn-confirm-facts');
+      
+      btn.textContent = '✓ Facts Committed to Canonical State!';
+      btn.classList.remove('btn-primary');
+      btn.style.background = '#047857';
+      badge.textContent = 'All Verified';
+      badge.className = 'badge badge-primary';
+
+      document.querySelectorAll('#candidate-rows tr').forEach(tr => {
+        const statusBadge = tr.querySelector('.badge');
+        if (statusBadge) {
+          statusBadge.textContent = 'Confirmed Fact';
+          statusBadge.className = 'badge badge-primary';
+        }
+      });
+
+      setTimeout(() => {
+        navigateTo('pantry');
+      }, 600);
+    }
+
+    // Pre-Cooking Slider Calculation
+    function updateBatchCalculation(val) {
+      const display = document.getElementById('headcount-display');
+      const scaledRice = document.getElementById('scaled-rice');
+      const scaledPaneer = document.getElementById('scaled-paneer');
+      const scaledTomatoes = document.getElementById('scaled-tomatoes');
+      const alert = document.getElementById('attendance-alert');
+
+      display.textContent = val + (val == 1 ? ' Person' : ' People');
+
+      // Deterministic scaling arithmetic
+      const ratio = val / 4;
+      scaledRice.textContent = Math.round(600 * ratio) + 'g';
+      scaledPaneer.textContent = Math.round(400 * ratio) + 'g';
+      scaledTomatoes.textContent = Math.round(6 * ratio) + ' pcs';
+
+      if (val < 4) {
+        alert.style.display = 'flex';
+        alert.querySelector('h4').textContent = `Headcount Reduction Detected (-${Math.round((1 - ratio) * 100)}% demand)`;
+        alert.querySelector('p').textContent = `Batch dynamically scaled down to prevent ~${Math.round(500 * (1 - ratio))}g of excess preparation.`;
+      } else if (val > 4) {
+        alert.style.display = 'flex';
+        alert.querySelector('h4').textContent = `Guest Surge Detected (+${Math.round((ratio - 1) * 100)}% demand)`;
+        alert.querySelector('p').textContent = `Checking pantry inventory to safely scale batch without stockout.`;
+      } else {
+        alert.style.display = 'none';
+      }
+    }
+
+    function approveBatchDecision() {
+      alert('✓ Cook Elena V. approved the revised 2-Person Batch!\n\nDeterministic portion parameters locked. No excess cooking batch generated.');
+      navigateTo('recovery');
+    }
+
+    // FSSAI Checklist
+    function evaluateSafetyChecklist() {
+      const c1 = document.getElementById('check-1').checked;
+      const c2 = document.getElementById('check-2').checked;
+      const c3 = document.getElementById('check-3').checked;
+      const c4 = document.getElementById('check-4').checked;
+
+      const lockedState = document.getElementById('dispatch-locked-state');
+      const unlockedState = document.getElementById('dispatch-unlocked-state');
+
+      if (c1 && c2 && c3 && c4) {
+        lockedState.style.display = 'none';
+        unlockedState.style.display = 'block';
+      } else {
+        lockedState.style.display = 'block';
+        unlockedState.style.display = 'none';
+      }
+    }
+
+    // Simulated Dispatch
+    function triggerSimulatedDispatch() {
+      const btn = document.getElementById('btn-trigger-dispatch');
+      const stepCarrier = document.getElementById('step-carrier');
+      const stepCarrierDesc = document.getElementById('step-carrier-desc');
+      const stepRecipient = document.getElementById('step-recipient');
+
+      btn.disabled = true;
+      btn.textContent = 'Assigning Carrier...';
+
+      setTimeout(() => {
+        stepCarrier.classList.add('done');
+        stepCarrier.textContent = '✓';
+        stepCarrierDesc.textContent = 'Driver Suresh M. (Vehicle #KA-03-HA-4412) In Transit';
+        btn.textContent = 'Carrier En Route (Simulated)...';
+
+        setTimeout(() => {
+          stepRecipient.classList.add('done');
+          stepRecipient.textContent = '✓';
+          btn.textContent = '✓ Delivered & Acknowledged by Shelter';
+          btn.style.background = '#047857';
+
+          setTimeout(() => {
+            navigateTo('impact');
+          }, 800);
+        }, 1200);
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

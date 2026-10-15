@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-15",
+  "scope": "Household MVP replan; no application implementation",
+  "localEntry": "docs/planning/00_START_HERE.md",
+  "driveFolder": "https://drive.google.com/drive/folders/1pOmmIILpFVDdfulAzZpzco2gAHW8Itj1",
+  "specDoc": "https://docs.google.com/document/d/1sGMeWyWlZK9Aom8JUXB1380ZaLensvAyh2nELb2-P0c",
+  "planDoc": "https://docs.google.com/document/d/14JYfQAZ8Q6egFL-tlgGUbKVGQBdFvT5LWoMXzwCqFuI",
+  "liveSheet": "https://docs.google.com/spreadsheets/d/10PQygT-suDuX2pfbDOpP-Y_q81XkExWBPFP_60_2GiI/edit#gid=1002",
+  "phases": 6,
+  "parentTasks": 12,
+  "granularUnits": 36,
+  "completionUnits": 0,
+  "nativeChecks": {
+    "checkboxes": 36,
+    "allFalse": true,
+    "dropdowns": 36,
+    "formulaErrors": 0,
+    "currentTabs": 3,
+    "archivedTabs": 6,
+    "oldDocSupersessionBanners": 10
+  },
+  "functionalChecks": [
+    {
+      "case": "Checkbox + Complete without evidence",
+      "actual": "Evidence required"
+    },
+    {
+      "case": "Evidence/reviewer/date and prerequisite present",
+      "actual": "Verified"
+    },
+    {
+      "case": "Remove upstream evidence",
+      "actual": "Upstream Evidence required; dependent Dependency open"
+    },
+    {
+      "case": "Restore validation inputs",
+      "actual": "All 36 units unchecked; 0 verified"
+    }
+  ],
+  "verificationMethod": "Native API readback and functional checks. Google UI sign-in unavailable. Exported XLSX layout inspected; preview values use native readback to avoid renderer-specific formula incompatibility; checkbox rendering is not native proof.",
+  "independentReview": "No remaining critical contradiction in final spot check; three reported gaps corrected.",
+  "skillValidation": "10 static frontmatter checks passed. Official quick_validate unavailable because bundled Python lacks PyYAML.",
+  "archive": "docs/archive/2026-10-15-pre-consumer-replan",
+  "limits": [
+    "Five recent linked-chat user turns readable; full assistant replies unavailable.",
+    "No application code/dependencies/design exports changed; no app tests/build/deployment/commit.",
+    "Managed cloud access and live commerce unverified; tasks remain open.",
+    "Native collaboration is live; local files/Docs do not automatically sync task state."
+  ]
+}

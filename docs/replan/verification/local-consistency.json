@@ -1,0 +1,101 @@
+{
+  "phases": 6,
+  "parentTasks": 12,
+  "units": 36,
+  "acyclic": true,
+  "allUnchecked": true,
+  "brokenActiveLinks": [],
+  "skillStaticChecks": 10,
+  "officialSkillValidator": "unavailable: PyYAML missing; no pass claimed",
+  "AGENTSLines": 45,
+  "applicationDiff": "",
+  "archivedTrackedPaths": 124,
+  "archiveMissing": [],
+  "unchangedDuplicatePrototypePairs": [
+    {
+      "path": "ecoloop_add_food_smart_capture/code.html",
+      "sha256": "6f7f6b336131475a3dc69d074eb8c18733e36a22c235bb3c9c06e6c4477e35f6"
+    },
+    {
+      "path": "ecoloop_add_food_smart_capture/screen.png",
+      "sha256": "647b20251b1953d8db7d018ec4daee3a0c92ddf99065970076cbb956b91823cc"
+    },
+    {
+      "path": "ecoloop_ask_ecoloop_assistant/code.html",
+      "sha256": "049812e70976bb69c2a1ad5fac59f985fed923320b32b91510bcacaa24293413"
+    },
+    {
+      "path": "ecoloop_ask_ecoloop_assistant/screen.png",
+      "sha256": "15e17d28d17136c340379af8e2680dd9fc713c3607b1758b6fded2a800804d67"
+    },
+    {
+      "path": "ecoloop_ask_ecoloop_shopping_decision/code.html",
+      "sha256": "19cdd7e146850808d5b7cee4010a2809fbda505bbbea2271d440da005b4b3719"
+    },
+    {
+      "path": "ecoloop_ask_ecoloop_shopping_decision/screen.png",
+      "sha256": "05d804d00ac6fd3a092c6de0e66f46bf250c25135c354b1922a0c325e745b9ae"
+    },
+    {
+      "path": "ecoloop_household_food_assistant_home/code.html",
+      "sha256": "d221e39d2e150653882687df050377fcdd5c9068302bed1856d7ac94c0f052ed"
+    },
+    {
+      "path": "ecoloop_household_food_assistant_home/screen.png",
+      "sha256": "5f4477cd7e069e40004937b8ed346afdc4ad51a18c34c341c03e961624781b1b"
+    },
+    {
+      "path": "ecoloop_my_kitchen_inventory/code.html",
+      "sha256": "b75648f9d613f0a3e1165eeb7c46034648d5ff2917b91fe0a3a260cf2e57e26e"
+    },
+    {
+      "path": "ecoloop_my_kitchen_inventory/screen.png",
+      "sha256": "bacd6abf9e18b79b85e11781deb2ac247e1b50e228cb3916185823740fb209cd"
+    },
+    {
+      "path": "ecoloop_organic_modernism/DESIGN.md",
+      "sha256": "2e24fefe5128569a63ce90bf8d05b53f563e8e1bb64c8d76cf07c3dcd9539761"
+    },
+    {
+      "path": "ecoloop_review_detected_food_items/code.html",
+      "sha256": "f2a7f19b4a372754dee5a7eb9206431634c1ca3ecfcceeade3a912ab49f9da68"
+    },
+    {
+      "path": "ecoloop_review_detected_food_items/screen.png",
+      "sha256": "6b470834b886142fccd2dca64aeb64d28a909e9098c78b6493258ca08f14fb66"
+    },
+    {
+      "path": "ecoloop_share_before_waste/code.html",
+      "sha256": "209fbf90f4fbbb69d65794aa416511f1c3c00d3878a3e17d1769cff8571e63fb"
+    },
+    {
+      "path": "ecoloop_share_before_waste/screen.png",
+      "sha256": "b8ac5c69b8983eade74e67e52756e32c4ac8f47cefbe89e0b6b52087f92e21ab"
+    },
+    {
+      "path": "ecoloop_smart_shopping_connected_services/code.html",
+      "sha256": "459a9fc96533600140233083012c11e8303b19caa802439eca7193d9db348693"
+    },
+    {
+      "path": "ecoloop_smart_shopping_connected_services/screen.png",
+      "sha256": "c0c2665aad686042a84b0a43c6d47c1c2edb57cb9268f44218e50369c7a48a82"
+    },
+    {
+      "path": "ecoloop_use_soon_food_action/code.html",
+      "sha256": "8b17dd329e223fb5b0496cd131b0c1b8dd8a16af09cab33e31a4db2931b05e19"
+    },
+    {
+      "path": "ecoloop_use_soon_food_action/screen.png",
+      "sha256": "7811c5bd522473b0a668db6f963713747d65bda28e00b51a877d1de2fbf6314a"
+    },
+    {
+      "path": "ecoloop_your_circular_impact/code.html",
+      "sha256": "aadd69d9dad541b811e9259cd9a136f3f8354adf70b2bc6382a26546e185bf30"
+    },
+    {
+      "path": "ecoloop_your_circular_impact/screen.png",
+      "sha256": "352545b40d39a8a73371cecd984424888fd1000d3d115f0eb27fd1e81fac60fc"
+    }
+  ],
+  "applicationTestsRun": false
+}

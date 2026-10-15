@@ -1,0 +1,25 @@
+digraph coding_gate_sequence {
+	graph [bgcolor=white dpi=160 fontcolor="#173e32" fontname="DejaVu Sans" fontsize=14 label="Coding Gate Sequence" labelloc=t nodesep=0.25 pad=0.27 rankdir=LR ranksep=0.45 splines=spline]
+	node [color="#c7d7cc" fillcolor="#f3fbf6" fontcolor="#173e32" fontname="DejaVu Sans" fontsize=11 margin="0.17,0.13" penwidth=1.05 shape=box style="rounded,filled"]
+	A [label="G0 Design tokens
++ routes" color="#c7d7cc" fillcolor="#e8f0f6" fontcolor="#173e32"]
+	B [label="G1 Mock data
++ deterministic flows" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	C [label="G2 Auth + Firestore
+role protections" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	D [label="G3 Gemini photo
++ user confirmation" color="#c7d7cc" fillcolor="#eee9f7" fontcolor="#173e32"]
+	E [label="G4 ADK + Memory Bank
++ typed GenUI" color="#c7d7cc" fillcolor="#eee9f7" fontcolor="#173e32"]
+	F [label="G5 Sharing/outcome
++ optional MCP mock" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	G [label="G6 Real tests
++ Google deployment" color="#173e32" fillcolor="#173e32" fontcolor=white]
+	edge [arrowsize=0.72 color="#557164" fontcolor="#aa5a2c" fontname="DejaVu Sans" fontsize=9 penwidth=1.15]
+	A -> B
+	B -> C
+	C -> D
+	D -> E
+	E -> F
+	F -> G
+}

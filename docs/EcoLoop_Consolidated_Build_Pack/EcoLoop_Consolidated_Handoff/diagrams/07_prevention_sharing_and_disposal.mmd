@@ -1,0 +1,31 @@
+flowchart LR
+  REM["Use-soon / may not<br/>use before trip"]
+  COND["Person verifies<br/>condition + availability"]
+  US["Cook or store<br/>while suitable"]
+  SHARE["Offer eligible items<br/>early (not waste)"]
+  AC["Trusted/family user<br/>accepts and handoff"]
+  UNSAFE["No longer suitable<br/>for eating / scraps"]
+  MAT["Check local material<br/>acceptance rules"]
+  DISP["Home compost / verified<br/>service / wet waste bin"]
+  EVENT["Record what actually<br/>happened and evidence"]
+  REM --> COND
+  COND -->|usable| US
+  COND -->|usable surplus| SHARE
+  SHARE --> AC
+  COND -->|unsuitable| UNSAFE
+  UNSAFE --> MAT
+  MAT --> DISP
+  US --> EVENT
+  AC --> EVENT
+  DISP --> EVENT
+  classDef core fill:#173e32,color:#fff,stroke:#173e32
+  classDef action fill:#dff2e6,color:#173e32,stroke:#85b299
+  classDef caution fill:#fff0d8,color:#47311a,stroke:#bd8e43
+  class REM core
+  class COND caution
+  class US action
+  class SHARE action
+  class UNSAFE caution
+  class MAT caution
+  class DISP action
+  class EVENT core

@@ -1,0 +1,26 @@
+flowchart LR
+  CAND["Observed / parsed<br/>CANDIDATE"]
+  CONF["User confirms<br/>CONFIRMED"]
+  STALE["Record ages<br/>NEEDS CHECK"]
+  USE["Used / stored /<br/>discarded recorded"]
+  OFFER["Share offer<br/>OFFERED"]
+  ACCEPT["Recipient accepts<br/>ACCEPTED"]
+  GIVEN["Actual handoff<br/>HANDED OVER"]
+  BIN["Organic waste<br/>COLLECTED"]
+  PROC["Actual processor proof<br/>PROCESSED"]
+  CAND --> CONF
+  CONF --> STALE
+  CONF --> USE
+  CONF --> OFFER
+  OFFER --> ACCEPT
+  ACCEPT --> GIVEN
+  USE -->|if scraps| BIN
+  BIN -->|requires proof| PROC
+  classDef core fill:#173e32,color:#fff,stroke:#173e32
+  classDef action fill:#dff2e6,color:#173e32,stroke:#85b299
+  classDef caution fill:#fff0d8,color:#47311a,stroke:#bd8e43
+  class CAND caution
+  class CONF action
+  class STALE caution
+  class GIVEN action
+  class PROC action

@@ -1,0 +1,21 @@
+flowchart LR
+  A["G0 Design tokens<br/>+ routes"]
+  B["G1 Mock data<br/>+ deterministic flows"]
+  C["G2 Auth + Firestore<br/>role protections"]
+  D["G3 Gemini photo<br/>+ user confirmation"]
+  E["G4 ADK + Memory Bank<br/>+ typed GenUI"]
+  F["G5 Sharing/outcome<br/>+ optional MCP mock"]
+  G["G6 Real tests<br/>+ Google deployment"]
+  A --> B
+  B --> C
+  C --> D
+  D --> E
+  E --> F
+  F --> G
+  classDef core fill:#173e32,color:#fff,stroke:#173e32
+  classDef action fill:#dff2e6,color:#173e32,stroke:#85b299
+  classDef caution fill:#fff0d8,color:#47311a,stroke:#bd8e43
+  class B action
+  class C action
+  class F action
+  class G core

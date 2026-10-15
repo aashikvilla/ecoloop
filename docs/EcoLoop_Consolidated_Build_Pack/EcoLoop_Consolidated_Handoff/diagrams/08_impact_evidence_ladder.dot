@@ -1,0 +1,22 @@
+digraph impact_evidence_ladder {
+	graph [bgcolor=white dpi=160 fontcolor="#173e32" fontname="DejaVu Sans" fontsize=14 label="Impact Evidence Ladder" labelloc=t nodesep=0.25 pad=0.27 rankdir=LR ranksep=0.45 splines=spline]
+	node [color="#c7d7cc" fillcolor="#f3fbf6" fontcolor="#173e32" fontname="DejaVu Sans" fontsize=11 margin="0.17,0.13" penwidth=1.05 shape=box style="rounded,filled"]
+	L1 [label="INTENTION
+Reminder / recommendation" color="#c7d7cc" fillcolor="#fff0d8" fontcolor="#173e32"]
+	L2 [label="USER ACTION
+Approved / marked used" color="#c7d7cc" fillcolor="#e8f0f6" fontcolor="#173e32"]
+	L3 [label="HANDOFF
+Accepted / collected" color="#c7d7cc" fillcolor="#e8f0f6" fontcolor="#173e32"]
+	L4 [label="OBSERVATION
+Weighed or recorded result" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	L5 [label="COMPARISON
+Defensible baseline / control" color="#c7d7cc" fillcolor="#dff2e6" fontcolor="#173e32"]
+	L6 [label="IMPACT ESTIMATE
+Only with sourced factors" color="#173e32" fillcolor="#173e32" fontcolor=white]
+	edge [arrowsize=0.72 color="#557164" fontcolor="#aa5a2c" fontname="DejaVu Sans" fontsize=9 penwidth=1.15]
+	L1 -> L2
+	L2 -> L3
+	L3 -> L4
+	L4 -> L5
+	L5 -> L6
+}

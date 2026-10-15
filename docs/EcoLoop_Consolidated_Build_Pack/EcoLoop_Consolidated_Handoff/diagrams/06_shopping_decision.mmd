@@ -1,0 +1,27 @@
+flowchart LR
+  IMAGE["Product photo /<br/>shopping item"]
+  PARSE["Gemini candidate<br/>product + pack size"]
+  CHECK["Confirm scanned<br/>product details"]
+  STOCK["Check last-confirmed<br/>stock + selected recipe"]
+  CHOICE["Have enough?<br/>Need / uncertain"]
+  NO["Use current stock /<br/>check again"]
+  LIST["Update shopping<br/>list with approval"]
+  MCP["Merchant catalog /<br/>MCP (only authorized)"]
+  CART["Cart PREVIEW; human<br/>review, no auto-charge"]
+  IMAGE --> PARSE
+  PARSE --> CHECK
+  CHECK --> STOCK
+  STOCK --> CHOICE
+  CHOICE -->|enough| NO
+  CHOICE -->|missing| LIST
+  LIST -->|optional| MCP
+  MCP --> CART
+  classDef core fill:#173e32,color:#fff,stroke:#173e32
+  classDef action fill:#dff2e6,color:#173e32,stroke:#85b299
+  classDef caution fill:#fff0d8,color:#47311a,stroke:#bd8e43
+  class CHECK action
+  class CHOICE caution
+  class NO action
+  class LIST action
+  class MCP caution
+  class CART core

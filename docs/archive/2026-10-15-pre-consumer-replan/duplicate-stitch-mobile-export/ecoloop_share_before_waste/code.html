@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<meta content="mobile_tab" name="shell-type"/>
+<title>Ecoloop   Share Before Waste | EcoLoop</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-low": "#edf6f0",
+            "secondary-fixed": "#ffdbd0",
+            "on-tertiary-container": "#e0aa45",
+            "tertiary-fixed-dim": "#f5bd56",
+            "surface-container-lowest": "#ffffff",
+            "outline-variant": "#c1c8c3",
+            secondary: "#994529",
+            "on-primary-fixed-variant": "#2c4d40",
+            "surface-container": "#e7f0eb",
+            "on-background": "#151d1a",
+            "secondary-fixed-dim": "#ffb59e",
+            "on-secondary-container": "#762b11",
+            "primary-fixed-dim": "#aacfbd",
+            surface: "#f3fbf6",
+            "surface-tint": "#446557",
+            "on-secondary-fixed": "#3a0b00",
+            "on-primary-container": "#98bbab",
+            "secondary-container": "#fe9472",
+            "surface-container-high": "#e2eae5",
+            "on-secondary-fixed-variant": "#7b2f15",
+            "primary-container": "#2b4c3f",
+            "primary-fixed": "#c6ebd9",
+            "inverse-surface": "#2a322f",
+            "on-tertiary": "#ffffff",
+            "surface-container-highest": "#dce5df",
+            "surface-variant": "#dce5df",
+            "tertiary-container": "#5d4000",
+            "on-primary-fixed": "#002116",
+            "tertiary-fixed": "#ffdea9",
+            error: "#ba1a1a",
+            "on-primary": "#ffffff",
+            "on-tertiary-fixed-variant": "#5f4100",
+            "on-surface": "#151d1a",
+            tertiary: "#402b00",
+            background: "#f3fbf6",
+            "error-container": "#ffdad6",
+            "surface-dim": "#d3dcd7",
+            "inverse-primary": "#aacfbd",
+            "on-surface-variant": "#414844",
+            "inverse-on-surface": "#eaf3ee",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed": "#271900",
+            "on-error-container": "#93000a",
+            "on-secondary": "#ffffff",
+            "surface-bright": "#f3fbf6",
+            primary: "#143529",
+            outline: "#717974"
+          },
+          borderRadius: {
+            DEFAULT: "1rem",
+            lg: "2rem",
+            xl: "3rem",
+            full: "9999px"
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans"],
+            display: ["Plus Jakarta Sans"],
+            body: ["Plus Jakarta Sans"],
+            label: ["Plus Jakarta Sans"]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    @layer base {
+      html, body {
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        min-height: max(884px, 100dvh);
+      }
+      body {
+        overscroll-behavior: none;
+      }
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+      }
+      main > :first-child {
+        margin-top: 0 !important;
+      }
+      main > :last-child {
+        margin-bottom: 0 !important;
+      }
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased flex flex-col min-h-screen">
+<header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,53,41,0.04)]">
+<div class="h-16 px-4 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<img alt="EcoLoop Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WoRA6dQ0cPknLqAmFeyVSs0OLPfC1FU8_UhJp4ZLtGvBnEXahgPDGnwefeWukxWYzo9kbUZsMjXT43oW6xUx5ZpGXrS1Q-hosdlDlRFGbVFAzpesCezaL7gHqrHm1vHdWmGokTvIvobYQ88GKRP8vf-qOVo-qaHWNrlsML71LFrwkqvsftAoH911ixke8A0Tu3Zb6aaHepMsJfs0oL1S4bvFduN1ncxnh7gMeR0bLqS23HlCL1eDKSIOAA"/>
+<div class="flex flex-col">
+<span class="font-headline text-[17px] font-bold text-primary leading-none tracking-tight">EcoLoop</span>
+<button class="flex items-center gap-0.5 text-left group mt-0.5">
+<span class="font-label text-[11px] font-medium text-on-surface-variant group-hover:text-primary transition-colors">My Home (Family)</span>
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">expand_more</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low shadow-[0_1px_3px_rgba(20,53,41,0.04)]">
+<span class="material-symbols-outlined text-surface-tint text-[16px]">auto_awesome</span>
+<span class="font-label text-[10px] font-bold text-surface-tint uppercase tracking-wider">AI Active</span>
+</div>
+<a aria-label="Profile" class="w-10 h-10 flex items-center justify-center rounded-full hover:opacity-90 transition-opacity" href="#">
+<img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_q1EJkO5Inp51E7ra0NUGaTiPIMtON5WFFo41QNL-SI-CZpVkAMk86kHUYnxqI3-8MHuqfZ1ZzIwY9PaiDg8Zv8ZJTTZTF2Pw9MMmGTxxbw7hTq7UgdkWeb98QU0vvpUfJapHEvazceGxW_Ap93UMqkt3Z0LflHVFvZ2Psw5iZaKGRqM2SWnNFeyowxmTOREUrRYMAm2005L7t5HzmNEe7ZFBITjODDrPgAJz06YaqEzZFAKhrpYrWA"/>
+</a>
+</div>
+</div>
+</header>
+<main class="flex-1 flex flex-col relative w-full pt-16 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] bg-surface">
+<div class="flex flex-col w-full">
+<div class="px-4 pb-24 max-w-md mx-auto w-full flex flex-col gap-5">
+<!-- Top Contextual Subheader & Empathy Title -->
+<div class="flex flex-col gap-1.5 pt-1">
+<div class="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full bg-secondary-fixed/50 text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[15px] text-secondary">flight_takeoff</span>
+<span class="font-label text-[11px] font-bold uppercase tracking-wider">Proactive Sharing · Before Trip</span>
+</div>
+<h1 class="font-headline text-[26px] leading-tight font-bold text-primary tracking-tight">Someone else could use this</h1>
+<p class="font-body text-[14px] leading-snug text-on-surface-variant">
+        You might not use these tomatoes before your trip. Want to do something with them?
+      </p>
+</div>
+<!-- Selected Item Card -->
+<div class="bg-surface-container-lowest rounded-2xl shadow-[0_4px_20px_-4px_rgba(20,53,41,0.06)] overflow-hidden flex flex-col">
+<div class="relative w-full h-44 overflow-hidden bg-surface-container-low">
+<img alt="Vine ripe tomatoes in a ceramic bowl" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGnTNecGT2X9AokRG_exJlgiN1xndZGf6Yw_3LItjNCH3xZFEXAdQyPBDnHrC350YQT2KlyybypPu8Wmu8QHdMsesFvpYXSKyY3t9fBugzLzr53nE1Sk5Qzi2F0d1iQzxnoPbhomzqrvACDM5Ztglw9zB3pUuk_2FmD46WZb4RL4cry62rtqo1GrYQbdwE58eadk1wR6hkg6n4qxoM10EnvDQX40OJogucvw9D5Mvxv54q1DgSZL0P9g"/>
+<div class="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-primary font-label text-[11px] font-bold shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-surface-tint">shelves</span>
+<span>In Pantry</span>
+</div>
+<div class="absolute bottom-2.5 right-3 px-2 py-0.5 rounded-full bg-primary/80 backdrop-blur-md text-on-primary font-label text-[10px] font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">verified_user</span>
+<span>Self-Checked</span>
+</div>
+</div>
+<div class="p-4 flex flex-col gap-2">
+<div class="flex items-start justify-between">
+<div>
+<h2 class="font-headline text-[18px] font-bold text-on-surface leading-snug">Vine Tomatoes</h2>
+<p class="font-label text-[12px] text-surface-tint font-semibold">6 tomatoes recorded</p>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant font-label text-[11px] font-medium">Good condition</span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-3 flex items-start gap-2.5 mt-1">
+<span class="material-symbols-outlined text-secondary text-[18px] mt-0.5">sentiment_satisfied</span>
+<div class="flex flex-col">
+<span class="font-label text-[11px] font-bold text-on-surface">User condition note</span>
+<span class="font-body text-[12px] text-on-surface-variant leading-tight">"Good condition, unbruised &amp; ready to eat."</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 pt-0.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px] text-outline">info</span>
+<p class="font-body text-[11px] text-on-surface-variant leading-tight">
+            Sensory check: User verified before offering. No automated safety certification.
+          </p>
+</div>
+</div>
+</div>
+<!-- 4 Action Pathways Grid -->
+<div class="flex flex-col gap-2.5">
+<span class="font-label text-[12px] font-bold text-on-surface-variant uppercase tracking-wider px-1">Decide an Action</span>
+<div class="grid grid-cols-2 gap-2.5">
+<!-- Action 1: Cook with them -->
+<button class="bg-surface-container-lowest hover:bg-surface-container-low transition-all p-3.5 rounded-2xl flex flex-col items-start gap-2 text-left shadow-[0_2px_8px_rgba(20,53,41,0.03)] active:scale-[0.98]">
+<div class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">skillet</span>
+</div>
+<div>
+<span class="font-headline text-[13px] font-bold text-on-surface block leading-tight">Cook with them</span>
+<span class="font-body text-[11px] text-on-surface-variant leading-tight">Quick recipes in Ask</span>
+</div>
+</button>
+<!-- Action 2: Store for later -->
+<button class="bg-surface-container-lowest hover:bg-surface-container-low transition-all p-3.5 rounded-2xl flex flex-col items-start gap-2 text-left shadow-[0_2px_8px_rgba(20,53,41,0.03)] active:scale-[0.98]">
+<div class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">ac_unit</span>
+</div>
+<div>
+<span class="font-headline text-[13px] font-bold text-on-surface block leading-tight">Store for later</span>
+<span class="font-body text-[11px] text-on-surface-variant leading-tight">Freezing or drying tips</span>
+</div>
+</button>
+<!-- Action 3: Share with someone (Highlighted) -->
+<button class="col-span-2 bg-primary text-on-primary p-4 rounded-2xl flex items-center justify-between shadow-[0_8px_20px_-6px_rgba(20,53,41,0.25)] relative overflow-hidden active:scale-[0.99] transition-all">
+<div class="flex items-center gap-3 relative z-10">
+<div class="w-11 h-11 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center shadow-inner">
+<span class="material-symbols-outlined text-[22px]">diversity_3</span>
+</div>
+<div class="text-left">
+<div class="flex items-center gap-1.5">
+<span class="font-headline text-[15px] font-bold leading-tight">Share with someone</span>
+<span class="px-2 py-0.5 rounded-full bg-secondary text-on-secondary font-label text-[10px] font-bold">Recommended</span>
+</div>
+<span class="font-body text-[12px] text-on-primary-container leading-tight mt-0.5 block">Zero waste · Offer to household or circle</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary-fixed text-[20px] relative z-10">arrow_downward</span>
+</button>
+<!-- Action 4: I've used them -->
+<button class="col-span-2 bg-surface-container hover:bg-surface-container-high transition-all py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-on-surface active:scale-[0.99]">
+<span class="material-symbols-outlined text-[17px] text-surface-tint">done_all</span>
+<span class="font-label text-[12px] font-semibold">I've used them (One-tap consume &amp; log)</span>
+</button>
+</div>
+</div>
+<!-- Active Sharing Panel -->
+<div class="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 shadow-[0_6px_24px_-4px_rgba(20,53,41,0.06)] flex flex-col gap-4">
+<!-- Panel Header & Progress Steps -->
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-headline text-[16px] font-bold text-primary">Sharing Setup</span>
+</div>
+<span class="font-label text-[11px] font-semibold text-surface-tint bg-primary-fixed/40 px-2.5 py-0.5 rounded-full">Step 1 of 4</span>
+</div>
+<!-- Status Tracker Ribbon -->
+<div class="bg-surface-container-low rounded-xl p-3 flex flex-col gap-2">
+<div class="flex items-center justify-between relative">
+<div class="absolute left-3 right-3 top-1/2 -translate-y-1/2 h-0.5 bg-surface-container-highest z-0"></div>
+<!-- Step 1: Draft (Active) -->
+<div class="relative z-10 flex flex-col items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center font-label text-[10px] font-bold shadow-sm">1</div>
+<span class="font-label text-[10px] font-bold text-primary">Draft</span>
+</div>
+<!-- Step 2: Offered -->
+<div class="relative z-10 flex flex-col items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-label text-[10px] font-medium">2</div>
+<span class="font-label text-[10px] text-on-surface-variant">Offered</span>
+</div>
+<!-- Step 3: Accepted -->
+<div class="relative z-10 flex flex-col items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-label text-[10px] font-medium">3</div>
+<span class="font-label text-[10px] text-on-surface-variant">Accepted</span>
+</div>
+<!-- Step 4: Handed over -->
+<div class="relative z-10 flex flex-col items-center gap-1">
+<div class="w-6 h-6 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-label text-[10px] font-medium">4</div>
+<span class="font-label text-[10px] text-on-surface-variant">Handover</span>
+</div>
+</div>
+<p class="font-body text-[11px] text-on-surface-variant text-center pt-1 leading-tight">
+            Only a confirmed in-person handoff counts as completed sharing.
+          </p>
+</div>
+</div>
+<!-- Tier Selection -->
+<div class="flex flex-col gap-2">
+<span class="font-label text-[12px] font-bold text-on-surface">Select Recipient Tier</span>
+<!-- Tier 1: My Household (Selected) -->
+<label class="cursor-pointer bg-primary-fixed/30 p-3 rounded-xl flex items-start gap-3 transition-colors">
+<input checked="" class="mt-0.5 accent-primary w-4 h-4" name="sharing_tier" type="radio" value="household"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-headline text-[13px] font-bold text-on-primary-fixed">My Household</span>
+<span class="px-1.5 py-0.2 rounded bg-primary text-on-primary font-label text-[9px] font-semibold">Active</span>
+</div>
+<span class="font-body text-[12px] text-on-primary-fixed-variant leading-snug mt-0.5">Offer to family members currently in your home space.</span>
+</div>
+</label>
+<!-- Tier 2: Trusted Circle -->
+<label class="cursor-pointer bg-surface-container-low hover:bg-surface-container p-3 rounded-xl flex items-start gap-3 transition-colors">
+<input class="mt-0.5 accent-primary w-4 h-4" name="sharing_tier" type="radio" value="circle"/>
+<div class="flex flex-col">
+<span class="font-headline text-[13px] font-semibold text-on-surface">Trusted Circle</span>
+<span class="font-body text-[12px] text-on-surface-variant leading-snug mt-0.5">Share with invited friends or nearby neighbors (requires recipient acceptance).</span>
+</div>
+</label>
+<!-- Tier 3: Community Sharing -->
+<label class="cursor-pointer bg-surface-container-low/60 hover:bg-surface-container p-3 rounded-xl flex items-start gap-3 transition-colors opacity-80">
+<input class="mt-0.5 accent-primary w-4 h-4" name="sharing_tier" type="radio" value="community"/>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-headline text-[13px] font-semibold text-on-surface">Community Sharing</span>
+<span class="px-1.5 py-0.2 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label text-[9px] font-semibold">Preview Only</span>
+</div>
+<span class="font-body text-[12px] text-on-surface-variant leading-snug mt-0.5">Explore verified local partners (pending neighborhood verification).</span>
+</div>
+</label>
+</div>
+<!-- Offer Details Form Inside Card -->
+<div class="flex flex-col gap-3 pt-1">
+<!-- Quantity Stepper -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label text-[12px] font-bold text-on-surface">Quantity to share</span>
+<span class="font-body text-[11px] text-on-surface-variant">Out of 6 available</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-lowest rounded-full p-1 shadow-sm">
+<button aria-label="Decrease quantity" class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary font-bold active:scale-95 transition-transform" id="qty-minus">
+<span class="material-symbols-outlined text-[16px]">remove</span>
+</button>
+<span class="font-label text-[13px] font-bold text-on-surface px-2 tabular-nums" id="qty-val">6 pieces</span>
+<button aria-label="Increase quantity" class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold active:scale-95 transition-transform" id="qty-plus">
+<span class="material-symbols-outlined text-[16px]">add</span>
+</button>
+</div>
+</div>
+<!-- Availability Condition -->
+<div class="flex items-start gap-2.5 p-3 rounded-xl bg-surface-container-low">
+<span class="material-symbols-outlined text-[18px] text-surface-tint mt-0.5">task_alt</span>
+<div class="flex flex-col">
+<span class="font-label text-[12px] font-bold text-on-surface">Verified Item Condition</span>
+<span class="font-body text-[12px] text-on-surface-variant">Firm and ripe, intact skin (user entered)</span>
+</div>
+</div>
+<!-- Collect by Time -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-secondary">schedule</span>
+<span class="font-label text-[12px] font-bold text-on-surface">Collect by</span>
+</div>
+<span class="font-label text-[12px] font-semibold text-secondary-container-on bg-secondary-fixed/60 text-on-secondary-fixed px-2.5 py-1 rounded-full">
+            Today by 6:00 PM
+          </span>
+</div>
+<!-- Privacy & Visibility Control -->
+<div class="flex items-center justify-between p-3 rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary">visibility</span>
+<span class="font-label text-[12px] font-bold text-on-surface">Visibility</span>
+</div>
+<span class="font-label text-[11px] text-on-surface-variant font-medium">Household &amp; circle only</span>
+</div>
+</div>
+<!-- Reassurance / Safety Notice Banner -->
+<div class="p-3 rounded-xl bg-surface-container-high/60 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-outline text-[16px] mt-0.5">health_and_safety</span>
+<p class="font-body text-[11px] text-on-surface-variant leading-relaxed">
+          No automatic safety judgments. Plate leftovers, spoiled, or unsealed perishable goods cannot be offered.
+        </p>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col gap-2 pt-1">
+<button class="w-full min-h-[48px] py-3 px-4 rounded-full bg-primary hover:bg-primary-container text-on-primary font-headline text-[14px] font-bold flex items-center justify-center gap-2 shadow-md active:scale-[0.98] transition-all" id="publish-btn">
+<span class="material-symbols-outlined text-[18px]">send</span>
+<span>Publish Offer to Household &amp; Circle</span>
+</button>
+<button class="w-full min-h-[40px] py-2 text-surface-tint hover:text-primary font-label text-[12px] font-semibold text-center transition-colors">
+          Explore cooking options instead
+        </button>
+</div>
+</div>
+<!-- Micro Impact Cue -->
+<div class="bg-surface-container-low rounded-2xl p-3.5 flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-[17px]">eco</span>
+</div>
+<p class="font-body text-[12px] text-on-surface-variant leading-tight">
+        Sharing this batch saves approx <span class="font-bold text-primary tabular-nums">0.8 kg CO₂e</span> from potential landfill disposal.
+      </p>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const minusBtn = document.getElementById('qty-minus');
+    const plusBtn = document.getElementById('qty-plus');
+    const qtyVal = document.getElementById('qty-val');
+    let count = 6;
+
+    if (minusBtn && plusBtn && qtyVal) {
+      minusBtn.addEventListener('click', () => {
+        if (count > 1) {
+          count--;
+          qtyVal.textContent = count + ' pieces';
+        }
+      });
+      plusBtn.addEventListener('click', () => {
+        if (count < 6) {
+          count++;
+          qtyVal.textContent = count + ' pieces';
+        }
+      });
+    }
+
+    const publishBtn = document.getElementById('publish-btn');
+    if (publishBtn) {
+      publishBtn.addEventListener('click', () => {
+        publishBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">check_circle</span><span>Offer Shared with Household!</span>';
+        publishBtn.classList.remove('bg-primary');
+        publishBtn.classList.add('bg-surface-tint');
+        setTimeout(() => {
+          publishBtn.innerHTML = '<span class="material-symbols-outlined text-[18px]">send</span><span>Publish Offer to Household &amp; Circle</span>';
+          publishBtn.classList.add('bg-primary');
+          publishBtn.classList.remove('bg-surface-tint');
+        }, 2500);
+      });
+    }
+  })();
+</script>
+</main>
+<div class="fixed bottom-3 inset-x-0 z-50 px-4 pointer-events-none pb-safe">
+<nav class="pointer-events-auto mx-auto max-w-md w-full bg-surface-container-lowest/90 backdrop-blur-xl rounded-full shadow-[0_10px_30px_-8px_rgba(20,53,41,0.12),0_4px_12px_-2px_rgba(20,53,41,0.04)] p-1.5 flex items-center justify-between" data-active-classes="text-primary font-bold bg-primary-fixed/50">
+<a class="flex-1 min-h-[48px] py-1.5 px-2 flex flex-col items-center justify-center rounded-full text-on-surface-variant transition-all" data-path="ecoloop---your-circular-impact" href="#">
+<span class="material-symbols-outlined text-[22px]">eco</span>
+<span class="font-label text-[10px] mt-0.5 tracking-tight">Home</span>
+</a>
+<a aria-current="page" class="flex-1 min-h-[48px] py-1.5 px-2 flex flex-col items-center justify-center rounded-full transition-all text-primary font-bold bg-primary-fixed/50" data-path="ecoloop---share-before-waste" href="#">
+<span class="material-symbols-outlined text-[22px]">kitchen</span>
+<span class="font-label text-[10px] mt-0.5 tracking-tight">Kitchen</span>
+</a>
+<a class="flex-1 min-h-[48px] py-1.5 px-2 flex flex-col items-center justify-center rounded-full text-on-surface-variant transition-all" data-path="ecoloop---ask-ecoloop-shopping-decision" href="#">
+<span class="material-symbols-outlined text-[22px] text-surface-tint">auto_awesome</span>
+<span class="font-label text-[10px] mt-0.5 tracking-tight text-surface-tint font-medium">Ask</span>
+</a>
+<a class="flex-1 min-h-[48px] py-1.5 px-2 flex flex-col items-center justify-center rounded-full text-on-surface-variant transition-all" data-path="ecoloop---smart-shopping-&amp;-connected-services" href="#">
+<span class="material-symbols-outlined text-[22px]">shopping_bag</span>
+<span class="font-label text-[10px] mt-0.5 tracking-tight">Shop</span>
+</a>
+</nav>
+</div>
+</body></html>

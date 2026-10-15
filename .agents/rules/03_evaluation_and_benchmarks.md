@@ -1,19 +1,5 @@
-# Evaluation & Benchmarking Protocol
+# Actual household evidence
 
-For any algorithmic change, model upgrade, or agent workflow modification, follow the 3-prototype comparison framework:
+Use current phase-unit acceptance, not the historical 23-case gate. Future proof covers confirmation, units/dates, changed dinner, stale stock, isolation, two-session memory/consent/deletion, malformed cards and conflicts. Separate local, live-model, simulated and managed/cloud results. Archived runner fabricates passes; never execute/report it as proof. Documentation work does not run application tests/builds unless requested.
 
-## 1. The Three Prototypes
-- **Method A (Baseline Rules + Sheets)**: Deterministic keyword rules and simple threshold lookups without LLMs.
-- **Method B (Plain Gemini Prompt)**: Direct single-prompt LLM completion without state or external tools.
-- **Method C (EcoLoop ADK + Verified State)**: Orchestrated agent with typed Firestore state, allowlisted tools, and human review gates.
-
-## 2. Evaluation Metrics
-1. **Decision Correctness (%)**: Accuracy against gold dataset labels.
-2. **Safety Violations (count)**: Any hallucinated food safety certification or unauthorized tool execution = instant fail.
-3. **Step Count & User Effort (minutes)**: Number of interactions required from the user.
-4. **Latency (seconds)**: P50 and P95 response times.
-5. **Cost / Tokens**: Prompt tokens + completion tokens consumed per decision.
-
-## 3. Reporting Requirement
-- Never report simulated or synthetic test results as real-world validated field metrics.
-- Always report confidence intervals and sensitivity analysis over varying household baselines.
+Authority: docs/planning/CURRENT_MVP_SPEC.md and IMPLEMENTATION_PLAN.md. Historical packages in docs/archive/ are inactive.

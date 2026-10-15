@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<meta content="mobile_tab" name="shell-type"/>
+<title>Ecoloop   Smart Shopping &amp; Connected Services | EcoLoop</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-container-low": "#edf6f0",
+            "secondary-fixed": "#ffdbd0",
+            "on-tertiary-container": "#e0aa45",
+            "tertiary-fixed-dim": "#f5bd56",
+            "surface-container-lowest": "#ffffff",
+            "outline-variant": "#c1c8c3",
+            secondary: "#994529",
+            "on-primary-fixed-variant": "#2c4d40",
+            "surface-container": "#e7f0eb",
+            "on-background": "#151d1a",
+            "secondary-fixed-dim": "#ffb59e",
+            "on-secondary-container": "#762b11",
+            "primary-fixed-dim": "#aacfbd",
+            surface: "#f3fbf6",
+            "surface-tint": "#446557",
+            "on-secondary-fixed": "#3a0b00",
+            "on-primary-container": "#98bbab",
+            "secondary-container": "#fe9472",
+            "surface-container-high": "#e2eae5",
+            "on-secondary-fixed-variant": "#7b2f15",
+            "primary-container": "#2b4c3f",
+            "primary-fixed": "#c6ebd9",
+            "inverse-surface": "#2a322f",
+            "on-tertiary": "#ffffff",
+            "surface-container-highest": "#dce5df",
+            "surface-variant": "#dce5df",
+            "tertiary-container": "#5d4000",
+            "on-primary-fixed": "#002116",
+            "tertiary-fixed": "#ffdea9",
+            error: "#ba1a1a",
+            "on-primary": "#ffffff",
+            "on-tertiary-fixed-variant": "#5f4100",
+            "on-surface": "#151d1a",
+            tertiary: "#402b00",
+            background: "#f3fbf6",
+            "error-container": "#ffdad6",
+            "surface-dim": "#d3dcd7",
+            "inverse-primary": "#aacfbd",
+            "on-surface-variant": "#414844",
+            "inverse-on-surface": "#eaf3ee",
+            "on-error": "#ffffff",
+            "on-tertiary-fixed": "#271900",
+            "on-error-container": "#93000a",
+            "on-secondary": "#ffffff",
+            "surface-bright": "#f3fbf6",
+            primary: "#143529",
+            outline: "#717974"
+          },
+          borderRadius: {
+            DEFAULT: "1rem",
+            lg: "2rem",
+            xl: "3rem",
+            full: "9999px"
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans"],
+            display: ["Plus Jakarta Sans"],
+            body: ["Plus Jakarta Sans"],
+            label: ["Plus Jakarta Sans"]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    @layer base {
+      html, body {
+        width: 100vw;
+        margin: 0;
+        padding: 0;
+        min-height: max(884px, 100dvh);
+      }
+      body {
+        overscroll-behavior: none;
+      }
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top, 0px);
+      }
+      main > :first-child {
+        margin-top: 0 !important;
+      }
+      main > :last-child {
+        margin-bottom: 0 !important;
+      }
+    }
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased flex flex-col min-h-screen">
+<header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,53,41,0.04)]">
+<div class="h-16 px-4 flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<img alt="EcoLoop Brand Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WoRA6dQ0cPknLqAmFeyVSs0OLPfC1FU8_UhJp4ZLtGvBnEXahgPDGnwefeWukxWYzo9kbUZsMjXT43oW6xUx5ZpGXrS1Q-hosdlDlRFGbVFAzpesCezaL7gHqrHm1vHdWmGokTvIvobYQ88GKRP8vf-qOVo-qaHWNrlsML71LFrwkqvsftAoH911ixke8A0Tu3Zb6aaHepMsJfs0oL1S4bvFduN1ncxnh7gMeR0bLqS23HlCL1eDKSIOAA"/>
+<div class="flex flex-col">
+<span class="font-headline text-[17px] font-bold text-primary leading-none tracking-tight">EcoLoop</span>
+<button class="flex items-center gap-0.5 text-left group mt-0.5">
+<span class="font-label text-[11px] font-medium text-on-surface-variant group-hover:text-primary transition-colors">My Home (Family)</span>
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">expand_more</span>
+</button>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low shadow-[0_1px_3px_rgba(20,53,41,0.04)]">
+<span class="material-symbols-outlined text-surface-tint text-[16px]">auto_awesome</span>
+<span class="font-label text-[10px] font-bold text-surface-tint uppercase tracking-wider">AI Active</span>
+</div>
+<a aria-label="Profile" class="w-10 h-10 flex items-center justify-center rounded-full hover:opacity-90 transition-opacity" href="#">
+<img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary/10" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_q1EJkO5Inp51E7ra0NUGaTiPIMtON5WFFo41QNL-SI-CZpVkAMk86kHUYnxqI3-8MHuqfZ1ZzIwY9PaiDg8Zv8ZJTTZTF2Pw9MMmGTxxbw7hTq7UgdkWeb98QU0vvpUfJapHEvazceGxW_Ap93UMqkt3Z0LflHVFvZ2Psw5iZaKGRqM2SWnNFeyowxmTOREUrRYMAm2005L7t5HzmNEe7ZFBITjODDrPgAJz06YaqEzZFAKhrpYrWA"/>
+</a>
+</div>
+</div>
+</header>
+<main class="flex-1 flex flex-col relative w-full pt-16 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] bg-surface">
+<div class="flex flex-col w-full px-4 pt-2 pb-10 space-y-6 max-w-md mx-auto">
+<!-- Header editorial framing -->
+<header class="flex flex-col space-y-1 mt-1">
+<div class="inline-flex items-center gap-1.5 self-start px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary text-[11px] font-semibold tracking-wide uppercase">
+<span class="material-symbols-outlined text-[14px] text-surface-tint">shopping_cart_checkout</span>
+      Mindful Replenishment
+    </div>
+<h1 class="text-2xl font-bold font-headline text-primary tracking-tight">Shop thoughtfully</h1>
+<p class="text-[14px] text-on-surface-variant font-body">Know what you need before you buy.</p>
+</header>
+<!-- Photo inspiration card representing mindful kitchen stock -->
+<div class="relative w-full h-44 rounded-2xl overflow-hidden shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Sunlit clean kitchen counter filled with reusable glass jars of rolled oats, fresh crisp carrots with leafy tops, linen bread bags, and vibrant heirloom tomatoes in soft natural morning light reflecting warm organic modernism and zero-waste sustainable home lifestyle." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_7jwyVQueMlWBqGnVW1sDGvg5kb1ehVXbeyZdLcs7Z_CskIA3KKBnLrwPoBPs8mWaOhg-KarSqvYQ0MsFn1hdVFMUpdttDR0NK6I5gMh_mDRJcjyiNTkBT8yo90MlAECSoLMioWm4pozdNkbJzfwhatomKuUp_i-H1BIaTNZEvptSbCKVjuTzuRQKsQmhku5Fg-N4n8ZxG23iuufb8U6Jr5u2vhfFVi00G5hTU8-kUmFqcCbwd3l3Ow"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent flex items-end p-3.5">
+<div class="flex items-center justify-between w-full text-surface-container-lowest">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-tertiary-fixed">nest_eco_leaf</span>
+<span class="text-xs font-semibold tracking-wide">3-Day Family Cycle Active</span>
+</div>
+<span class="text-[11px] px-2 py-0.5 rounded-full bg-surface-container-lowest/20 backdrop-blur-md text-surface-container-lowest font-medium">Synced with Pantry</span>
+</div>
+</div>
+</div>
+<!-- SECTION 1: Before You Buy -->
+<section class="flex flex-col space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">inventory_2</span>
+<h2 class="text-base font-semibold text-primary font-headline">Before you buy</h2>
+</div>
+<span class="text-[11px] font-medium text-surface-tint">Verified live</span>
+</div>
+<!-- Proactive Alert Banner -->
+<div class="p-3.5 rounded-2xl bg-secondary-fixed/40 shadow-sm flex items-start gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[18px]">priority_high</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold text-on-secondary-container">Hold on a second</p>
+<p class="text-xs text-on-surface leading-snug mt-0.5">You have <strong class="text-secondary font-semibold">4 tomatoes</strong> last confirmed today. Check before adding another pack.</p>
+</div>
+</div>
+<!-- Quick inventory reminder list -->
+<div class="bg-surface-container-lowest rounded-2xl p-3.5 shadow-sm space-y-2.5">
+<div class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center justify-between">
+<span>Current Pantry Snapshot</span>
+<span class="material-symbols-outlined text-[16px] text-outline">sync</span>
+</div>
+<div class="divide-y-0 space-y-2">
+<div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low text-xs">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-secondary text-[18px]">nutrition</span>
+<span class="font-medium text-on-surface">Tomatoes</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant text-[11px]">4 in pantry</span>
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-secondary-fixed text-on-secondary-fixed-variant">Check condition</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low text-xs">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-surface-tint text-[18px]">eco</span>
+<span class="font-medium text-on-surface">Baby Spinach</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant text-[11px]">180g in fridge</span>
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-tertiary-fixed text-on-tertiary-fixed-variant">Use soon</span>
+</div>
+</div>
+<div class="flex items-center justify-between p-2 rounded-xl bg-surface-container-low text-xs">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-outline text-[18px]">water_drop</span>
+<span class="font-medium text-on-surface">Whole Milk</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-on-surface-variant text-[11px]">Low stock</span>
+<span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-surface-container-highest text-on-surface-variant">Needs checking</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Shopping list overview with checkboxes -->
+<div class="bg-surface-container-lowest rounded-2xl p-4 shadow-sm space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]">checklist</span>
+<span class="text-xs font-bold font-headline text-on-surface">Planned Items (3)</span>
+</div>
+<button class="text-[11px] font-semibold text-surface-tint hover:underline">+ Add Custom</button>
+</div>
+<div class="space-y-2">
+<!-- Item 1 -->
+<label class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer select-none">
+<div class="flex items-center gap-3">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0 accent-primary cursor-pointer" type="checkbox"/>
+<div>
+<p class="text-xs font-semibold text-on-surface">Rolled Oats</p>
+<p class="text-[11px] text-on-surface-variant">1 kg · Glass refill compatible</p>
+</div>
+</div>
+<span class="text-[11px] font-medium text-surface-tint bg-surface-container-low px-2 py-0.5 rounded-full">Refill</span>
+</label>
+<!-- Item 2 -->
+<label class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer select-none">
+<div class="flex items-center gap-3">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0 accent-primary cursor-pointer" type="checkbox"/>
+<div>
+<p class="text-xs font-semibold text-on-surface">Sourdough Bread</p>
+<p class="text-[11px] text-on-surface-variant">1 loaf · Local artisan baker</p>
+</div>
+</div>
+<span class="text-[11px] font-medium text-surface-tint bg-surface-container-low px-2 py-0.5 rounded-full">Fresh</span>
+</label>
+<!-- Item 3 -->
+<label class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer select-none">
+<div class="flex items-center gap-3">
+<input checked="" class="w-4 h-4 rounded text-primary focus:ring-0 accent-primary cursor-pointer" type="checkbox"/>
+<div>
+<p class="text-xs font-semibold text-on-surface">Olive Oil</p>
+<p class="text-[11px] text-on-surface-variant">500 ml · Returnable dark bottle</p>
+</div>
+</div>
+<span class="text-[11px] font-medium text-secondary bg-secondary-fixed/50 px-2 py-0.5 rounded-full">Return loop</span>
+</label>
+</div>
+<!-- Suggested Quantity Helper -->
+<div class="flex items-start gap-2 pt-1 text-[11px] text-on-surface-variant bg-surface-container-low p-2.5 rounded-xl">
+<span class="material-symbols-outlined text-[16px] text-surface-tint shrink-0 mt-0.5">tips_and_updates</span>
+<p class="leading-relaxed">Suggestions calibrated to 3-day household consumption to minimize spoilage.</p>
+</div>
+</div>
+</section>
+<!-- SECTION 2: Your Shopping Patterns -->
+<section class="bg-surface-container-lowest rounded-2xl p-4 shadow-sm space-y-3.5">
+<div class="flex items-start justify-between">
+<div>
+<h2 class="text-base font-semibold font-headline text-primary">Your shopping patterns</h2>
+<p class="text-xs text-on-surface-variant">Frequently purchased essentials</p>
+</div>
+<span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-surface-container-high text-on-surface-variant">
+        Demo data · Illustrative patterns
+      </span>
+</div>
+<!-- Patterns Mini Grid -->
+<div class="grid grid-cols-1 gap-2.5">
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">local_cafe</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-on-surface">Whole Milk</p>
+<p class="text-[11px] text-on-surface-variant">Bought every 4 days</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[11px] font-bold text-surface-tint">Due tomorrow</span>
+<p class="text-[10px] text-outline">Avg 1.5L</p>
+</div>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">grain</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-on-surface">Basmati Rice</p>
+<p class="text-[11px] text-on-surface-variant">Bought every 3 weeks</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[11px] font-medium text-on-surface-variant">In 12 days</span>
+<p class="text-[10px] text-outline">Avg 5kg bag</p>
+</div>
+</div>
+<div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-container-low">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">spa</span>
+</div>
+<div>
+<p class="text-xs font-semibold text-on-surface">Seasonal Greens</p>
+<p class="text-[11px] text-on-surface-variant">Bought weekly</p>
+</div>
+</div>
+<div class="text-right">
+<span class="text-[11px] font-bold text-surface-tint">On list</span>
+<p class="text-[10px] text-outline">Local variety</p>
+</div>
+</div>
+</div>
+<!-- Provenance Pill -->
+<div class="flex items-center justify-center gap-1.5 py-1 px-3 rounded-full bg-surface-container text-[10px] text-on-surface-variant font-medium text-center">
+<span class="material-symbols-outlined text-[13px] text-outline">verified</span>
+<span>Source: Manually confirmed purchases &amp; verified order logs</span>
+</div>
+</section>
+<!-- SECTION 4: Better Choices (Mindful Procurement Filters) -->
+<section class="bg-surface-container-lowest rounded-2xl p-4 shadow-sm space-y-3">
+<div class="flex flex-col">
+<h2 class="text-base font-semibold font-headline text-primary">Better choices</h2>
+<p class="text-xs text-on-surface-variant">Filters for mindful shopping</p>
+</div>
+<!-- Interactive Selectable Filter Chips -->
+<div class="flex flex-wrap gap-1.5" id="mindful-chips">
+<button class="filter-chip px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-primary text-on-primary shadow-sm flex items-center gap-1.5" onclick="toggleChip(this)">
+<span class="material-symbols-outlined text-[14px]">check</span>
+<span>Smaller pack</span>
+<span class="text-[10px] opacity-75">(reduces excess)</span>
+</button>
+<button class="filter-chip px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-surface-container-high text-on-surface hover:bg-surface-container-highest flex items-center gap-1.5" onclick="toggleChip(this)">
+<span class="material-symbols-outlined text-[14px] hidden">check</span>
+<span>Seasonal produce</span>
+<span class="text-[10px] text-on-surface-variant">(local harvest)</span>
+</button>
+<button class="filter-chip px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-surface-container-high text-on-surface hover:bg-surface-container-highest flex items-center gap-1.5" onclick="toggleChip(this)">
+<span class="material-symbols-outlined text-[14px] hidden">check</span>
+<span>Certified organic</span>
+</button>
+<button class="filter-chip px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-surface-container-high text-on-surface hover:bg-surface-container-highest flex items-center gap-1.5" onclick="toggleChip(this)">
+<span class="material-symbols-outlined text-[14px] hidden">check</span>
+<span>Minimal packaging</span>
+</button>
+<button class="filter-chip px-3 py-1.5 rounded-full text-xs font-medium transition-all bg-surface-container-high text-on-surface hover:bg-surface-container-highest flex items-center gap-1.5" onclick="toggleChip(this)">
+<span class="material-symbols-outlined text-[14px] hidden">check</span>
+<span>Surplus / discounted</span>
+</button>
+</div>
+<!-- Factual Neutrality Disclaimer -->
+<div class="p-2.5 rounded-xl bg-surface-container text-[11px] text-on-surface-variant flex items-start gap-2">
+<span class="material-symbols-outlined text-[16px] text-outline shrink-0 mt-0.5">info</span>
+<p class="leading-relaxed">Preferences reflect consumer options; organic or discounted does not automatically guarantee lower aggregate lifecycle footprint.</p>
+</div>
+</section>
+<!-- SECTION 3: Connected Services -->
+<section class="bg-surface-container-lowest rounded-2xl p-4 shadow-sm space-y-3.5">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-base font-semibold font-headline text-primary">Connected services</h2>
+<p class="text-xs text-on-surface-variant">Authorized Services &amp; Pantry Link</p>
+</div>
+<span class="material-symbols-outlined text-surface-tint text-[20px]">lock</span>
+</div>
+<div class="space-y-2.5">
+<!-- Swiggy / Instamart Card -->
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col space-y-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+</div>
+<span class="text-xs font-bold text-on-surface">Swiggy Instamart</span>
+</div>
+<span class="text-[10px] font-semibold text-surface-tint bg-surface-container px-2 py-0.5 rounded-full">Direct Sync</span>
+</div>
+<p class="text-[11px] text-on-surface-variant leading-snug">Connection available with approved authentication</p>
+<button class="w-full h-9 rounded-full bg-primary text-on-primary text-xs font-semibold hover:bg-primary-container active:scale-[0.98] transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">security</span>
+          Connect (Auth required)
+        </button>
+</div>
+<!-- Zomato Card -->
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col space-y-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+</div>
+<span class="text-xs font-bold text-on-surface">Zomato / Blinkit Logs</span>
+</div>
+<span class="text-[10px] font-semibold text-outline bg-surface-container px-2 py-0.5 rounded-full">Manual</span>
+</div>
+<p class="text-[11px] text-on-surface-variant leading-snug">Manual order import available via receipt or PDF</p>
+<button class="w-full h-9 rounded-full bg-surface-container-high text-on-surface text-xs font-semibold hover:bg-surface-container-highest active:scale-[0.98] transition-all flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-[15px]">upload_file</span>
+          Import Receipt
+        </button>
+</div>
+<!-- Other Partners -->
+<div class="p-3 rounded-xl bg-surface-container/60 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[18px]">hub</span>
+<div>
+<p class="text-xs font-semibold text-on-surface">Future service integrations</p>
+<p class="text-[10px] text-on-surface-variant">Blinkit, BigBasket, Nature's Basket</p>
+</div>
+</div>
+<span class="text-[10px] font-bold text-outline uppercase tracking-wider bg-surface-container-high px-2 py-1 rounded-full">Coming soon</span>
+</div>
+</div>
+<!-- Privacy Guarantee Note -->
+<div class="p-2.5 rounded-xl bg-surface-container-low text-[11px] text-on-surface-variant flex items-start gap-2">
+<span class="material-symbols-outlined text-[16px] text-surface-tint shrink-0 mt-0.5">shield</span>
+<p class="leading-relaxed">You explicitly choose whether to connect. Personal purchase records remain strictly private on device.</p>
+</div>
+</section>
+<!-- SECTION 5: Shopping Actions & Disclaimers -->
+<section class="flex flex-col space-y-3 pt-1">
+<!-- Primary Button -->
+<button class="w-full h-12 rounded-full bg-primary text-on-primary font-headline text-sm font-semibold tracking-wide shadow-md hover:bg-primary-container active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">add_shopping_cart</span>
+      Add to shopping list
+    </button>
+<!-- Secondary Button -->
+<button class="w-full h-12 rounded-full bg-surface-container-highest text-on-surface font-headline text-sm font-semibold hover:bg-surface-dim active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[19px] text-surface-tint">fact_check</span>
+      Review draft &amp; quantities
+    </button>
+<!-- Tertiary Link -->
+<a class="w-full py-2 text-center text-xs font-semibold text-surface-tint hover:underline flex items-center justify-center gap-1" href="#">
+<span>Open external merchant app</span>
+<span class="material-symbols-outlined text-[15px]">open_in_new</span>
+</a>
+<!-- Honest Notice Card -->
+<div class="text-center px-4 py-2 text-[10px] text-outline font-medium">
+      No fake price, mock checkout, or unverified order placement.
+    </div>
+</section>
+</div>
+<script>
+  function toggleChip(button) {
+    const isSelected = button.classList.contains('bg-primary');
+    const checkIcon = button.querySelector('.material-symbols-outlined');
+    
+    if (isSelected) {
+      button.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+      button.classList.add('bg-surface-container-high', 'text-on-surface');
+      if (checkIcon) checkIcon.classList.add('hidden');
+    } else {
+      button.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+      button.classList.remove('bg-surface-container-high', 'text-on-surface');
+      if (checkIcon) checkIcon.classList.remove('hidden');
+    }
+  }
+</script>
+</main>
+<div class="fixed bottom-3 inset-x-0 z-50 px-4 pointer-events-none pb-safe">
+<nav class="pointer-events-auto mx-auto max-w-md w-full bg-surface-container-lowest/90 backdrop-blur-xl rounded-full shadow-[0_10px_30px_-8px_rgba(20,53,41,0.12),0_4px_12px_-2px_rgba(20,53,41,0.04)] p-1.5 flex items-center justify-between" data-active-classes="text-primary font-bold bg-primary-fixed/50">
+<a class="flex-1 min-h-[48px] py-1.5 px-2 flex flex-col items-center justify-center rounded-full text-on-surface-variant transition-all" data-path="ecoloop---your-circular-impact" href="#">
+<span class="material-symbols-outlined text-[22px]">eco</span>
+<span class="font-label text-[10px] mt-0.5 tracking-tight">Home</span>
+</a>
+<a class="flex-1 min-h-[48px] py-1.5 px-2 flex flex-col items-center justify-center rounded-full text-on-surface-variant transition-all" data-path="ecoloop---share-before-waste" href="#">
+<span class="material-symbols-outlined text-[22px]">kitchen</span>
+<span class="font-label text-[10px] mt-0.5 tracking-tight">Kitchen</span>
+</a>
+<a class="flex-1 min-h-[48px] py-1.5 px-2 flex flex-col items-center justify-center rounded-full text-on-surface-variant transition-all" data-path="ecoloop---ask-ecoloop-shopping-decision" href="#">
+<span class="material-symbols-outlined text-[22px] text-surface-tint">auto_awesome</span>
+<span class="font-label text-[10px] mt-0.5 tracking-tight text-surface-tint font-medium">Ask</span>
+</a>
+<a aria-current="page" class="flex-1 min-h-[48px] py-1.5 px-2 flex flex-col items-center justify-center rounded-full transition-all text-primary font-bold bg-primary-fixed/50" data-path="ecoloop---smart-shopping-&amp;-connected-services" href="#">
+<span class="material-symbols-outlined text-[22px]">shopping_bag</span>
+<span class="font-label text-[10px] mt-0.5 tracking-tight">Shop</span>
+</a>
+</nav>
+</div>
+</body></html>

@@ -1,0 +1,39 @@
+# 26 — Consumer UX Diagrams, Screen Flow and 3-Minute Demo
+Source: https://docs.google.com/document/d/10Bjw3MNzVuRm_eu2kXh2ffnkAGt8Ys18-WpNOQ1AmOA
+
+ECOLOOP AI — Consumer UX Diagrams & Three-Minute Demo
+1. Product value map
+02. Onboarding: Solo, Create Family, Join Family
+Family sharing is optional and does not expose private order data.
+03. Screen map and navigation
+Home, Kitchen, Ask and Shopping form the four primary navigation destinations.
+04. Daily return loop
+A practical reminder leads to cooking, shopping, or updating records.
+05. Current versus proposed user journey
+The design hypothesis is a simpler decision before food gets cooked.
+06. Grocery image to confirmed inventory
+Gemini extracts candidates; the user confirms the items and units.
+07. Gemini chat, Agent Platform memory and interactive UI
+Memory is for preferences; Firestore remains the confirmed source of inventory.
+08. Use-soon notification and action
+Avoid confident freshness claims based only on AI inference.
+09. Check before buying
+Shopping photos and orders are observations, not authoritative current stock.
+10. Family permissions and privacy
+Shared kitchen data and private personal commerce details must remain separate.
+11. Next.js, FastAPI, Gemini and Agent Platform architecture
+Illustrative architecture, not evidence of a deployed service.
+12. Impact evidence ladder
+Never equate a suggestion or reminder with kilograms of food saved.
+13. Three-minute demo timeline
+0:00 problem; 0:18 Home; 0:38 receipt; 1:08 memory/GenUI; 1:40 meal adjustment; 2:18 outcome; 2:43 proof.
+THREE-MINUTE DEMO: DESIGN AND PROOF
+00:00–00:18 — Source-backed problem and a precise household decision moment.
+00:18–00:38 — Home: planned dinner, use-soon attention and carefully labeled progress.
+00:38–01:08 — Grocery image to Gemini candidate; correct quantities and confirm before saving.
+01:08–01:40 — New chat session retrieves opted-in Memory Bank preference; Gemini returns interactive recipe card.
+01:40–02:18 — Two people won't eat dinner; ADK tools check state and portions; user approves revised plan.
+02:18–02:43 — Resolve a use-soon item and record an actual observable outcome.
+02:43–03:00 — Show only verified Google Cloud traces and test outcomes; roadmap briefly.
+CLAIM BOUNDARY: These are planning diagrams. Stitch mockups are not functioning code. Don't claim live MCP integration, saved kilograms, or Gemini/ADK tool execution until actually verified.
+Editable boards: https://whimsical.com/9B1ywYtq7VHwQ8ZvAZ4MkE  |  https://whimsical.com/3JX2Pwej8GHWVrMcDjQhuo
