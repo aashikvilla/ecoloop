@@ -17,3 +17,6 @@ Prevention: preserve dated source inventory, record explicit supersession/confli
 ## 2026-10-15 — Checkboxes without evidence
 Prevention verified in native Sheets: completion checkbox plus status, evidence, reviewer/date and verified prerequisites are all required. Removing upstream evidence reopens dependent work. IDs must be unique and dependencies precede dependents. Use filters, not physical row sorting.
 
+## 2026-10-16 — Reopening billing can affect other projects
+
+Observation: the only available billing account is closed but remains associated with another active project. Reopening it to unblock the hackathon could resume charges beyond EcoLoop. Prevention: enumerate linked projects and review their owners/resources before reopening an account; use a dedicated active account scoped to the hackathon project or obtain explicit account-owner approval, then configure the project budget and additional cost controls before enabling paid services.

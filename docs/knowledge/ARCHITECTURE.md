@@ -5,3 +5,5 @@ Planned: Next.js/App Hosting; FastAPI/Cloud Run canonical authority; real Gemini
 
 The [old broad architecture](../archive/2026-10-15-pre-consumer-replan/planning/00_START_HERE.md) is archived. Do not revive operator lanes, dark cockpit, unsupported safety/carbon constants or fabricated benchmarks.
 
+
+Frontend foundation: Tailwind CSS v4 `@theme` in `frontend/src/app/globals.css` is the single semantic design-token source. `frontend/src/components/ui/` contains shared primitives; `frontend/src/components/layout/` contains shared navigation/page shell. Build mobile-first from 360px. No frontend/backend unit tests; use evidence from allowed integration, security, accessibility and end-to-end checks instead.

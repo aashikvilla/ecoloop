@@ -103,7 +103,7 @@
       "task": "M0.02 Technical feasibility",
       "title": "Set privacy, consent, retention and cost boundaries",
       "owner": "Technical + product",
-      "acceptance": "Chosen retention durations, scoped preference consent/deletion policy and per-user cost limits documented.",
+      "acceptance": "Chosen retention durations, scoped preference consent/deletion policy and per-user cost limits documented; available credits are verified or recorded as unknown, the billing account's linked-project impact is reviewed, and a $10/month alert is configured for the single hackathon project before paid services are enabled. Its non-cap behavior and additional cost controls are explicit.",
       "dependencies": [
         "M0.01.03",
         "M0.02.01"
@@ -183,9 +183,9 @@
       "id": "M1.02.01",
       "phase": "M1",
       "task": "M1.02 Stitch shell",
-      "title": "Implement four-tab responsive Stitch shell",
+      "title": "Establish shared tokenized UI foundation and four-tab responsive shell",
       "owner": "Frontend",
-      "acceptance": "Home/Kitchen/Ask/Shop match light tokens; 360px and desktop states include keyboard/focus/touch behavior.",
+      "acceptance": "Reusable Button/Heading/Input/Card primitives are in frontend/src/components/ui/; shared shell/navigation is in frontend/src/components/layout/; Tailwind v4 semantic tokens are centralized in frontend/src/app/globals.css @theme; Home/Kitchen/Ask/Shop reuse them and match the light Stitch references at 360px and wider breakpoints, with accessible touch/focus behavior.",
       "dependencies": [
         "M0.02.03"
       ],
@@ -576,9 +576,9 @@
       "id": "M5.02.01",
       "phase": "M5",
       "task": "M5.02 Release and handoff",
-      "title": "Stage the authorized cloud deployment with rollback",
+      "title": "Automate authorized hackathon deployment with rollback",
       "owner": "Technical lead",
-      "acceptance": "Reviewed config/IAM/secrets and rollback; actual authorized staging deployment has HTTPS, version and health evidence before deployed E2E. If authorization/access unavailable, deployed gate stays blocked.",
+      "acceptance": "Reviewed single project/region, budget alerts and additional cost controls, IAM, Secret Manager references and rollback; repeatable Google Cloud build/deploy pipeline rolls out to the one hackathon environment; deployed version has HTTPS and health evidence before deployed E2E. Do not embed credentials in GitHub or repository files; if authorization/access unavailable, deployed gate stays blocked.",
       "dependencies": [
         "M4.02.03"
       ],
@@ -611,7 +611,7 @@
       "task": "M5.02 Release and handoff",
       "title": "Review release gate and resolve open blockers",
       "owner": "Product + reviewer",
-      "acceptance": "All prerequisite evidence reviewed; only then mark release-ready. No autonomous production rollout or invented completion.",
+      "acceptance": "All prerequisite evidence reviewed; only then mark hackathon-ready. No autonomous rollout or invented completion.",
       "dependencies": [
         "M5.01.03",
         "M5.02.02"

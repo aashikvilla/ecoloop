@@ -42,6 +42,16 @@ Use the user-supplied root HTML/PNG pairs under [prototypes](../prototypes/) as 
 
 Warm light surfaces, deep forest green, restrained terracotta, Plus Jakarta Sans, rounded cards and generous spacing are the baseline. Initial token values from the exported frontmatter/code: surface `#f3fbf6`, primary `#143529`, primary container `#2b4c3f`, secondary `#994529`, text `#151d1a`; cards approximately 24px radius. Match each screen when tokens disagree, then consolidate once in implementation. Test contrast; do not inherit an unverified AAA claim. Do not introduce dark-first enterprise styling. A dark variant requires its own design later.
 
+### Shared frontend foundation
+
+Use `frontend/src/components/ui/` for app-wide primitives (`Button`, `Heading`, `Input`, `Card`, and other stable controls) and `frontend/src/components/layout/` for the four-tab shell, navigation, page frame and shared responsive layout. Feature-specific composition remains close to its route. Build mobile-first from the supplied 360px Stitch screens, then expand at wider breakpoints; shared controls retain ≥44px hit areas, labels, visible focus and keyboard behavior.
+
+The scaffold currently uses Tailwind CSS v4. Its CSS-first `@theme` block in `frontend/src/app/globals.css` is the single theme-token source. Define semantic color, type, radius, spacing and elevation tokens there and consume them through generated Tailwind utilities. Do not maintain a duplicate raw-color palette in components or introduce a competing legacy `tailwind.config` token table. A theme color revision should normally be a one-file token change followed by visual review of all four destinations. If Tailwind is deliberately downgraded, record that decision and move the single token source to the matching config format.
+
+### Verification policy
+
+Per current user instruction, do not add or run frontend or backend unit tests, test files/frameworks, or unit-test dependencies. Verification uses requested lint/type/build checks, explicit contract and integration checks, security-boundary exercises, cloud health/smoke checks, manual accessibility review and end-to-end user-journey evidence. Gemini/Google Cloud model evaluations may support quality review when data, cost and expected results are bounded; they do not replace deterministic checks for authorization, arithmetic, versions, idempotency or safety rules. Never claim verification without recording observed evidence.
+
 The generic DESIGN.md prose contains unrelated Shop/Loop/Impact/Bag navigation and a second palette. Actual household screens and the latest consumer four-tab structure take precedence. Use “Shop” as the visible tab label; “Shopping” may describe the feature in prose.
 
 | Stitch export folder | Proposed route/state | Primary behavior and correction |

@@ -4,6 +4,8 @@
 
 This replaces the 156-unit platform plan. Every box starts unchecked: documentation is not implementation. The live MVPTasks Sheet is the status authority; this file is a baseline snapshot. Each unit has an owner, prerequisite and observable acceptance condition. A review gate counts once as a unit, not once per parent task.
 
+**Verification constraint:** No frontend or backend unit tests, test frameworks/files or unit-test dependencies. Use type/lint/build checks only when requested, plus contract/integration/security checks, manual accessibility review, Cloud smoke checks and end-to-end journey evidence. AI evaluations may assess generated response quality under bounded data/cost but cannot establish deterministic correctness or authorization.
+
 ## How to execute
 
 1. Read the current specification section for the unit, relevant Stitch export and active guidance only.
@@ -48,7 +50,7 @@ Indicative effort: 1–2 engineering days. Entry: current source/design packet. 
 
 - [ ] **M0.02.02 — Set privacy, consent, retention and cost boundaries**
   - Owner: Technical + product. Prerequisites: M0.01.03, M0.02.01.
-  - Acceptance: Chosen retention durations, scoped preference consent/deletion policy and per-user cost limits documented.
+  - Acceptance: Chosen retention durations, scoped preference consent/deletion policy and per-user cost limits documented; available credits are verified or recorded as unknown, the billing account's linked-project impact is reviewed, and a $10/month alert is configured for the single hackathon project before paid services are enabled. Its non-cap behavior and additional cost controls are explicit.
 
 - [ ] **M0.02.03 — Review M0 exit evidence**
   - Owner: Reviewer. Prerequisites: M0.01.03, M0.02.02.
@@ -74,9 +76,9 @@ Indicative effort: 2–3 engineering days. Entry: M0 reviewed exit gate. Exit: M
 
 ### M1.02 Stitch shell
 
-- [ ] **M1.02.01 — Implement four-tab responsive Stitch shell**
+- [ ] **M1.02.01 — Establish shared tokenized UI foundation and four-tab responsive shell**
   - Owner: Frontend. Prerequisites: M0.02.03.
-  - Acceptance: Home/Kitchen/Ask/Shop match light tokens; 360px and desktop states include keyboard/focus/touch behavior.
+  - Acceptance: reusable Button/Heading/Input/Card primitives are in `frontend/src/components/ui/`; shared shell/navigation is in `frontend/src/components/layout/`; Tailwind v4 semantic tokens are centralized in `frontend/src/app/globals.css` `@theme`; Home/Kitchen/Ask/Shop reuse them and match the light Stitch references at 360px and wider breakpoints, with accessible touch/focus behavior.
 
 - [ ] **M1.02.02 — Provide honest empty, loading, error and demo states**
   - Owner: Frontend. Prerequisites: M1.02.01.
@@ -202,9 +204,9 @@ Indicative effort: 2–4 engineering days. Entry: M4 reviewed exit gate. Exit: M
 
 ### M5.02 Release and handoff
 
-- [ ] **M5.02.01 — Stage the authorized cloud deployment with rollback**
+- [ ] **M5.02.01 — Automate authorized hackathon deployment with rollback**
   - Owner: Technical lead. Prerequisites: M4.02.03.
-  - Acceptance: Reviewed config/IAM/secrets and rollback; actual authorized staging deployment has HTTPS, version and health evidence before deployed E2E. If authorization/access unavailable, deployed gate stays blocked.
+  - Acceptance: Reviewed single project/region, budget alerts and additional cost controls, IAM, Secret Manager references and rollback; repeatable Google Cloud build/deploy pipeline rolls out to the one hackathon environment; deployed version has HTTPS and health evidence before deployed E2E. Do not embed credentials in GitHub or repository files; if authorization/access unavailable, deployed gate stays blocked.
 
 - [ ] **M5.02.02 — Record three-minute demo and operational handoff**
   - Owner: Product + technical. Prerequisites: M5.01.03, M5.02.01.
@@ -212,7 +214,7 @@ Indicative effort: 2–4 engineering days. Entry: M4 reviewed exit gate. Exit: M
 
 - [ ] **M5.02.03 — Review release gate and resolve open blockers**
   - Owner: Product + reviewer. Prerequisites: M5.01.03, M5.02.02.
-  - Acceptance: All prerequisite evidence reviewed; only then mark release-ready. No autonomous production rollout or invented completion.
+  - Acceptance: All prerequisite evidence reviewed; only then mark hackathon-ready. No autonomous rollout or invented completion.
 
 ## Deferred queue — outside release progress
 

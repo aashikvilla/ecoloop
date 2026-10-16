@@ -9,3 +9,9 @@ Old DEC-PLAT register and ADRs remain historical sources. M0 resolves exact cont
 ## Consolidated pack precedence and archive (2026-10-15)
 
 The newly added consolidated build pack is a detailed reference, not the current MVP authority. The current spec, decisions and phase checklist in `docs/planning/` govern. Current navigation is Home, Kitchen, Ask, Shop; sharing is an owner-recorded private log. Family invitations, recipient confirmations, live partner integrations and deposit/tote/marketplace flows are deferred. The pack's 13 explicitly legacy diagrams and exact duplicate Stitch export are preserved under `docs/archive/2026-10-15-pre-consumer-replan/`.
+
+Current user decisions: shared accessible UI primitives under `frontend/src/components/ui/`; shared navigation/layout under `frontend/src/components/layout/`; one central Tailwind v4 `@theme` token source in `frontend/src/app/globals.css`; mobile-first responsive development; Google Cloud/Gemini services for approved product integrations; no frontend/backend unit tests or dependencies. See [MVP-D15–16](../planning/DECISIONS.md).
+
+## Single hackathon environment (2026-10-16)
+
+Use one named Google Cloud/Firebase project and one environment for the hackathon by default; do not add staging/production separation unless the owner explicitly asks. Current project ID is `ecoloop-staging-20261015` (immutable); display name is “EcoLoop Hackathon.” Existing billing is off. The only listed billing account is closed and still linked to another active project, so inspect account-wide impact before reopening. The credits page failed to load; balance is unknown. See MVP-D17–18 and the current cloud setup session.
