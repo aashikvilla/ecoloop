@@ -17,8 +17,10 @@ import { getFirebaseClient } from "@/lib/firebase-client";
 import { useLiveHousehold } from "@/lib/live-household";
 import {
   CanonicalApiError,
+  createCanonicalHousehold,
   readCanonicalRecords,
   type CanonicalData,
+  type CreatedHousehold,
 } from "@/lib/canonical-api";
 import { CanonicalCommandControls } from "./command-controls";
 import { OutcomeControls } from "./outcome-controls";
@@ -43,6 +45,12 @@ export function AccountConnection() {
   const [user, setUser] = useState<User | null>(null);
   const [householdId, setHouseholdId] = useState("");
   const [selectedHousehold, setSelectedHousehold] = useState("");
+  const [householdName, setHouseholdName] = useState("");
+  const [onboardingStep, setOnboardingStep] = useState<"name" | "review" | "complete">("name");
+  const [createRequestId, setCreateRequestId] = useState("");
+  const [createdHousehold, setCreatedHousehold] = useState<CreatedHousehold | null>(null);
+  const [createPending, setCreatePending] = useState(false);
+  const [createError, setCreateError] = useState<CanonicalApiError | null>(null);
   const [revision, setRevision] = useState(0);
   const [data, setData] = useState<CanonicalData | null>(null);
   const [dataError, setDataError] = useState<CanonicalApiError | null>(null);
@@ -51,6 +59,7 @@ export function AccountConnection() {
   );
   const [notice, setNotice] = useState("");
   const requestRef = useRef<AbortController | null>(null);
+  const createRequestRef = useRef<AbortController | null>(null);
   const identityRef = useRef("");
 
   useEffect(() => {
@@ -71,6 +80,8 @@ export function AccountConnection() {
             const nextKey = nextUser?.uid ?? "";
             if (identityRef.current !== nextKey) {
               requestRef.current?.abort();
+              createRequestRef.current?.abort();
+              createRequestRef.current = null;
               setData(null);
               setDataError(null);
               setLoadingKind(null);
@@ -83,6 +94,12 @@ export function AccountConnection() {
               );
               setHouseholdId("");
               setSelectedHousehold("");
+              setHouseholdName("");
+              setOnboardingStep("name");
+              setCreateRequestId("");
+              setCreatedHousehold(null);
+              setCreatePending(false);
+              setCreateError(null);
               identityRef.current = nextKey;
             }
             setUser(nextUser);
@@ -91,6 +108,8 @@ export function AccountConnection() {
           (error) => {
             requestRef.current?.abort();
             requestRef.current = null;
+            createRequestRef.current?.abort();
+            createRequestRef.current = null;
             identityRef.current = "";
             setData(null);
             setDataError(null);
@@ -98,6 +117,12 @@ export function AccountConnection() {
             setNotice("");
             setHouseholdId("");
             setSelectedHousehold("");
+            setHouseholdName("");
+            setOnboardingStep("name");
+            setCreateRequestId("");
+            setCreatedHousehold(null);
+            setCreatePending(false);
+            setCreateError(null);
             setUser(null);
             setAuthState("error");
             setAuthError(authMessage(error));
@@ -113,6 +138,7 @@ export function AccountConnection() {
     return () => {
       active = false;
       requestRef.current?.abort();
+      createRequestRef.current?.abort();
       unsubscribe();
     };
   }, []);
@@ -185,6 +211,9 @@ export function AccountConnection() {
   }
 
   async function handleSignOut() {
+    createRequestRef.current?.abort();
+    createRequestRef.current = null;
+    setCreatePending(false);
     clearRecords();
     setHouseholdId("");
     setSelectedHousehold("");
@@ -262,6 +291,47 @@ export function AccountConnection() {
     setRevision((value) => value + 1);
     clearRecords("Household selected. Load records to check your access.");
   }
+
+  function reviewHousehold(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const name = householdName.trim();
+    if (!name || name.length > 80 || /[\u0000-\u001f\u007f]/.test(name)) return;
+    setHouseholdName(name);
+    setCreateRequestId(crypto.randomUUID());
+    setCreateError(null);
+    setOnboardingStep("review");
+  }
+
+  async function createHousehold() {
+    if (!user || authState !== "signed-in" || onboardingStep !== "review" || !createRequestId || createPending) return;
+    createRequestRef.current?.abort();
+    const controller = new AbortController();
+    createRequestRef.current = controller;
+    const identity = user.uid;
+    setCreatePending(true);
+    setCreateError(null);
+    try {
+      const token = await user.getIdToken();
+      if (controller.signal.aborted) return;
+      const result = await createCanonicalHousehold(token, householdName, createRequestId, controller.signal);
+      if (controller.signal.aborted || identityRef.current !== identity) return;
+      clearRecords();
+      setHouseholdId(result.household_id);
+      setSelectedHousehold(result.household_id);
+      liveHousehold.setHouseholdId(result.household_id);
+      setRevision((value) => value + 1);
+      setCreatedHousehold(result);
+      setOnboardingStep("complete");
+      setNotice("Household created and selected for this tab.");
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      setCreateError(error instanceof CanonicalApiError ? error : new CanonicalApiError("unexpected", "The household service could not confirm this request."));
+    } finally {
+      if (!controller.signal.aborted) setCreatePending(false);
+    }
+  }
+
+  const canChangeHouseholdName = !createError || ["validation", "unauthenticated", "forbidden"].includes(createError.code);
 
   function commandCommitted() {
     clearRecords(
@@ -414,6 +484,75 @@ export function AccountConnection() {
         )}
       </Card>
 
+      {authState === "signed-in" && (!selectedHousehold || onboardingStep === "complete") && (
+        <Card className="space-y-4 border border-line p-5 sm:p-6" aria-labelledby="onboarding-title">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted">Household setup</span>
+            <Badge>{onboardingStep === "complete" ? "Ready" : `Step ${onboardingStep === "name" ? "1" : "2"} of 2`}</Badge>
+          </div>
+          <div>
+            <Heading id="onboarding-title" as="h2">
+              {onboardingStep === "complete" ? "Your kitchen is ready" : onboardingStep === "review" ? "Review your household" : "Who’s sharing your kitchen?"}
+            </Heading>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              {onboardingStep === "complete" ? "This household is selected in the current tab. Your sign-in and household membership stay under your control." : onboardingStep === "review" ? "Check the name once more. EcoLoop will create the household only after you confirm." : "Start with your own private kitchen. You can use it right away once the household service is enabled."}
+            </p>
+          </div>
+          {onboardingStep === "name" && (
+            <form onSubmit={reviewHousehold} className="space-y-3">
+              <div className="relative overflow-hidden rounded-2xl border border-line bg-white p-4 shadow-sm">
+                <div className="absolute inset-y-0 left-0 w-1.5 bg-primary" aria-hidden="true" />
+                <div className="pl-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-primary">Just me</p>
+                      <p className="mt-0.5 text-xs text-muted">Your personal kitchen</p>
+                    </div>
+                    <span aria-label="Selected" className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-white">✓</span>
+                  </div>
+                  <ul className="mt-3 space-y-1.5 text-xs text-muted">
+                    <li>• Your own household records</li>
+                    <li>• No invitations or shared access are set up</li>
+                  </ul>
+                  <div className="mt-4 border-t border-line pt-3">
+                    <label htmlFor="new-household-name" className="block text-xs font-semibold text-primary">Household name</label>
+                    <Input id="new-household-name" className="mt-2 bg-surface-muted text-sm" required maxLength={80} autoComplete="off" value={householdName} onChange={(event) => setHouseholdName(event.target.value)} placeholder="For example, My kitchen" aria-describedby="new-household-help" />
+                    <p id="new-household-help" className="mt-2 text-xs leading-relaxed text-muted">Choose a name you’ll recognize. No food or personal details are needed.</p>
+                  </div>
+                </div>
+              </div>
+              <Card className="bg-primary-soft/60 p-4 text-xs leading-relaxed text-primary">Your personal order history stays private. This setup does not invite other people or share records.</Card>
+              <Button type="submit" fullWidth>Continue</Button>
+            </form>
+          )}
+          {onboardingStep === "review" && (
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-surface-muted p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-muted">Household name</p>
+                <p className="mt-1 break-words text-lg font-semibold text-primary">{householdName}</p>
+              </div>
+              {process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE !== "true" && <p role="status" className="text-sm leading-relaxed text-muted">Household creation is currently disabled for this app. Your name is saved only on this page; no request has been sent.</p>}
+              {createError && <Card role="alert" className="space-y-2 border border-danger/25 bg-danger-soft/40 p-4"><p className="text-sm font-semibold text-danger">{createError.message}</p>{createError.requestId && <p className="text-xs text-muted">Request reference: {createError.requestId}</p>}{(createError.code === "timeout" || createError.code === "network" || createError.code === "unavailable") && <p className="text-xs text-muted">Retrying keeps the same request reference so the service can recognize this creation attempt.</p>}</Card>}
+              {createError && !canChangeHouseholdName && <p role="status" className="text-xs leading-relaxed text-muted">Retry this same request before changing the name. The previous result could not be confirmed.</p>}
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button onClick={() => setOnboardingStep("name")} variant="secondary" disabled={createPending || !canChangeHouseholdName}>Back</Button>
+                <Button onClick={() => void createHousehold()} fullWidth disabled={createPending || process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE !== "true"} aria-busy={createPending}>{createPending ? "Creating household…" : createError ? "Retry household creation" : "Create household"}</Button>
+              </div>
+            </div>
+          )}
+          {onboardingStep === "complete" && createdHousehold && (
+            <div className="space-y-3" role="status">
+              <div className="rounded-2xl bg-primary-soft p-4">
+                <p className="font-semibold text-primary">{createdHousehold.name}</p>
+                <p className="mt-1 break-all text-xs text-muted">Household ID: {createdHousehold.household_id}</p>
+                <p className="mt-1 text-xs text-muted">Your role: {createdHousehold.role}</p>
+              </div>
+              <p className="text-sm leading-relaxed text-muted">You can now open Home, Kitchen, Ask, or Shop with this selected household.</p>
+            </div>
+          )}
+        </Card>
+      )}
+
       <Card
         className="space-y-4 border border-line p-5 sm:p-6"
         aria-labelledby="scope-title"
@@ -423,9 +562,9 @@ export function AccountConnection() {
             Choose a household
           </Heading>
           <p className="mt-1 text-sm leading-relaxed text-muted">
-            Enter the exact household ID you were given. Access is checked by
-            the API for every request; this screen cannot join or create a
-            household.
+            Use the exact ID for a household you already belong to. Access is
+            checked by the API for every request; this picker does not change
+            household membership.
           </p>
         </div>
         <form onSubmit={submitHousehold} className="space-y-3">
