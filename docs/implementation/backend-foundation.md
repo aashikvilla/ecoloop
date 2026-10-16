@@ -47,6 +47,14 @@ Retention durations and user deletion behavior remain an explicit open decision 
 
 All routes except root, docs and liveness require Firebase identity and an active explicit household membership. The anonymous browser demo should not call this API.
 
+## Cloud Run packaging and release prerequisites
+
+`backend/Dockerfile` builds only the FastAPI service. Its Python base image is pinned to the Linux amd64 manifest digest, dependencies install from `uv.lock` with `uv sync --locked`, runtime runs as the unprivileged `app` user, and the command binds to Cloud Run's injected `PORT` (8080 fallback for local runs). Build with the repository's `backend/` directory as the context. `backend/.dockerignore` excludes local environments, credential-like files, caches and Git metadata; it does not include frontend or demo assets. The CLI is not installed in the runtime image.
+
+Before a separately authorized release, the owner must select the existing single Google Cloud/Firebase project and region, confirm billing status and budget alerts, and verify the Cloud Run runtime service account has only the required access. Supply Firebase project configuration and any future secrets through reviewed runtime configuration/Secret Manager references; never copy service-account keys or `.env` files into the image. Confirm the approved browser origins and that Firestore/Storage deny-by-default rules are deployed and reviewed. This packaging does not provision IAM, Firebase, secrets, rules, monitoring, rate limiting or managed assistant services. The API currently provides liveness only, so a successful startup probe is not evidence that Firebase identity or Firestore is ready.
+
+For a release, build and inspect the image locally first, then push it to the approved Artifact Registry repository and deploy a new Cloud Run revision only after the project, region, image, runtime identity, ingress, scaling and environment settings have been reviewed. Verify the deployed revision and authenticated, non-mutating smoke behavior before sending traffic. Roll back by routing traffic to the previously verified Cloud Run revision; retain its image until the rollback window closes. No cloud build, push, provisioning, deployment or rollback was performed for this foundation.
+
 ## Observed verification
 
 No unit tests or unit-test dependencies were added or run. No paid calls, Firebase provisioning, deployment, or live Firestore writes were performed.
@@ -64,5 +72,6 @@ No unit tests or unit-test dependencies were added or run. No paid calls, Fireba
 - With only the identity/membership dependency overridden for a local route smoke, the assistant endpoint returned 503 `MANAGED_AGENT_UNAVAILABLE` in the safe error envelope with a matching request ID. This did not call Firebase or an AI provider.
 - Follow-up review added actor-scoped idempotency document IDs and saved-actor verification, rejection of unsupported reversals, outcome timestamp ordering with a five-minute future tolerance, and server observation/actor updates.
 - A Starlette TestClient deprecation warning appeared because its installed version recommends `httpx2`; it did not affect these observed responses.
+- Packaging inspection found Docker CLI 28.3.3 and resolved the pinned Linux amd64 base-image digest from Docker Hub. The Docker Desktop Linux engine was unavailable (`docker version` could not connect to its engine), so the Dockerfile and ignore rules were reviewed locally without an image build or cloud registry interaction.
 
 Membership resolution, transaction retries/conflicts, Firebase identity with real credentials, Firestore rules deployment, managed assistant access, media authorization, deletion, and cloud behavior remain unverified. Distributed rate limiting and production abuse controls are not implemented. These files are a local backend foundation, not deployment readiness evidence. The billing-deferred environment has not been provisioned by this work.
