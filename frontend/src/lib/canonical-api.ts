@@ -22,6 +22,8 @@ export type ShoppingEntry = {
   updated_at: string;
 };
 
+export type CreatedHousehold = { household_id: string; name: string; role: string };
+
 export type CanonicalData =
   | { kind: "kitchen"; records: KitchenObservation[] }
   | { kind: "shopping"; records: ShoppingEntry[] };
@@ -65,4 +67,24 @@ function validateSuccess(data: unknown, kind: "kitchen" | "shopping"): Canonical
 export async function readCanonicalRecords(kind: "kitchen" | "shopping", idToken: string, householdId: string, signal?: AbortSignal): Promise<CanonicalData> {
   if (kind !== "kitchen" && kind !== "shopping") throw new CanonicalApiError("validation", "This household list is not supported.");
   return validateSuccess(await canonicalRequest(kind, idToken, householdId, { signal }), kind);
+}
+
+export async function createCanonicalHousehold(idToken: string, name: string, idempotencyKey: string, signal?: AbortSignal): Promise<CreatedHousehold> {
+  const cleanName = name.trim();
+  if (!cleanName || cleanName.length > 60 || /[\u0000-\u001f\u007f]/.test(cleanName) || !/^[A-Za-z0-9-]{16,128}$/.test(idempotencyKey)) {
+    throw new CanonicalApiError("validation", "Enter a household name and review it before creating.");
+  }
+  const payload = await canonicalRequest("households", idToken, null, {
+    method: "POST",
+    body: { schema_version: 1, idempotency_key: idempotencyKey, name: cleanName },
+    signal,
+  });
+  if (!object(payload) || payload.schema_version !== 1 || !boundedString(payload.request_id, 128) || !object(payload.result)) {
+    throw new CanonicalApiError("invalid_response", "The household service returned an unexpected creation response.", object(payload) && boundedString(payload.request_id, 128) ? payload.request_id : undefined);
+  }
+  const result = payload.result;
+  if (typeof result.household_id !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(result.household_id) || !boundedString(result.name, 60) || result.name !== cleanName || !boundedString(result.role, 32) || !/^[a-z][a-z_-]*$/i.test(result.role)) {
+    throw new CanonicalApiError("invalid_response", "The household service returned an unexpected creation result.", payload.request_id);
+  }
+  return { household_id: result.household_id, name: result.name, role: result.role };
 }

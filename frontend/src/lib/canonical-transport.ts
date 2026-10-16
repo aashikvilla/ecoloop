@@ -7,10 +7,10 @@ export class CanonicalApiError extends Error {
   }
 }
 
-export type CanonicalResource = "kitchen" | "shopping" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "assistant-turns";
+export type CanonicalResource = "households" | "kitchen" | "shopping" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "assistant-turns";
 export type CanonicalRequestOptions = { method?: "GET" | "POST" | "PATCH"; recordId?: string; body?: unknown; signal?: AbortSignal; query?: { limit?: number; cursor?: string } };
 const methods: Record<CanonicalResource, readonly string[]> = {
-  kitchen: ["GET"], shopping: ["GET", "POST"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "assistant-turns": ["POST"],
+  households: ["POST"], kitchen: ["GET"], shopping: ["GET", "POST"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "assistant-turns": ["POST"],
 };
 const RESPONSE_BYTES = 512_000;
 
@@ -61,14 +61,16 @@ async function readJson(response: Response): Promise<unknown> {
 }
 
 /** Fixed household endpoints only; callers own command and result schema validation. Never retries. */
-export async function canonicalRequest(resource: CanonicalResource, idToken: string, householdId: string, options: CanonicalRequestOptions = {}): Promise<unknown> {
+export async function canonicalRequest(resource: CanonicalResource, idToken: string, householdId: string | null, options: CanonicalRequestOptions = {}): Promise<unknown> {
   const method = options.method ?? "GET";
   if (!Object.hasOwn(methods, resource) || !methods[resource].includes(method)) throw new CanonicalApiError("validation", "This household operation is not supported.");
   if (!idToken || idToken.length > 8192 || /[\r\n]/.test(idToken)) throw new CanonicalApiError("unauthenticated", "Sign in before accessing household records.");
-  if (!/^[A-Za-z0-9_-]{1,128}$/.test(householdId)) throw new CanonicalApiError("validation", "Enter a valid household ID.");
+  const householdCreation = resource === "households";
+  if (householdCreation ? householdId !== null : !householdId || !/^[A-Za-z0-9_-]{1,128}$/.test(householdId)) throw new CanonicalApiError("validation", householdCreation ? "Household creation cannot include a selected household." : "Enter a valid household ID.");
   const writing = method !== "GET" && resource !== "assistant-turns";
-  if (writing && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS !== "true") throw new CanonicalApiError("not_configured", "Household changes are not enabled for this app yet.");
-  let path = `/api/v1/${resource}`;
+  if (householdCreation && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE !== "true") throw new CanonicalApiError("not_configured", "First-household creation is not enabled for this app yet.");
+  if (writing && !householdCreation && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS !== "true") throw new CanonicalApiError("not_configured", "Household changes are not enabled for this app yet.");
+  let path = householdCreation ? "/api/v1/households" : `/api/v1/${resource}`;
   if (resource === "assistant-turns") {
     path = "/api/v1/assistant/turns";
   } else if (resource === "share-transition") {
@@ -98,7 +100,7 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   if (options.signal?.aborted) controller.abort(options.signal.reason);
   options.signal?.addEventListener("abort", abort, { once: true });
   try {
-    const response = await fetch(url, { method, body: serialized, headers: { Authorization: `Bearer ${idToken}`, "X-Household-ID": householdId, Accept: "application/json", ...(hasBody ? { "Content-Type": "application/json" } : {}) }, cache: "no-store", credentials: "omit", redirect: "error", signal: controller.signal });
+    const response = await fetch(url, { method, body: serialized, headers: { Authorization: `Bearer ${idToken}`, ...(householdCreation ? {} : { "X-Household-ID": householdId! }), Accept: "application/json", ...(hasBody ? { "Content-Type": "application/json" } : {}) }, cache: "no-store", credentials: "omit", redirect: "error", signal: controller.signal });
     const body = await readJson(response);
     if (!response.ok) throw failure(response.status, body, writing);
     return body;
