@@ -23,12 +23,16 @@
   --color-tertiary-soft: #fff0cc;
   --color-danger: #a8342e;
   --color-danger-soft: #ffdad6;
+  --color-danger-hover: #ffc8c1;
+  --color-focus: #578a72;
+  --color-selection: #c6ebd9;
   --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --radius-card: 1.5rem;
   --radius-control: 1rem;
   --shadow-card: 0 10px 30px -18px rgb(20 53 41 / 22%);
 }
 
+@layer base {
 :root { color-scheme: light; }
 * { box-sizing: border-box; }
 html { min-height: 100%; background: var(--color-background); }
@@ -36,8 +40,12 @@ body { min-height: 100vh; margin: 0; background: var(--color-background); color:
 button, input, textarea, select { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; text-decoration: none; }
-::selection { background: #c6ebd9; color: var(--color-primary); }
-:focus-visible { outline: 3px solid #578a72; outline-offset: 3px; }
+::selection { background: var(--color-selection); color: var(--color-primary); }
+:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+}
+@layer components {
+  .ecoloop-card { border-radius: var(--radius-card); background: var(--color-surface-card); box-shadow: var(--shadow-card); }
+}
 .safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
 
 @media (prefers-reduced-motion: reduce) {

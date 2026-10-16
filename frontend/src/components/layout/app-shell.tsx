@@ -15,7 +15,7 @@ const destinations = [
 ];
 
 function DestinationNav({ pathname }: { pathname: string }) {
-  return <nav aria-label="Main navigation" className="flex items-center justify-between gap-1 rounded-full border border-white/80 bg-white/95 p-1.5 shadow-[0_10px_30px_-8px_rgba(20,53,41,0.16)] backdrop-blur-xl">
+  return <nav aria-label="Main navigation" className="flex items-center justify-between gap-1 rounded-full border border-white/80 bg-white/95 p-1.5 shadow-card backdrop-blur-xl">
     {destinations.map(({ href, label, icon }) => {
       const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
       return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-1 transition-colors ${active ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}>
@@ -30,6 +30,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { hydrated, persistenceError } = useDemo();
   return <div className="min-h-screen bg-background text-foreground">
+    <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
     <header className="sticky top-0 z-30 border-b border-line/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-4 sm:px-7">
         <Link href="/" aria-label="EcoLoop home" className="flex items-center gap-2.5 rounded-xl">
