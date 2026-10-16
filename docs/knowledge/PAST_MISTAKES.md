@@ -67,3 +67,7 @@ Observation: the only available billing account is closed but remains associated
 ## 2026-10-17 — Validate wrapped API responses at the client boundary
 
 Candidate GET/confirm endpoints correctly returned the shared `ApiResult` envelope, but the first UI parser version expected the nested intake fields at the top level. An independent review caught that this would make every valid read/confirmation appear malformed before browser acceptance. Parse and validate the common envelope once, then pass only its result to route-specific schema parsers; verify the actual shared contract at integration.
+
+## 2026-10-17 — Keep shared route status aligned with implemented flows
+
+Manual capture and persisted candidate review were implemented, but the shared shell still classified `/kitchen/add` and `/kitchen/review` as unavailable. The page content worked while the header/sidebar said it did not. When a flow is added, update shared route-level availability labels and guidance alongside the page; include those shared states in browser review.

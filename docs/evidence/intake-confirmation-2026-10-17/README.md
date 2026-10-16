@@ -24,6 +24,18 @@
 - Pydantic wire-shape checks on worker branches and `git diff --check` — passed.
 - No frontend/backend unit tests were added or run.
 
+## Bounded synthetic live acceptance
+
+On 17 October, the signed-in synthetic user used the empty test household `d8e5ef4cb23b4925a383ae1ae29792c5`:
+
+- Created one text intake with two unknown-amount names. The authenticated API returned 201 and showed two unconfirmed candidates; no canonical Kitchen rows were written at this step.
+- Edited “E2E test spinach” to “E2E confirmed spinach”, deselected rice, checked the explicit consent box and confirmed. The API returned 200; the UI reported one confirmed and one remaining at intake version 2.
+- Confirmed the remaining rice candidate. The API returned 200; the intake was completed at version 3 with no remaining candidates.
+- Kitchen API/UI readback showed exactly two records, both with unknown amount/date/storage. A narrow Firestore read found one confirmed intake and two distinct canonical observation IDs.
+- The first browser preflight failed because API CORS did not include local port 3003. The collection was verified empty before retrying with the same idempotency key. A temporary process-only CORS allowlist for `http://127.0.0.1:3003` allowed the retry. No env file was inspected or edited.
+
+This proves one create/edit/partial/full confirmation/readback journey. Replay after a successful but lost response, concurrent conflicts and duplicate prevention under contention remain open. The write flag was enabled only for this local browser process and is false in the ordinary app configuration.
+
 ## Live and release limits
 
-No live candidate intake or canonical confirmation writes were made. Browser confirmation was not enabled. Firestore transaction conflict/idempotency behavior therefore remains unverified against the service. M2 remains open because M2.01.02 structured photo extraction is not implemented, M1.02.03 is not verified, and live acceptance is missing. No MVP task was completed from this evidence. The code is locally reviewable on `codex/demo-integration`; PR #1 is still draft and `main` remains unchanged. Billing, Cloud Run provisioning/deployment and deployed whole-flow acceptance remain open.
+The bounded synthetic journey does not close the M2 phase. M2.01.02 structured photo extraction is not implemented, M1.02.03 is not verified, and live retry/conflict acceptance is incomplete. No MVP task was marked complete from this evidence. The code is locally reviewable on `codex/demo-integration`; PR #1 is still draft and `main` remains unchanged. Billing, Cloud Run provisioning/deployment and deployed whole-flow acceptance remain open.
