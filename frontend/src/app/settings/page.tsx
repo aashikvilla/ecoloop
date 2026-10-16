@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,6 +17,14 @@ export default function SettingsPage() {
   const [resetOpen, setResetOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [error, setError] = useState("");
+  const resetDialog = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = resetDialog.current;
+    if (!dialog) return;
+    if (resetOpen && !dialog.open) dialog.showModal();
+    else if (!resetOpen && dialog.open) dialog.close();
+  }, [resetOpen]);
 
   function submitPreference(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,6 +62,8 @@ export default function SettingsPage() {
 
     <Card className="border border-line p-5 sm:p-6"><div className="flex items-start gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-secondary-soft text-secondary"><Icon name="info" size={21}/></span><div><Heading as="h2">Reset demo data</Heading><p className="mt-1 text-sm leading-relaxed text-muted">Remove this browser’s demo items, list, activity, preferences, and meal plan, then restore the sample kitchen.</p>{persistenceError && <p role="status" className="mt-2 text-xs text-secondary">{persistenceError}</p>}<Button variant="danger" className="mt-4" onClick={() => setResetOpen(true)}>Reset this demo</Button></div></div></Card>
 
-    {resetOpen && <div className="fixed inset-0 z-50 flex items-end justify-center bg-primary/35 p-4 sm:items-center" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setResetOpen(false); }}><section role="alertdialog" aria-modal="true" aria-labelledby="reset-title" aria-describedby="reset-description" className="w-full max-w-md rounded-card bg-white p-6 shadow-2xl"><span className="flex size-12 items-center justify-center rounded-2xl bg-danger-soft text-danger"><Icon name="trash" size={22}/></span><Heading id="reset-title" as="h2" className="mt-4">Reset this browser demo?</Heading><p id="reset-description" className="mt-2 text-sm leading-relaxed text-muted">This clears your local demo changes and restores the sample kitchen. This cannot be undone.</p><div className="mt-6 flex justify-end gap-2"><Button variant="secondary" onClick={() => setResetOpen(false)}>Keep my data</Button><Button variant="danger" onClick={() => { resetDemo(); setResetOpen(false); setDraft(""); setConsented(false); setEditingId(null); setFeedback("Demo data has been reset in this browser."); }}>Reset data</Button></div></section></div>}
+    <dialog ref={resetDialog} aria-labelledby="reset-title" aria-describedby="reset-description" className="fixed inset-0 z-50 m-0 h-full max-h-none w-full max-w-none overflow-visible bg-transparent p-4 backdrop:bg-primary/35" onClose={() => setResetOpen(false)} onClick={(event) => { if (event.target === resetDialog.current) setResetOpen(false); }}>
+      <section role="alertdialog" className="absolute inset-0 m-auto flex max-h-fit w-[calc(100%-2rem)] max-w-md flex-col rounded-card bg-white p-6 shadow-2xl"><span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-danger-soft text-danger"><Icon name="trash" size={22}/></span><Heading id="reset-title" as="h2" className="mt-4">Reset this browser demo?</Heading><p id="reset-description" className="mt-2 text-sm leading-relaxed text-muted">This clears your local demo changes and restores the sample kitchen. This cannot be undone.</p><div className="mt-6 flex flex-wrap justify-end gap-2"><Button variant="secondary" onClick={() => setResetOpen(false)}>Keep my data</Button><Button variant="danger" onClick={() => { resetDemo(); setResetOpen(false); setDraft(""); setConsented(false); setEditingId(null); setFeedback("Demo data has been reset in this browser."); }}>Reset data</Button></div></section>
+    </dialog>
   </div>;
 }
