@@ -3,9 +3,9 @@ from typing import Any
 from fastapi import APIRouter, Depends, Request
 
 from app.core.identity import Principal, current_principal
-from app.domain.intake import create_intake, read_intake
+from app.domain.intake import confirm_intake, create_intake, read_intake
 from app.schemas.household import ApiResult, OpaqueId
-from app.schemas.intake import CreateIntakeCommand
+from app.schemas.intake import ConfirmIntakeCommand, CreateIntakeCommand
 
 
 router = APIRouter()
@@ -31,3 +31,13 @@ def read(
     principal: Principal = Depends(current_principal),
 ) -> ApiResult:
     return _result(request.state.request_id, read_intake(principal, intake_id))
+
+
+@router.post("/intakes/{intake_id}/confirm", response_model=ApiResult)
+def confirm(
+    request: Request,
+    intake_id: OpaqueId,
+    command: ConfirmIntakeCommand,
+    principal: Principal = Depends(current_principal),
+) -> ApiResult:
+    return _result(request.state.request_id, confirm_intake(principal, intake_id, command))

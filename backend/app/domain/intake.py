@@ -13,10 +13,10 @@ from app.core.firestore import get_firestore
 from app.core.identity import Principal
 from app.domain.repository import _assert_member_in_transaction, _idempotency_ref, _prior_result
 from app.schemas.household import DateType
-from app.schemas.intake import CreateIntakeCommand, IntakeRecord
+from app.schemas.intake import ConfirmIntakeCommand, CreateIntakeCommand, IntakeConfirmationRecord, IntakeRecord
 
 
-def _payload_hash(command: CreateIntakeCommand) -> str:
+def _payload_hash(command: CreateIntakeCommand | ConfirmIntakeCommand) -> str:
     canonical = json.dumps(command.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
@@ -51,7 +51,7 @@ def create_intake(principal: Principal, command: CreateIntakeCommand) -> dict[st
     payload_hash = _payload_hash(command)
     created_at = datetime.now(timezone.utc)
     candidates = [_candidate_value(uuid4().hex, entry) for entry in command.entries]
-    record = IntakeRecord(intake_id=intake_id, status="CANDIDATE", candidates=candidates)
+    record = IntakeRecord(intake_id=intake_id, status="CANDIDATE", version=1, candidates=candidates)
     result = record.model_dump(mode="json")
 
     @firestore.transactional
@@ -102,13 +102,106 @@ def read_intake(principal: Principal, intake_id: str) -> dict[str, Any]:
         data = snapshot.to_dict() if snapshot.exists else None
         if not data or data.get("created_by") != principal.uid:
             raise DomainError("NOT_FOUND", "The intake was not found.", 404)
-        record = {
-            "intake_id": data.get("intake_id"),
-            "status": data.get("status"),
-            "candidates": data.get("candidates"),
-        }
+        record = _intake_record(data, intake_id)
         return IntakeRecord.model_validate(record).model_dump(mode="json")
     except DomainError:
         raise
     except Exception as exc:
         raise DomainError("DATA_UNAVAILABLE", "The intake is unavailable.", 503, True) from exc
+
+
+def _intake_record(data: dict[str, Any], intake_id: str) -> dict[str, Any]:
+    # Existing candidate records predate versioning and represent their initial version.
+    return {
+        "intake_id": data.get("intake_id", intake_id),
+        "status": data.get("status"),
+        "version": data.get("version", 1),
+        "candidates": data.get("candidates", []),
+    }
+
+
+def confirm_intake(principal: Principal, intake_id: str, command: ConfirmIntakeCommand) -> dict[str, Any]:
+    if principal.role != "OWNER":
+        raise DomainError("FORBIDDEN", "Only the household owner can confirm intake candidates.", 403)
+
+    db = get_firestore()
+    household = db.collection("households").document(principal.household_id)
+    intake_ref = household.collection("intakes").document(intake_id)
+    observations = household.collection("food_observations")
+    idem_ref = _idempotency_ref(household, "intake-confirm", command.idempotency_key, principal.uid)
+    payload_hash = _payload_hash(command)
+    observed_at = datetime.now(timezone.utc)
+
+    @firestore.transactional
+    def commit(transaction: Any) -> dict[str, Any]:
+        _assert_member_in_transaction(transaction, db, principal)
+        idem_snapshot = idem_ref.get(transaction=transaction)
+        intake_snapshot = intake_ref.get(transaction=transaction)
+        intake_data = intake_snapshot.to_dict() if intake_snapshot.exists else None
+        if not intake_data or intake_data.get("created_by") != principal.uid:
+            raise DomainError("NOT_FOUND", "The intake was not found.", 404)
+
+        previous = _prior_result(idem_snapshot, payload_hash, principal.uid)
+        if previous is not None:
+            return previous
+
+        intake_record = IntakeRecord.model_validate(_intake_record(intake_data, intake_id))
+        if intake_record.version != command.base_version:
+            raise DomainError("VERSION_CONFLICT", "This intake changed. Reload it and review your edits.", 409)
+
+        pending_by_id = {candidate.candidate_id: candidate for candidate in intake_record.candidates}
+        selected_ids = [candidate.candidate_id for candidate in command.candidates]
+        if any(candidate_id not in pending_by_id for candidate_id in selected_ids):
+            raise DomainError("VERSION_CONFLICT", "One or more candidates are no longer pending in this intake.", 409)
+
+        item_refs = [observations.document(candidate_id) for candidate_id in selected_ids]
+        item_snapshots = [ref.get(transaction=transaction) for ref in item_refs]
+        if any(snapshot.exists for snapshot in item_snapshots):
+            raise DomainError("VERSION_CONFLICT", "A selected candidate already has a confirmed kitchen item.", 409)
+
+        selected = set(selected_ids)
+        remaining = [candidate for candidate in intake_record.candidates if candidate.candidate_id not in selected]
+        next_version = intake_record.version + 1
+        status_value = "CONFIRMED" if not remaining else "CANDIDATE"
+        result = IntakeConfirmationRecord(
+            intake_id=intake_id,
+            status=status_value,
+            version=next_version,
+            candidates=remaining,
+            confirmed=[{"item_id": candidate_id, "version": 1} for candidate_id in selected_ids],
+        ).model_dump(mode="json")
+
+        # All membership, idempotency, intake, and target item reads precede writes.
+        for candidate, item_ref in zip(command.candidates, item_refs, strict=True):
+            item = candidate.model_dump(mode="json", exclude={"candidate_id"})
+            item.update(
+                item_id=candidate.candidate_id,
+                household_id=principal.household_id,
+                version=1,
+                source="USER",
+                confirmed_by=principal.uid,
+                observed_at=observed_at,
+            )
+            transaction.create(item_ref, item)
+
+        transaction.update(
+            intake_ref,
+            {"status": status_value, "version": next_version, "candidates": result["candidates"]},
+        )
+        transaction.set(
+            idem_ref,
+            {
+                "payload_hash": payload_hash,
+                "result": result,
+                "created_at": observed_at,
+                "actor_uid": principal.uid,
+            },
+        )
+        return result
+
+    try:
+        return commit(db.transaction())
+    except DomainError:
+        raise
+    except Exception as exc:
+        raise DomainError("DATA_UNAVAILABLE", "The intake confirmation could not be saved.", 503, True) from exc
