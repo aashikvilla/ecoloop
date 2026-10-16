@@ -63,4 +63,3 @@ Observation: the only available billing account is closed but remains associated
 ## 2026-10-17 — Validate the full provider request, then the actual provider
 
 `process_schema` alone accepted an assistant schema that the full GenAI converter rejected on discriminator/union fields. A subsequent full converter check passed a raw JSON Schema which the provider rejected with HTTP 400. Verify local schema construction, full request conversion, actual provider acceptance and final strict response validation as distinct boundaries. Preserve strict local validation when changing provider generation hints; a conversion success is not model-response evidence.
-
