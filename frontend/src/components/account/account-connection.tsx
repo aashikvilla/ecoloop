@@ -34,6 +34,8 @@ type AuthState =
   | "signed-in"
   | "error";
 
+type PendingHouseholdCreation = { uid: string; idempotencyKey: string; name: string };
+
 export function AccountConnection() {
   const liveHousehold = useLiveHousehold();
   const [authState, setAuthState] = useState<AuthState>("loading");
@@ -60,6 +62,8 @@ export function AccountConnection() {
   const [notice, setNotice] = useState("");
   const requestRef = useRef<AbortController | null>(null);
   const createRequestRef = useRef<AbortController | null>(null);
+  const pendingHouseholdCreationsRef = useRef(new Map<string, PendingHouseholdCreation>());
+  const householdScopeRevisionRef = useRef(0);
   const identityRef = useRef("");
 
   useEffect(() => {
@@ -79,6 +83,7 @@ export function AccountConnection() {
           (nextUser) => {
             const nextKey = nextUser?.uid ?? "";
             if (identityRef.current !== nextKey) {
+              householdScopeRevisionRef.current += 1;
               requestRef.current?.abort();
               createRequestRef.current?.abort();
               createRequestRef.current = null;
@@ -94,18 +99,21 @@ export function AccountConnection() {
               );
               setHouseholdId("");
               setSelectedHousehold("");
-              setHouseholdName("");
-              setOnboardingStep("name");
-              setCreateIdempotencyKey("");
+              const storedCreation = nextKey ? pendingHouseholdCreationsRef.current.get(nextKey) : undefined;
+              const pendingCreation = storedCreation?.uid === nextKey ? storedCreation : undefined;
+              setHouseholdName(pendingCreation?.name ?? "");
+              setOnboardingStep(pendingCreation ? "review" : "name");
+              setCreateIdempotencyKey(pendingCreation?.idempotencyKey ?? "");
               setCreatedHousehold(null);
               setCreatePending(false);
-              setCreateError(null);
+              setCreateError(pendingCreation ? new CanonicalApiError("network", "A previous household creation result was not confirmed. Retry the same request to continue.") : null);
               identityRef.current = nextKey;
             }
             setUser(nextUser);
             setAuthState(nextUser ? "signed-in" : "signed-out");
           },
           (error) => {
+            householdScopeRevisionRef.current += 1;
             requestRef.current?.abort();
             requestRef.current = null;
             createRequestRef.current?.abort();
@@ -211,6 +219,7 @@ export function AccountConnection() {
   }
 
   async function handleSignOut() {
+    householdScopeRevisionRef.current += 1;
     createRequestRef.current?.abort();
     createRequestRef.current = null;
     setCreatePending(false);
@@ -233,6 +242,8 @@ export function AccountConnection() {
   }
 
   function updateHousehold(value: string) {
+    if (busy || createRequestRef.current) return;
+    householdScopeRevisionRef.current += 1;
     setHouseholdId(value);
     setSelectedHousehold("");
     clearRecords();
@@ -284,8 +295,10 @@ export function AccountConnection() {
 
   function submitHousehold(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy || createRequestRef.current) return;
     const scope = householdId.trim();
     if (!/^[A-Za-z0-9_-]{1,128}$/.test(scope)) return;
+    householdScopeRevisionRef.current += 1;
     setSelectedHousehold(scope);
     liveHousehold.setHouseholdId(scope);
     setRevision((value) => value + 1);
@@ -303,35 +316,53 @@ export function AccountConnection() {
   }
 
   async function createHousehold() {
-    if (!user || authState !== "signed-in" || onboardingStep !== "review" || !createIdempotencyKey || createPending) return;
-    createRequestRef.current?.abort();
+    if (!user || authState !== "signed-in" || onboardingStep !== "review" || !createIdempotencyKey || busy || createPending || createRequestRef.current) return;
     const controller = new AbortController();
     createRequestRef.current = controller;
-    const identity = user.uid;
+    const attempt: PendingHouseholdCreation = {
+      uid: user.uid,
+      idempotencyKey: createIdempotencyKey,
+      name: householdName.trim(),
+    };
+    const startingScopeRevision = householdScopeRevisionRef.current;
+    pendingHouseholdCreationsRef.current.set(attempt.uid, attempt);
     setCreatePending(true);
     setCreateError(null);
     try {
       const token = await user.getIdToken();
       if (controller.signal.aborted) return;
-      const result = await createCanonicalHousehold(token, householdName, createIdempotencyKey, controller.signal);
-      if (controller.signal.aborted || identityRef.current !== identity) return;
-      clearRecords();
-      setHouseholdId(result.household_id);
-      setSelectedHousehold(result.household_id);
-      liveHousehold.setHouseholdId(result.household_id);
-      setRevision((value) => value + 1);
+      const result = await createCanonicalHousehold(token, attempt.name, attempt.idempotencyKey, controller.signal);
+      if (controller.signal.aborted || identityRef.current !== attempt.uid) return;
+      const scopeIsCurrent = householdScopeRevisionRef.current === startingScopeRevision;
+      if (pendingHouseholdCreationsRef.current.get(attempt.uid)?.idempotencyKey === attempt.idempotencyKey) {
+        pendingHouseholdCreationsRef.current.delete(attempt.uid);
+      }
+      if (scopeIsCurrent) {
+        clearRecords();
+        setHouseholdId(result.household_id);
+        setSelectedHousehold(result.household_id);
+        liveHousehold.setHouseholdId(result.household_id);
+        householdScopeRevisionRef.current += 1;
+        setRevision((value) => value + 1);
+      }
       setCreatedHousehold(result);
       setOnboardingStep("complete");
-      setNotice("Household created and selected for this tab.");
+      setNotice(scopeIsCurrent ? "Household created and selected for this tab." : "Household created. Your newer household selection was kept.");
     } catch (error) {
       if (controller.signal.aborted) return;
-      setCreateError(error instanceof CanonicalApiError ? error : new CanonicalApiError("unexpected", "The household service could not confirm this request."));
+      const requestError = error instanceof CanonicalApiError ? error : new CanonicalApiError("unexpected", "The household service could not confirm this request.");
+      if (["validation", "unauthenticated", "forbidden"].includes(requestError.code) && pendingHouseholdCreationsRef.current.get(attempt.uid)?.idempotencyKey === attempt.idempotencyKey) {
+        pendingHouseholdCreationsRef.current.delete(attempt.uid);
+      }
+      setCreateError(requestError);
     } finally {
+      if (createRequestRef.current === controller) createRequestRef.current = null;
       if (!controller.signal.aborted) setCreatePending(false);
     }
   }
 
   const canChangeHouseholdName = !createError || ["validation", "unauthenticated", "forbidden"].includes(createError.code);
+  const createdHouseholdIsSelected = Boolean(createdHousehold && selectedHousehold === createdHousehold.household_id);
 
   function commandCommitted() {
     clearRecords(
@@ -492,10 +523,10 @@ export function AccountConnection() {
           </div>
           <div>
             <Heading id="onboarding-title" as="h2">
-              {onboardingStep === "complete" ? "Your kitchen is ready" : onboardingStep === "review" ? "Review your household" : "Who’s sharing your kitchen?"}
+              {onboardingStep === "complete" ? createdHouseholdIsSelected ? "Your kitchen is ready" : "Household created" : onboardingStep === "review" ? "Review your household" : "Who’s sharing your kitchen?"}
             </Heading>
             <p className="mt-1 text-sm leading-relaxed text-muted">
-              {onboardingStep === "complete" ? "This household is selected in the current tab. Your sign-in and household membership stay under your control." : onboardingStep === "review" ? "Check the name once more. EcoLoop will create the household only after you confirm." : "Start with your own private kitchen. You can use it right away once the household service is enabled."}
+              {onboardingStep === "complete" ? createdHouseholdIsSelected ? "This household is selected in the current tab. Your sign-in and household membership stay under your control." : "The household was created, and your newer household selection was kept." : onboardingStep === "review" ? "Check the name once more. EcoLoop will create the household only after you confirm." : "Start with your own private kitchen. You can use it right away once the household service is enabled."}
             </p>
           </div>
           {onboardingStep === "name" && (
@@ -536,7 +567,7 @@ export function AccountConnection() {
               {createError && !canChangeHouseholdName && <p role="status" className="text-xs leading-relaxed text-muted">Retry this same request before changing the name. The previous result could not be confirmed.</p>}
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button onClick={() => setOnboardingStep("name")} variant="secondary" disabled={createPending || !canChangeHouseholdName}>Back</Button>
-                <Button onClick={() => void createHousehold()} fullWidth disabled={createPending || process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE !== "true"} aria-busy={createPending}>{createPending ? "Creating household…" : createError ? "Retry household creation" : "Create household"}</Button>
+                <Button onClick={() => void createHousehold()} fullWidth disabled={busy || createPending || process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE !== "true"} aria-busy={createPending}>{createPending ? "Creating household…" : createError ? "Retry household creation" : "Create household"}</Button>
               </div>
             </div>
           )}
@@ -547,7 +578,7 @@ export function AccountConnection() {
                 <p className="mt-1 break-all text-xs text-muted">Household ID: {createdHousehold.household_id}</p>
                 <p className="mt-1 text-xs text-muted">Your role: {createdHousehold.role}</p>
               </div>
-              <p className="text-sm leading-relaxed text-muted">You can now open Home, Kitchen, Ask, or Shop with this selected household.</p>
+              <p className="text-sm leading-relaxed text-muted">{createdHouseholdIsSelected ? "You can now open Home, Kitchen, Ask, or Shop with this selected household." : "The ID above identifies the created household. Your active household was not changed."}</p>
             </div>
           )}
         </Card>
@@ -578,6 +609,7 @@ export function AccountConnection() {
             id="household-id"
             value={householdId}
             onChange={(event) => updateHousehold(event.target.value)}
+            disabled={busy || createPending}
             autoComplete="off"
             spellCheck={false}
             maxLength={128}
@@ -589,9 +621,10 @@ export function AccountConnection() {
             Your household choice is kept in this tab to load the four main
             destinations and is cleared when you change accounts or sign out.
           </p>
-          <Button type="submit" variant="secondary">
+          <Button type="submit" variant="secondary" disabled={busy || createPending}>
             Use this household
           </Button>
+          {createPending && <p role="status" className="text-xs text-muted">Household selection is paused while creation is in progress.</p>}
         </form>
         {notice && (
           <p role="status" className="text-sm text-muted">
