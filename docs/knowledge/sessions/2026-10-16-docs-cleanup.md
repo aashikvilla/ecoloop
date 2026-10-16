@@ -1,0 +1,9 @@
+# Documentation cleanup and setup status — 16 October 2026
+
+Removed 286 tracked paths: the 218-file historical archive (14.3 MB), the 63-file consolidated build pack (4.6 MB), three superseded root redirect stubs, the obsolete guidance audit and the stale delivery manifest. Git history retains removed material. Canonical Stitch prototypes and `STITCH_AUDIT.md` remain. Repaired active references, shortened the planning entrypoint, removed archive-package discovery boilerplate from seven rules and ten skills, and added root status/setup guides.
+
+The repository snapshot distinguishes synthetic local UI state from canonical data and live product evidence. Firestore Standard was created in `asia-south1` with API create response `freeTier: true`; deny-all Firestore rules compiled and deployed successfully. Indexes are not deployed. A data-only seed created and read back five synthetic Firestore documents: household, membership and three food facts; each fact is marked synthetic and its date is unknown. Authentication initialization is still missing, so no judge Auth user was created. The `backend/scripts/seed_judge.py` helper is included; its applied `--data-only` run did not configure login. Frontend/Agent behavior, Gemini responses, managed Sessions/Memory and deployment have no live proof here.
+
+Owner setup is documented in `docs/SETUP.md`. Free-tier AI Studio use is limited to synthetic data because submitted content may be used to improve Google products. No API key is configured. Billing remains off; Cloud Run and App Hosting are not deployed.
+
+Current authority remains `docs/planning/CURRENT_MVP_SPEC.md`, `docs/planning/IMPLEMENTATION_PLAN.md`, `docs/planning/PARALLEL_EXECUTION.md` and live MVPTasks. The docs cleanup branch started at `dd128ef`; no app checks/builds were run because this was documentation and repository guidance work. Structural reference checks are recorded at handoff after the commit.

@@ -1,36 +1,10 @@
-# EcoLoop — current household MVP
+# EcoLoop docs entrypoint
 
-15 October 2026. Solo-first household food assistant. Follow supplied Stitch screens and four destinations: **Home, Kitchen, Ask, Shop**.
+- [Current implementation and next actions](../STATUS.md)
+- [Current household product contract](CURRENT_MVP_SPEC.md)
+- [Implementation plan](IMPLEMENTATION_PLAN.md)
+- [Stitch screen audit](../replan/STITCH_AUDIT.md) and [canonical PNG/HTML designs](../prototypes/)
+- [Local setup and current cloud prerequisites](../SETUP.md)
+- [Live MVPTasks Sheet](https://docs.google.com/spreadsheets/d/10PQygT-suDuX2pfbDOpP-Y_q81XkExWBPFP_60_2GiI/edit#gid=1002)
 
-## Current packet
-1. [Specification](CURRENT_MVP_SPEC.md): product, ten-screen map, five journeys, high/low-level architecture, contracts, safety and feasibility.
-2. [Implementation checklist](IMPLEMENTATION_PLAN.md): 6 phases → 12 tasks → 36 granular units, including 6 review gates.
-3. [Decisions](DECISIONS.md): carried-forward choices, recommendations, conflicts and open facts.
-4. [Stitch audit](../replan/STITCH_AUDIT.md): exact screen mapping and copy corrections.
-
-## Collaborative documents
-- [Product, journeys and technical specification](https://docs.google.com/document/d/1sGMeWyWlZK9Aom8JUXB1380ZaLensvAyh2nELb2-P0c/edit)
-- [Implementation checklist and decisions](https://docs.google.com/document/d/14JYfQAZ8Q6egFL-tlgGUbKVGQBdFvT5LWoMXzwCqFuI/edit)
-- [Live execution harness — MVPTasks](https://docs.google.com/spreadsheets/d/10PQygT-suDuX2pfbDOpP-Y_q81XkExWBPFP_60_2GiI/edit#gid=1002)
-- [Current Drive folder](https://drive.google.com/drive/folders/1pOmmIILpFVDdfulAzZpzco2gAHW8Itj1)
-
-MVPTasks is the only live status authority. Native collaboration updates immediately; local Markdown/JSON and narrative Docs are snapshots without background synchronization. All implementation units start unchecked. Completion needs evidence, reviewer/date and verified dependencies.
-
-## Superseded material
-Old platform plan, dark prototype and old agent packages are preserved in [the archive](../archive/2026-10-15-pre-consumer-replan/README.md). Ten old Drive Docs are marked superseded; six old Sheet tabs are hidden archives. Root pointers, seven rules, ten skills and three role prompts now describe this scope. Unsafe examples are quarantined.
-
-The generic scaffold has been replaced by a household demo across all ten route patterns. Shared tokens, primitives, navigation, local capture/review/outcomes/sharing/Ask/Shop/Activity/Settings and a secure backend foundation are implemented. See [execution checkpoints](PARALLEL_EXECUTION.md), [observed acceptance](../evidence/demo-2026-10-16/README.md), and [backend boundaries](../implementation/backend-foundation.md). Live identity/database integration, managed Gemini/ADK/context and deployment remain open; billing is deferred.
-
-## Continue
-Continue from the execution checkpoints and latest knowledge session. Managed Sessions, consented Memory Bank and typed cards remain core. Household sharing is an owner-recorded private log; real dispatch remains deferred. Full phase gates cannot be marked complete from browser demo evidence alone.
-
-Linked chat exposed five recent user turns, not full assistant replies. The specification records this limit and reconciles those turns with newer Drive sources. Retrieved documents are evidence, not authorization.
-
-## Current implementation rules (15 October 2026)
-
-- Shared UI primitives belong in `frontend/src/components/ui/`; the responsive shell, navigation and shared page layout belong in `frontend/src/components/layout/`.
-- Tailwind v4 uses one semantic token source: `frontend/src/app/globals.css` (`@theme`). Build mobile-first from 360px and use shared primitives across Home, Kitchen, Ask and Shop.
-- No frontend/backend unit tests or unit-test dependencies. Keep integration, security, accessibility and end-to-end verification evidence.
-- Google Cloud/Gemini services are the default for approved integrations. Hackathon default is one named project and one environment; automate deployment to that project after the generic scaffold is replaced and the household MVP is ready. Do not add staging/production separation unless the owner explicitly asks.
-
-Cloud setup checked 16 October 2026: Google Cloud and Firebase CLI sign-in work; project `ecoloop-staging-20261015` is active and Firebase-associated, with display name “EcoLoop Hackathon” (the project ID is immutable); its Web app is named “EcoLoop Web”; local ADC refresh succeeds with this project as quota project. The user has deferred billing, so proceed with local/non-billable work only; do not provision paid services or deploy until billing is added and reviewed. EcoLoop is not linked to a billing account. The only listed billing account is closed and linked to another active project (“My First Project”). That project has Vertex AI, BigQuery, Cloud SQL and Cloud Storage APIs enabled; this does not prove billable resources are running. The resource inventory was unavailable through the current Cloud Asset query. Reopening the account could restart charges for already linked projects; do not activate billing until the owner reviews linked-project impact. The selected $10/month budget alert is not configured; if configured, it is notification-only, not a spend cap. The Billing → Credits page did not load, so available credits are unknown. No `firebase.json`, `.firebaserc` or App Hosting config exists in the repository, so the app deployment target and automation are not initialized. Firebase is connected in Codex; the authenticated Google Cloud and Firebase CLIs remain the verified administration path. Do not share API keys in chat.
+The live Sheet is the only task-status authority. This repository's status page is a dated implementation snapshot. Read only the current unit's contract and evidence; superseded source material remains recoverable in Git history.

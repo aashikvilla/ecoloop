@@ -1,6 +1,6 @@
 # Household MVP decision register
 
-15 October 2026. “Carried forward” means explicitly present in the latest user/source direction; “Recommended” identifies implementation judgment awaiting normal review. No entry records cloud deployment or partner approval.
+Updated 16 October 2026. “Carried forward” means explicitly present in the latest user/source direction; “Recommended” identifies implementation judgment awaiting normal review. No entry records cloud deployment or partner approval.
 
 | ID | Disposition | Decision | Alternative and tradeoff | Revisit trigger |
 |---|---|---|---|---|
@@ -17,7 +17,7 @@
 | MVP-D11 | Recommended | One modular backend and transaction-based command authority | Per-feature microservices add deployment seams; browser writes duplicate authority | Demonstrated scaling/team isolation need |
 | MVP-D12 | Recommended | Existing Sheet reused, new MVP tabs; old 156-unit plan archived | Multiple writable status copies drift; automatic sync adds a product to build | A real operational sync need with owner and conflict policy |
 | MVP-D13 | Reconciliation | Current explicit Stitch scope governs; dinner exception is first slice | Later autonomous war-room reports propose dinner-only; they do not replace this user's scope | Direct human scope change |
-| MVP-D14 | Reconciliation | Archive superseded guidance and examples, preserve app scaffold/source assets | Hard reset cannot restore nonexistent household code and risks untracked work | Deliberate implementation tasks replace scaffold incrementally |
+| MVP-D14 | Reconciliation | Remove superseded guidance and examples from the active checkout; preserve Git history, app scaffold and canonical source assets | Keeping competing instructions increases stale discovery; hard reset risks untracked work | Deliberate implementation tasks replace scaffold incrementally |
 | MVP-D15 | Carried forward from current user instruction | Use shared frontend primitives under `frontend/src/components/ui/`, shared shell/layout under `frontend/src/components/layout/`, and one semantic Tailwind v4 token source in `frontend/src/app/globals.css` | Per-screen styles duplicate behavior and make global theme changes costly; CSS-first `@theme` is native to the installed Tailwind v4 version | Deliberate Tailwind upgrade/downgrade or demonstrated component API friction |
 | MVP-D16 | Carried forward from current user instruction | No frontend/backend unit tests or unit-test dependencies; retain evidence-based integration, security, manual accessibility, AI-quality and end-to-end acceptance | Unit testing is explicitly out of scope; integration and journey evidence validate seams and behavior | Direct user change to this constraint |
 | MVP-D17 | Carried forward from current user instruction | Use an initial $10/month budget alert for the single hackathon project before paid hosting/model services; alerts are notifications, not spend caps | A lower alert gives earlier notice but does not prevent charges; actual hard limits require separate quotas and service controls | Owner changes the alert amount or service-cost profile materially changes |
