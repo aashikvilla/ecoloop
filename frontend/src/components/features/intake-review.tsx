@@ -54,6 +54,7 @@ function IntakeReviewForm({ auth, user, householdId, intakeId }: { auth: ReturnT
   const [error, setError] = useState("");
   const [pending, setPending] = useState<PendingConfirmation | null>(null);
   const [reviewed, setReviewed] = useState(false);
+  const [confirmedCount, setConfirmedCount] = useState(0);
   const controller = useRef<AbortController | null>(null);
   const enabled = process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true";
 
@@ -75,6 +76,7 @@ function IntakeReviewForm({ auth, user, householdId, intakeId }: { auth: ReturnT
       setCandidates(response.candidates.map(editable));
       setPending(null);
       setReviewed(false);
+      setConfirmedCount(0);
       setPhase(response.status === "CONFIRMED" ? "confirmed" : "ready");
     } catch (failure) {
       if (!request.signal.aborted && !(failure instanceof Error && failure.name === "AbortError")) {
@@ -114,7 +116,8 @@ function IntakeReviewForm({ auth, user, householdId, intakeId }: { auth: ReturnT
       setRecord(result);
       setCandidates(result.candidates.map(editable));
       setPending(null);
-      setPhase("confirmed");
+      setConfirmedCount(result.confirmed.length);
+      setPhase(result.status === "CONFIRMED" ? "confirmed" : "ready");
       setError("");
     } catch (failure) {
       if (!request.signal.aborted && !(failure instanceof Error && failure.name === "AbortError")) {
@@ -159,6 +162,7 @@ function IntakeReviewForm({ auth, user, householdId, intakeId }: { auth: ReturnT
     {phase === "busy" && <div role="status" className="mt-4"><Panel><p className="font-medium">Confirming selected candidates…</p><p className="mt-1 text-sm text-muted">The request may take a moment. It will not be sent again automatically.</p><button type="button" onClick={() => { controller.current?.abort(); setPhase("error"); setError("You stopped waiting. The service may have received the confirmation; retry the exact request or reload the intake."); }} className="mt-3 min-h-11 rounded-full bg-surface-muted px-4 text-sm font-medium text-primary">Stop waiting</button></Panel></div>}
     {phase === "confirmed" && <section className="mt-4 space-y-3" aria-live="polite"><Notice tone="success">This intake is confirmed. The selected candidates are now canonical household records.</Notice><Panel><h2 className="font-semibold">Confirmed records</h2><ul className="mt-2 space-y-2">{record?.candidates.map((candidate) => <li key={candidate.candidate_id} className="text-sm"><span className="font-medium">{candidate.name}</span> · {candidate.candidate_id}</li>)}</ul><p className="mt-3 text-sm text-muted">Confirmation records details only. It does not assess condition or safety.</p><div className="mt-4 flex flex-wrap gap-3"><QuietLink href="/kitchen">Open Kitchen</QuietLink><QuietLink href="/kitchen/add">Add more food</QuietLink></div></Panel></section>}
     {phase === "ready" && record && <section className="mt-4 space-y-4" aria-label="Candidate review">
+      {confirmedCount > 0 && <Notice tone="success">{confirmedCount} {confirmedCount === 1 ? "candidate is" : "candidates are"} now confirmed. {candidates.length} {candidates.length === 1 ? "candidate remains" : "candidates remain"} in this intake.</Notice>}
       <Panel className="space-y-1"><p className="text-xs font-semibold uppercase tracking-wide text-primary">Unconfirmed intake · version {record.version}</p><p className="text-sm text-muted">Select candidates to confirm. Blank amount, date, or storage stays unknown.</p></Panel>
       {candidates.length === 0 ? <Panel><h2 className="font-semibold">No candidates to review</h2><p className="mt-1 text-sm text-muted">This intake has no candidates. Nothing can be confirmed.</p></Panel> : candidates.map((candidate, index) => <article key={candidate.candidate_id} className="rounded-3xl border border-border bg-surface p-4 shadow-sm sm:p-5">
         <div className="flex items-start gap-3"><input id={`candidate-${index}-selected`} type="checkbox" checked={candidate.selected} disabled={locked} onChange={(event) => update(candidate.candidate_id, { selected: event.target.checked })} className="mt-1 size-5 accent-[var(--color-primary)]" /><div className="min-w-0 flex-1"><label htmlFor={`candidate-${index}-selected`} className="block min-h-11 cursor-pointer py-1 text-sm font-semibold">Select this candidate</label><p className="break-all text-xs text-muted">Candidate ID · {candidate.candidate_id}</p></div></div>

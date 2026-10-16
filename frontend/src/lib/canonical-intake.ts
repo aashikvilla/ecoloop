@@ -41,7 +41,6 @@ export type IntakeConfirmationCommand = {
 };
 
 export type IntakeConfirmationResult = IntakeRecord & {
-  status: "CONFIRMED";
   confirmed: Array<{ item_id: string; version: number }>;
 };
 
@@ -117,7 +116,6 @@ function parseConfirmation(payload: unknown): IntakeConfirmationResult {
     throw new CanonicalApiError("invalid_response", "The confirmation response did not match the supported format.");
   }
   const record = parseIntakeRecord(payload);
-  if (record.status !== "CONFIRMED") throw new CanonicalApiError("invalid_response", "The intake service did not confirm the selected candidates.");
   const confirmed: IntakeConfirmationResult["confirmed"] = [];
   for (const item of payload.confirmed) {
     if (!object(item) || !boundedId(item.item_id) || !validVersion(item.version)) {
@@ -128,7 +126,7 @@ function parseConfirmation(payload: unknown): IntakeConfirmationResult {
   if (new Set(confirmed.map((item) => item.item_id)).size !== confirmed.length) {
     throw new CanonicalApiError("invalid_response", "The confirmation response contained duplicate item IDs.");
   }
-  return { ...record, status: "CONFIRMED", confirmed };
+  return { ...record, confirmed };
 }
 
 function parseResult(payload: unknown): IntakeResult {
