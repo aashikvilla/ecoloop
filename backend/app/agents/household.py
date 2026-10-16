@@ -240,18 +240,25 @@ def _iso(value: Any) -> str | None:
 
 def _kitchen_query(principal: Principal, item_ids: list[str]) -> list[dict[str, Any]]:
     """Read and minimize only the caller's verified household observations."""
-    query = (
+    observations = (
         get_firestore()
         .collection("households")
         .document(principal.household_id)
         .collection("food_observations")
-        .order_by("observed_at", direction="DESCENDING")
-        .limit(200)
     )
-    wanted = set(item_ids[:MAX_KITCHEN_CONTEXT_ITEMS])
+    if item_ids:
+        # Resolve selected context directly within the authorized household and
+        # retain caller order. Deduplicating preserves the prior set semantics.
+        snapshots = (
+            observations.document(item_id).get()
+            for item_id in dict.fromkeys(item_ids[:MAX_KITCHEN_CONTEXT_ITEMS])
+        )
+    else:
+        snapshots = observations.order_by("observed_at", direction="DESCENDING").limit(200).stream()
+
     rows: list[dict[str, Any]] = []
-    for snapshot in query.stream():
-        if wanted and snapshot.id not in wanted:
+    for snapshot in snapshots:
+        if not snapshot.exists:
             continue
         data = snapshot.to_dict() or {}
         name = data.get("name")
@@ -291,7 +298,7 @@ def _kitchen_query(principal: Principal, item_ids: list[str]) -> list[dict[str, 
                 "condition": "UNKNOWN",
             }
         )
-        if len(rows) >= (len(wanted) if wanted else MAX_KITCHEN_CONTEXT_ITEMS):
+        if len(rows) >= MAX_KITCHEN_CONTEXT_ITEMS:
             break
     return rows
 
