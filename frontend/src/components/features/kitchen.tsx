@@ -9,6 +9,7 @@ import { useLiveHousehold } from "@/lib/live-household";
 import { CanonicalApiError } from "@/lib/canonical-transport";
 import { submitIntake, type IntakeCommand, type IntakeEntry, type IntakeResult } from "@/lib/canonical-intake";
 import { Notice, PageIntro, Panel, QuietLink, UnitLabel } from "./ui";
+import { IntakeReview } from "./intake-review";
 
 function dateLabel(date: string | null, type: DateType) {
   if (!date || type === "UNKNOWN") return "Date unknown";
@@ -205,10 +206,10 @@ function CaptureFoodForm({ auth, user, householdId }: Pick<ReturnType<typeof use
         {candidate.uncertainty.length > 0 && <p className="mt-2 text-xs text-muted">Unknown details: {candidate.uncertainty.map((item) => item === "AMOUNT_UNKNOWN" ? "amount" : item === "DATE_UNKNOWN" ? "date" : "storage").join(", ")}.</p>}
       </article>)}</div>}
       <p className="text-xs text-muted">Intake reference: {result.intake_id}. Review and confirmation are a separate step.</p>
-      <QuietLink href="/kitchen">Return to Kitchen</QuietLink>
+      <div className="flex flex-wrap gap-2"><QuietLink href={`/kitchen/review?id=${encodeURIComponent(result.intake_id)}`}>Review candidates</QuietLink><QuietLink href="/kitchen">Return to Kitchen</QuietLink></div>
     </section>}
   </div>;
 }
-export function ReviewFood() { return <UnavailableKitchenFlow title="Review food details" details="No confirmed candidate draft is available on this route. Local demo drafts are not shown as household data." />; }
+export function ReviewFood() { return <IntakeReview />; }
 export function ItemDetail({ itemId }: { itemId: string }) { return <UnavailableKitchenFlow title="Food record details" details={`The canonical detail view for item ${itemId} is not connected. The Kitchen list contains only records returned by the household API.`} />; }
 export function ShareItem({ itemId }: { itemId: string }) { return <UnavailableKitchenFlow title="Private sharing controls" details={`Private sharing commands for item ${itemId} are not connected. Account can show owner-private sharing history, but it cannot prepare or record a new share here.`} />; }
