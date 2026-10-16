@@ -25,6 +25,25 @@ export type IntakeCandidate = IntakeEntry & {
   uncertainty: Array<"AMOUNT_UNKNOWN" | "DATE_UNKNOWN" | "STORAGE_UNKNOWN">;
 };
 
+export type IntakeRecord = {
+  intake_id: string;
+  status: "CANDIDATE" | "CONFIRMED";
+  version: number;
+  candidates: IntakeCandidate[];
+};
+
+export type IntakeConfirmationCandidate = IntakeEntry & { candidate_id: string };
+export type IntakeConfirmationCommand = {
+  schema_version: 1;
+  idempotency_key: string;
+  base_version: number;
+  candidates: IntakeConfirmationCandidate[];
+};
+
+export type IntakeConfirmationResult = IntakeRecord & {
+  confirmed: Array<{ item_id: string; version: number }>;
+};
+
 export type IntakeResult = {
   intake_id: string;
   status: "CANDIDATE";
@@ -63,31 +82,75 @@ function validEntry(value: unknown): value is IntakeEntry {
 }
 
 function validCandidate(value: unknown): value is IntakeCandidate {
-  if (!object(value) || !Array.isArray(value.uncertainty) || value.uncertainty.length > 3) return false;
-  const uncertainty = value.uncertainty;
+  if (!object(value)) return false;
+  const uncertainty = Array.isArray(value.uncertainty) ? value.uncertainty : [];
+  if (uncertainty.length > 3) return false;
   return boundedId(value.candidate_id)
     && validEntry(value)
     && uncertainty.every((item) => typeof item === "string" && uncertainties.has(item));
 }
 
-function parseResult(payload: unknown): IntakeResult {
+function validVersion(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 1;
+}
+
+function parseIntakeRecord(payload: unknown): IntakeRecord {
+  if (!object(payload) || !boundedId(payload.intake_id) || !validVersion(payload.version)
+    || !["CANDIDATE", "CONFIRMED"].includes(String(payload.status))
+    || !Array.isArray(payload.candidates) || payload.candidates.length > MAX_ENTRIES) {
+    throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected review record.");
+  }
+  const candidates: IntakeCandidate[] = [];
+  for (const candidate of payload.candidates) {
+    if (!validCandidate(candidate)) throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.");
+    candidates.push(candidate);
+  }
+  if (new Set(candidates.map((candidate) => candidate.candidate_id)).size !== candidates.length) {
+    throw new CanonicalApiError("invalid_response", "The intake service returned duplicate candidate IDs.");
+  }
+  return { intake_id: payload.intake_id, status: payload.status as IntakeRecord["status"], version: payload.version, candidates };
+}
+
+function parseConfirmation(payload: unknown): IntakeConfirmationResult {
+  if (!object(payload) || !Array.isArray(payload.confirmed) || payload.confirmed.length < 1 || payload.confirmed.length > MAX_ENTRIES) {
+    throw new CanonicalApiError("invalid_response", "The confirmation response did not match the supported format.");
+  }
+  const record = parseIntakeRecord(payload);
+  const confirmed: IntakeConfirmationResult["confirmed"] = [];
+  for (const item of payload.confirmed) {
+    if (!object(item) || !boundedId(item.item_id) || !validVersion(item.version)) {
+      throw new CanonicalApiError("invalid_response", "The confirmation response did not match the supported format.");
+    }
+    confirmed.push({ item_id: item.item_id, version: item.version });
+  }
+  if (new Set(confirmed.map((item) => item.item_id)).size !== confirmed.length) {
+    throw new CanonicalApiError("invalid_response", "The confirmation response contained duplicate item IDs.");
+  }
+  return { ...record, confirmed };
+}
+
+function parseEnvelope<T>(payload: unknown, parseResult: (result: unknown) => T): T {
   if (!object(payload) || payload.schema_version !== 1 || !boundedId(payload.request_id) || !object(payload.result)) {
     throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected response.");
   }
-  const result = payload.result;
+  return parseResult(payload.result);
+}
+
+function parseResult(result: unknown): IntakeResult {
+  if (!object(result)) throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected response.");
   if (!boundedId(result.intake_id) || result.status !== "CANDIDATE" || !Array.isArray(result.candidates) || result.candidates.length > MAX_ENTRIES) {
-    throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected candidate result.", payload.request_id);
+    throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected candidate result.");
   }
   const candidates: IntakeCandidate[] = [];
   for (const candidate of result.candidates) {
     if (!validCandidate(candidate)) {
-      throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.", payload.request_id);
+      throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.");
     }
     candidates.push(candidate);
   }
   const ids = candidates.map((candidate) => candidate.candidate_id);
   if (new Set(ids).size !== ids.length) {
-    throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.", payload.request_id);
+    throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.");
   }
   return { intake_id: result.intake_id, status: "CANDIDATE", candidates };
 }
@@ -143,7 +206,7 @@ async function readJson(response: Response): Promise<unknown> {
   try { return JSON.parse(text) as unknown; } catch { throw new CanonicalApiError("invalid_response", "The household service returned unreadable data."); }
 }
 
-async function requestIntake(path: string, token: string, householdId: string, options: { method: "GET" | "POST"; body?: IntakeCommand; signal?: AbortSignal }): Promise<IntakeResult> {
+async function requestIntake<T>(path: string, token: string, householdId: string, options: { method: "GET" | "POST"; body?: unknown; signal?: AbortSignal; parse: (payload: unknown) => T }): Promise<T> {
   if (!token || token.length > 8192 || /[\r\n]/.test(token)) throw new CanonicalApiError("unauthenticated", "Sign in before accessing household records.");
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(householdId)) throw new CanonicalApiError("validation", "Enter a valid household ID.");
   if (options.method === "POST" && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS !== "true") {
@@ -163,7 +226,7 @@ async function requestIntake(path: string, token: string, householdId: string, o
     });
     const payload = await readJson(response);
     if (!response.ok) throw responseError(response.status, options.method === "POST");
-    return parseResult(payload);
+    return parseEnvelope(payload, options.parse);
   } catch (error) {
     if (controller.signal.aborted) {
       if (options.signal?.aborted) throw new DOMException("Request cancelled", "AbortError");
@@ -181,10 +244,22 @@ export function submitIntake(token: string, householdId: string, command: Intake
   if (command.schema_version !== 1 || !/^[A-Za-z0-9._:-]{8,128}$/.test(command.idempotency_key) || !["MANUAL", "TEXT"].includes(command.source) || command.entries.length < 1 || command.entries.length > MAX_ENTRIES || !command.entries.every(validEntry)) {
     return Promise.reject(new CanonicalApiError("validation", "Review the intake entries before sending."));
   }
-  return requestIntake("intakes", token, householdId, { method: "POST", body: command, signal });
+  return requestIntake("intakes", token, householdId, { method: "POST", body: command, signal, parse: parseResult });
 }
 
-export function readIntake(token: string, householdId: string, intakeId: string, signal?: AbortSignal): Promise<IntakeResult> {
+export function readIntake(token: string, householdId: string, intakeId: string, signal?: AbortSignal): Promise<IntakeRecord> {
   if (!boundedId(intakeId)) return Promise.reject(new CanonicalApiError("validation", "Choose a valid intake."));
-  return requestIntake(`intakes/${encodeURIComponent(intakeId)}`, token, householdId, { method: "GET", signal });
+  return requestIntake(`intakes/${encodeURIComponent(intakeId)}`, token, householdId, { method: "GET", signal, parse: parseIntakeRecord });
+}
+
+export function confirmIntake(token: string, householdId: string, intakeId: string, command: IntakeConfirmationCommand, signal?: AbortSignal): Promise<IntakeConfirmationResult> {
+  if (!boundedId(intakeId) || command.schema_version !== 1 || !/^[A-Za-z0-9._:-]{8,128}$/.test(command.idempotency_key)
+    || !validVersion(command.base_version) || command.candidates.length < 1 || command.candidates.length > MAX_ENTRIES
+    || !command.candidates.every((candidate) => boundedId(candidate.candidate_id) && validEntry(candidate))) {
+    return Promise.reject(new CanonicalApiError("validation", "Review the selected candidates before confirming."));
+  }
+  if (new Set(command.candidates.map((candidate) => candidate.candidate_id)).size !== command.candidates.length) {
+    return Promise.reject(new CanonicalApiError("validation", "Choose each candidate only once."));
+  }
+  return requestIntake(`intakes/${encodeURIComponent(intakeId)}/confirm`, token, householdId, { method: "POST", body: command, signal, parse: parseConfirmation });
 }
