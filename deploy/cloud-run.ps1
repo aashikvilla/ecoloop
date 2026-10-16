@@ -44,14 +44,22 @@ if ($Mode -eq "Deploy") {
     if ([string]::IsNullOrWhiteSpace($Image) -or $Image -notmatch "@sha256:[0-9a-f]{64}$") {
         throw "Deploy requires -Image pinned by digest (IMAGE@sha256:...)."
     }
-    if ([string]::IsNullOrWhiteSpace($RuntimeServiceAccount) -or $RuntimeServiceAccount -notmatch "^[^@]+@[^@]+\.iam\.gserviceaccount\.com$") {
-        throw "Deploy requires an existing dedicated -RuntimeServiceAccount; do not use the Firebase Admin SDK service account."
+    $serviceAccountPattern = "^[a-z][a-z0-9-]*@$([regex]::Escape($Project))\.iam\.gserviceaccount\.com$"
+    if ([string]::IsNullOrWhiteSpace($RuntimeServiceAccount) -or $RuntimeServiceAccount -notmatch $serviceAccountPattern -or $RuntimeServiceAccount -match "^firebase-adminsdk") {
+        throw "Deploy requires a dedicated -RuntimeServiceAccount in project $Project; Firebase Admin SDK and default service accounts are not accepted."
     }
     $parsedOrigin = $null
-    if (-not [System.Uri]::TryCreate($FrontendOrigin, [System.UriKind]::Absolute, [ref]$parsedOrigin) -or $parsedOrigin.Scheme -ne "https" -or $parsedOrigin.AbsolutePath -ne "/" -or -not [string]::IsNullOrEmpty($parsedOrigin.Query) -or -not [string]::IsNullOrEmpty($parsedOrigin.Fragment)) {
+    if (-not [System.Uri]::TryCreate($FrontendOrigin, [System.UriKind]::Absolute, [ref]$parsedOrigin) -or $parsedOrigin.Scheme -ne "https" -or [string]::IsNullOrWhiteSpace($parsedOrigin.Host) -or -not [string]::IsNullOrEmpty($parsedOrigin.UserInfo) -or $parsedOrigin.AbsolutePath -ne "/" -or -not [string]::IsNullOrEmpty($parsedOrigin.Query) -or -not [string]::IsNullOrEmpty($parsedOrigin.Fragment)) {
         throw "Deploy requires one exact HTTPS -FrontendOrigin (scheme and host only), such as https://app.example.com."
     }
 
+    $environment = [ordered]@{
+        FIREBASE_PROJECT_ID = $Project
+        GOOGLE_CLOUD_PROJECT = $Project
+        AGENT_ENABLED = "false"
+        BACKEND_CORS_ORIGINS = (ConvertTo-Json -InputObject ([object[]]@($parsedOrigin.GetLeftPart([System.UriPartial]::Authority))) -Compress)
+    }
+    $environmentFile = Join-Path ([System.IO.Path]::GetTempPath()) ("ecoloop-cloud-run-env-{0}.json" -f [guid]::NewGuid().ToString("N"))
     $arguments = @(
         "run", "deploy", $Service,
         "--project=$Project",
@@ -68,7 +76,7 @@ if ($Mode -eq "Deploy") {
         "--max=1",
         "--no-traffic",
         "--quiet",
-        "--set-env-vars=FIREBASE_PROJECT_ID=$Project,GOOGLE_CLOUD_PROJECT=$Project,AGENT_ENABLED=false,BACKEND_CORS_ORIGINS=$FrontendOrigin"
+        "--env-vars-file=$environmentFile"
     )
     if ($AllowUnauthenticated) {
         $arguments += "--allow-unauthenticated"
@@ -81,7 +89,15 @@ if ($Mode -eq "Deploy") {
         }
         $arguments += "--set-secrets=GEMINI_API_KEY=$GeminiApiSecretRef"
     }
-    Invoke-Gcloud $arguments
+    try {
+        $environmentJson = ConvertTo-Json -InputObject $environment -Depth 3 -Compress
+        [System.IO.File]::WriteAllText($environmentFile, $environmentJson, [System.Text.UTF8Encoding]::new($false))
+        Invoke-Gcloud $arguments
+    } finally {
+        if (Test-Path -LiteralPath $environmentFile -PathType Leaf) {
+            Remove-Item -LiteralPath $environmentFile -Force
+        }
+    }
     Write-Output "Revision deployed without traffic. Verify its health and configuration before promotion."
     exit 0
 }
