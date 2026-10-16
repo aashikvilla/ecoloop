@@ -16,7 +16,7 @@ Three GPT-6 Luna/high read-only lanes inspected canonical item detail, proposal 
 
 One worker implemented read-only item detail on isolated `codex/kitchen-item-detail` (`068e2f5`). It links Kitchen records to details, renders authenticated observations and unknown fields, handles loading/sign-in/no-household/API-error/not-found states, explains the list cap and uncertainty limits, and links to existing Account controls. An independent critical/informational review found no actionable issue. The change was integrated sequentially as `50ea53b` and pushed.
 
-The worker's ESLint, TypeScript, production build and `git diff --check` passed. Root integration ESLint, TypeScript and `git diff --check` passed. A redundant root production rebuild was stopped after Next.js announced it loads ignored `.env.local`; file contents were not inspected. No unit tests, backend edits, cloud calls or browser writes occurred.
+The worker's ESLint, TypeScript, production build and `git diff --check` passed. Root integration ESLint, TypeScript and `git diff --check` passed. A redundant root production rebuild was stopped after Next.js announced it loads ignored `.env.local`; file contents were not inspected. Root dev server returned HTTP 200 for Kitchen and the item route; browser review showed the signed-out item state and the correct shell label, with no authenticated item payload or mutation exercised. No unit tests, backend edits, cloud calls or browser writes occurred.
 
 ## Status and next work
 

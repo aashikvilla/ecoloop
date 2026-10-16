@@ -11,6 +11,7 @@ The read-only slice adds links from confirmed Kitchen records to `/kitchen/items
 - Isolated worktree: ESLint, TypeScript, production build and `git diff --check` passed.
 - Integration checkout: ESLint and TypeScript passed; `git diff --check` passed.
 - The redundant integration rebuild was stopped after Next.js announced it loads ignored `.env.local`. No environment file contents were inspected. The isolated worktree build completed before integration.
+- Root dev server returned HTTP 200 for Kitchen and a synthetic item URL. Browser review confirmed the item route displays its signed-out state and the correct shell label; no authenticated item payload or mutation was exercised.
 - No frontend/backend unit tests ran. No backend changes, cloud calls or browser writes occurred in this slice.
 
 ## Limits and next work
