@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useDemo } from "@/lib/demo-store";
 import type { FoodItem } from "@/lib/contracts";
-import { ActionLink, Notice, PageIntro, Panel, QuietLink, UnitLabel } from "./ui";
+import { ActionLink, Notice, PageIntro, Panel, QuietLink } from "./ui";
 
 const field = "min-h-11 rounded-xl border border-border bg-surface px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const primary = "inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
