@@ -75,6 +75,7 @@ if ($Mode -eq "Deploy") {
         "--min=0",
         "--max=1",
         "--no-traffic",
+        "--tag=candidate",
         "--quiet",
         "--env-vars-file=$environmentFile"
     )
@@ -98,7 +99,7 @@ if ($Mode -eq "Deploy") {
             Remove-Item -LiteralPath $environmentFile -Force
         }
     }
-    Write-Output "Revision deployed without traffic. Verify its health and configuration before promotion."
+    Write-Output "Candidate revision deployed without default traffic. Use its candidate tag URL for smoke checks before promotion."
     exit 0
 }
 
