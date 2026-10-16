@@ -23,6 +23,7 @@ from app.domain.repository import (
 )
 from app.schemas.household import (
     CreateShareLogCommand,
+    DateType,
     ShareCondition,
     ShareState,
     TransitionShareLogCommand,
@@ -55,15 +56,26 @@ def _check_share_eligibility(item: dict[str, Any], condition: ShareCondition, no
     if condition != ShareCondition.UNSERVED_USER_REPORTED:
         raise DomainError("SHARE_INELIGIBLE", "A share requires an owner-reported unserved item; plate, spoiled, expired, and unknown conditions cannot be offered.", 422)
     date_value = item.get("date_value")
-    date_type = item.get("date_type")
+    raw_date_type = item.get("date_type")
+    try:
+        date_type = DateType(raw_date_type)
+    except (TypeError, ValueError):
+        raise DomainError("DATE_RECONCILIATION_REQUIRED", "The item's date type is invalid; reconcile it before sharing.", 409) from None
+    if date_type == DateType.UNKNOWN:
+        if date_value is not None:
+            raise DomainError("DATE_RECONCILIATION_REQUIRED", "The item's unknown date type conflicts with its stored date; reconcile it before sharing.", 409)
+        return None
     if isinstance(date_value, str):
         try:
-            date_value = date.fromisoformat(date_value)
+            parsed_date = date.fromisoformat(date_value)
         except ValueError:
-            raise DomainError("DATA_UNAVAILABLE", "The item's date observation is invalid; reconcile it before sharing.", 503, True) from None
-    if date_type in {"USE_BY", "EXPIRY"} and (not isinstance(date_value, date) or isinstance(date_value, datetime)):
-        raise DomainError("DATE_RECONCILIATION_REQUIRED", "The use-by or expiry date is missing or invalid; reconcile it before sharing.", 409)
-    if isinstance(date_value, date) and not isinstance(date_value, datetime) and date_type in {"USE_BY", "EXPIRY"}:
+            raise DomainError("DATE_RECONCILIATION_REQUIRED", "The item's date observation is invalid; reconcile it before sharing.", 409) from None
+        if parsed_date.isoformat() != date_value:
+            raise DomainError("DATE_RECONCILIATION_REQUIRED", "The item's date observation is not in canonical date format; reconcile it before sharing.", 409)
+        date_value = parsed_date
+    if not isinstance(date_value, date) or isinstance(date_value, datetime):
+        raise DomainError("DATE_RECONCILIATION_REQUIRED", "The item's known date is missing or invalid; reconcile it before sharing.", 409)
+    if date_type in {DateType.USE_BY, DateType.EXPIRY}:
         zone_name = household_data.get("time_zone")
         if not isinstance(zone_name, str) or not zone_name:
             raise DomainError("DATE_RECONCILIATION_REQUIRED", "Set a valid household time zone before sharing food with a use-by or expiry date.", 409)
@@ -229,7 +241,7 @@ def transition_share_log(principal: Principal, share_id: str, command: Transitio
                     raise DomainError("UNIT_CONFLICT", "The handover unit does not match confirmed stock.", 409)
                 if command.amount > stock_amount:
                     raise DomainError("AMOUNT_CONFLICT", "The handover amount exceeds confirmed stock.", 409)
-                item["amount"] = round(stock_amount - command.amount, 6)
+                item["amount"] = stock_amount - command.amount
             elif command.amount is None and stock_amount is not None:
                 # The handover is real but its quantity is unknown; avoid retaining a known stale balance.
                 item["amount"] = None

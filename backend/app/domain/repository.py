@@ -176,7 +176,11 @@ def record_outcome(principal: Principal, command: RecordOutcomeCommand) -> dict[
             if stock_amount is not None and command.amount > stock_amount:
                 raise DomainError("AMOUNT_CONFLICT", "The outcome amount exceeds confirmed stock; reconcile the item first.", 409)
             if stock_amount is not None:
-                item["amount"] = round(stock_amount - command.amount, 6)
+                item["amount"] = stock_amount - command.amount
+        elif command.amount is None and command.outcome_type.value in {"USED", "DISCARDED", "COMPOSTED"} and stock_amount is not None:
+            # The outcome changes stock, but without a quantity the prior balance is stale.
+            item["amount"] = None
+            item["unit"] = None
         if command.outcome_type.value == "STORED":
             item["storage"] = command.storage
         item["version"] = command.base_version + 1
