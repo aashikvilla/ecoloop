@@ -129,24 +129,28 @@ function parseConfirmation(payload: unknown): IntakeConfirmationResult {
   return { ...record, confirmed };
 }
 
-function parseResult(payload: unknown): IntakeResult {
+function parseEnvelope<T>(payload: unknown, parseResult: (result: unknown) => T): T {
   if (!object(payload) || payload.schema_version !== 1 || !boundedId(payload.request_id) || !object(payload.result)) {
     throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected response.");
   }
-  const result = payload.result;
+  return parseResult(payload.result);
+}
+
+function parseResult(result: unknown): IntakeResult {
+  if (!object(result)) throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected response.");
   if (!boundedId(result.intake_id) || result.status !== "CANDIDATE" || !Array.isArray(result.candidates) || result.candidates.length > MAX_ENTRIES) {
-    throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected candidate result.", payload.request_id);
+    throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected candidate result.");
   }
   const candidates: IntakeCandidate[] = [];
   for (const candidate of result.candidates) {
     if (!validCandidate(candidate)) {
-      throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.", payload.request_id);
+      throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.");
     }
     candidates.push(candidate);
   }
   const ids = candidates.map((candidate) => candidate.candidate_id);
   if (new Set(ids).size !== ids.length) {
-    throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.", payload.request_id);
+    throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.");
   }
   return { intake_id: result.intake_id, status: "CANDIDATE", candidates };
 }
@@ -222,7 +226,7 @@ async function requestIntake<T>(path: string, token: string, householdId: string
     });
     const payload = await readJson(response);
     if (!response.ok) throw responseError(response.status, options.method === "POST");
-    return options.parse(payload);
+    return parseEnvelope(payload, options.parse);
   } catch (error) {
     if (controller.signal.aborted) {
       if (options.signal?.aborted) throw new DOMException("Request cancelled", "AbortError");
