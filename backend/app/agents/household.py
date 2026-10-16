@@ -174,17 +174,19 @@ async def _get_runner() -> tuple[Runner, InMemorySessionService]:
             name="ecoloop_household_agent",
             model=settings.AGENT_MODEL,
             description="Suggests household food decisions from confirmed kitchen observations.",
-            instruction=HOUSEHOLD_INSTRUCTION,
+            # Keep the schema in trusted instructions because provider schema
+            # conversion rejects parts of this JSON Schema; local validation below
+            # remains authoritative for every generated card.
+            instruction=(
+                f"{HOUSEHOLD_INSTRUCTION}\n\n"
+                "OUTPUT JSON SCHEMA (follow this exact structure):\n"
+                f"{json.dumps(AgentOutput.model_json_schema(), ensure_ascii=False, separators=(',', ':'))}"
+            ),
             output_key="assistant_result",
-            # ADK output_schema lowers Pydantic's discriminated union to
-            # google-genai Schema, which rejects its oneOf/discriminator keys.
-            # Raw JSON Schema keeps the provider contract; local parsing below
-            # still validates AgentOutput and each strict ProposalCard.
             generate_content_config=types.GenerateContentConfig(
                 temperature=0.2,
                 max_output_tokens=settings.AGENT_MAX_OUTPUT_TOKENS,
                 response_mime_type="application/json",
-                response_json_schema=AgentOutput.model_json_schema(),
             ),
         )
         sessions = InMemorySessionService()

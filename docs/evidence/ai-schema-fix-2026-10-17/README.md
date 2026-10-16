@@ -1,28 +1,26 @@
 # AI structured output schema fix — 17 October 2026
 
-## Finding
+## Finding and change
 
-The first local Ask attempt failed before any provider request. `google-genai` 2.31.0's `process_schema` rejects the Pydantic proposal schema's numeric and boolean `const` values with `ValueError: Literal values must be strings.` The initial fix made `process_schema` pass, but the merged UI attempt then exposed the next conversion stage: `types.Schema` rejects Pydantic's `discriminator` and `oneOf` keys with `extra_forbidden` validation errors.
+The initial Ask request failed before network because `google-genai` 2.31.0 rejects non-string literals during `response_schema` conversion. A later full UI request using `response_json_schema` reached Google but returned HTTP 400 `INVALID_ARGUMENT`; its response did not identify which JSON Schema feature was unsupported. The schema contains Pydantic-specific `gt`/`ge`/`le`, `discriminator`, and `oneOf` structures.
 
-## Change
-
-`backend/app/agents/household.py` now supplies `AgentOutput.model_json_schema()` through `GenerateContentConfig.response_json_schema` with `response_mime_type="application/json"`. It no longer routes the schema through ADK `output_schema` / GenAI `response_schema`, which converts Pydantic's full JSON Schema into the narrower `types.Schema`. This preserves the complete provider JSON Schema, including discriminated card alternatives. The response is still parsed and locally validated against the strict `AgentOutput` / `ProposalCard` models before returning to the API. No arbitrary UI, action execution, or mutation tools were added.
+The current implementation sends JSON MIME mode without `output_schema`, `response_schema`, or `response_json_schema`. It appends the compact `AgentOutput.model_json_schema()` JSON to EcoLoop's trusted agent instruction as output-format guidance. `_output_from_events` still parses `AgentOutput`, and `_validate_cards` plus the strict `ProposalCard` models remain authoritative. No arbitrary UI or mutation tools were added.
 
 ## Local evidence
 
-Using the existing root backend virtual environment (`google-adk` 2.12.0, `google-genai` 2.31.0, Pydantic 2.14.1), with `backend/` in the isolated worktree as the working directory:
+Using the existing backend virtual environment (`google-adk` 2.12.0, `google-genai` 2.31.0, Pydantic 2.14.1), with the isolated worktree `backend/` as the current directory:
 
-- The full `google.genai.models._GenerateContentParameters_to_mldev` conversion with `response_schema=AgentOutput` reproduced `ValidationError` for `properties.cards.items.discriminator` and `properties.cards.items.oneOf`.
-- Constructing an ADK `LlmAgent` and `LlmRequest` with `response_json_schema=AgentOutput.model_json_schema()` succeeded; the full GenAI MLDev parameter conversion succeeded and emitted `responseJsonSchema`.
-- A valid meal proposal passed strict card validation, while `schema_version: "1"` was rejected.
-- The offline converter used a dummy client key and made no network request. No cloud call, unit test, or environment-file read was performed.
+- Offline ADK `LlmAgent` / `LlmRequest` construction and full GenAI MLDev parameter conversion succeeded with `response_mime_type="application/json"` and no response schema fields.
+- The converted request contained the trusted system instruction with the compact JSON schema and emitted `responseMimeType` without `responseSchema` or `responseJsonSchema`.
+- Strict local validation accepted a valid meal card and rejected string `schema_version: "1"`.
+- The offline converter used a dummy key and made no network call. No cloud call, unit test, or environment-file read was performed.
 
-## Timeout and error path review
+## Timeout and error path
 
-The backend wraps `runner.run_async()` in `asyncio.timeout(settings.AGENT_REQUEST_TIMEOUT_SECONDS)` and maps expiry to `DomainError("AGENT_TIMEOUT", ..., 504, True)`. The existing FastAPI `DomainError` handler preserves the 504 status and retryable flag. The provider-run timeout starts after local runner/session initialization; schema conversion failures there are caught as generic assistant unavailability (503), distinct from a provider response timeout. The frontend's prior 12-second request budget was shorter than the backend's 20-second default; root is addressing the assistant transport budget separately.
+The backend wraps `runner.run_async()` in `asyncio.timeout(settings.AGENT_REQUEST_TIMEOUT_SECONDS)` and maps expiry to retryable 504. The FastAPI domain error handler preserves that status. Local runner/session initialization happens before the provider-run timeout; errors there map to 503. Root separately raised the frontend assistant request budget beyond the backend's 20-second default.
 
-## Not yet proven
+## Remaining proof and limitation
 
-Local ADK and GenAI request conversion plus strict response validation pass. A live provider response remains necessary to prove service acceptance and an emitted response passing strict validation. Root will perform one bounded synthetic Ask call after review/restart.
+One bounded live synthetic Ask response is still needed to confirm a provider response passes strict validation. Root will run it after review/restart; stop after that attempt if the provider reports quota or authorization failure.
 
-A separate context-selection limitation surfaced during integrated audit: explicit `context_item_ids` are filtered only among the 200 newest observations, so an older selected ID may be omitted. This is outside the schema fix and should be handled separately.
+A separate integrated audit found that explicit `context_item_ids` are filtered only among the 200 newest observations, so an older selected ID may be omitted. Handle this separately from schema generation.
