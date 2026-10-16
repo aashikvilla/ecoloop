@@ -1,4 +1,5 @@
-"""Pydantic schemas."""
-from .item import Item, ItemCreate, ItemUpdate
+"""Strict versioned household API schemas."""
 
-__all__ = ["Item", "ItemCreate", "ItemUpdate"]
+from .household import AssistantEnvelope, ConfirmFactsCommand, RecordOutcomeCommand, ShoppingCommand
+
+__all__ = ["AssistantEnvelope", "ConfirmFactsCommand", "RecordOutcomeCommand", "ShoppingCommand"]
