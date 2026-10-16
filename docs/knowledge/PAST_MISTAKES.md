@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-16 — Public configuration and identity changes are integration boundaries
+
+Review caught public Firebase configuration read through a destructured environment object, which Next.js does not inline into browser bundles, and an authentication-error path that cleared the screen without cancelling an in-flight private read. Use literal `process.env.NEXT_PUBLIC_*` references; on account/scope/error changes cancel requests and clear both records and scope identifiers. An isolated worker typecheck cannot prove configuration delivery or private-data lifecycle; combine independent boundary review with production browser checks and later live identity proof.
+
 ## 2026-10-16 — Shared boundaries require integration proof
 
 CSS reset rules outside cascade layers defeated token utilities; provider hydration across a streamed subtree changed its initial markup; dynamic route params failed production prerender outside Suspense. Keep resets/component defaults in appropriate layers, put state providers within the same hydration boundary as consumers, and check the production build plus actual browser interactions after feature merges. A worker build alone does not prove the integrated styled application. Use installed tools from the package directory, not root npx fallback packages.

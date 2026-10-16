@@ -24,7 +24,7 @@ Repository paths and ownership fields:
 | `households/{householdId}/shopping_entries/{entryId}` | Versioned manual list entry; never a receipt or purchase record. |
 | `households/{householdId}/idempotency/{command}:{actorUidHash}:{key}` | Canonical request hash, result and actor UID required for actor-scoped safe retries. Currently retained until a reviewed retention/TTL policy is configured. |
 
-Intake candidates, proposals, consent ledger, memory references, share logs and media are not written yet. Future session records must be UID/application scoped; only explicitly approved preferences belong in a consent ledger, never raw transcripts. Future share logs must be owner-only and must not expose recipient contact details. These are schema/privacy constraints, not implemented features.
+Intake candidates, proposals, consent ledger, memory references and media are not written yet. Owner-private share-log transactions and activity reads are now implemented locally; see [sharing/activity](share-activity.md). Generic `HANDED_OVER` outcomes are rejected so sharing eligibility cannot be bypassed. Future session records must be UID/application scoped; only explicitly approved preferences belong in a consent ledger, never raw transcripts.
 
 ## Access, errors, and deletion
 
@@ -34,7 +34,7 @@ Errors expose only a stable code, safe message, retryable flag and server-genera
 
 Retention durations and user deletion behavior remain an explicit open decision from M0.02.02. No delete endpoint or Firestore TTL policy is claimed. Before household deletion is enabled, it must enumerate and delete all nested household subcollections (Firestore parent deletion alone is insufficient), clean up any private media and managed provider references, revoke preference recall immediately, and report provider deletion as pending until verified. Idempotency retention must exceed the documented client retry window. No personal transcript or photo is currently stored by this API.
 
-`firestore.indexes.json` contains no composite indexes because the current scoped reads use Firestore's automatic single-field indexes. Add a composite index only when an actual query requires it; never use an unscoped collection-group query to infer access.
+`firestore.indexes.json` declares the two composite indexes used by owner-filtered share/activity timelines. They have not been deployed or proved against Firestore. Queries remain within the authorized household collection; no unscoped collection-group query is used to infer access.
 
 ## Routes
 
@@ -43,6 +43,8 @@ Retention durations and user deletion behavior remain an explicit open decision 
 - `POST /api/v1/facts/confirm` — atomic confirmation.
 - `POST /api/v1/outcomes` — atomic owner-reported outcome and eligible stock adjustment.
 - `GET|POST /api/v1/shopping` — scoped list read and versioned entry command.
+- `GET|POST /api/v1/share-logs`, `PATCH /api/v1/share-logs/{share_id}` — owner-private, versioned sharing lifecycle; handover alone records an outcome and eligible stock effect.
+- `GET /api/v1/activity` — bounded owner-recorded outcomes with measurement provenance; excludes recipient labels.
 - `POST /api/v1/assistant/turns` — strict bounded input; explicit unavailable response until real managed services are connected.
 
 All routes except root, docs and liveness require Firebase identity and an active explicit household membership. The anonymous browser demo should not call this API.

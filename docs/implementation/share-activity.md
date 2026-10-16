@@ -23,7 +23,7 @@ Generic `POST /api/v1/outcomes` rejects `HANDED_OVER`, so callers cannot bypass 
 
 ## Storage and verification limits
 
-Owner-filtered timelines require Firestore composite indexes on `(owner_uid ASC, updated_at DESC)` for `share_logs` and `(recorded_by ASC, recorded_at DESC)` for `outcomes`; index deployment/configuration is not included in this backend-only change. Cursor tokens identify the last page document; each read verifies that document belongs to the requesting owner before applying it as a cursor. Pages are capped at 100.
+Owner-filtered timelines require Firestore composite indexes on `(owner_uid ASC, updated_at DESC)` for `share_logs` and `(recorded_by ASC, recorded_at DESC)` for `outcomes`. The integrator added these declarations to `firestore.indexes.json`; deployment/live query proof remains open. The document-ID tiebreaker follows the last sort direction, as described in the [Firestore index documentation](https://firebase.google.com/docs/firestore/query-data/index-overview#default_ordering_and_the_name_field). Cursor tokens identify the last page document; each read verifies that document belongs to the requesting owner before applying it as a cursor. Pages are capped at 100.
 
 The backend pins the IANA `tzdata` package so timezone validation works on Windows and slim Linux images without relying on host timezone files.
 

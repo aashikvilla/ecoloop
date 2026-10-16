@@ -131,13 +131,13 @@ export function AccountConnection() {
 
   return <div className="mx-auto max-w-3xl space-y-6">
     <header>
-      <Badge tone="amber" className="mb-3">SEPARATE CANONICAL ACCOUNT</Badge>
+      <Badge tone="amber" className="mb-3">ACCOUNT · READ ONLY</Badge>
       <Heading as="h1">Household connection</Heading>
-      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">Sign in and enter a household ID to read canonical records from the household API. This page is separate from the local browser demo. Nothing here creates membership or changes records.</p>
+      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">Sign in to view records for a household you already belong to. These records stay separate from this browser’s demo. Opening them does not change your records or membership.</p>
     </header>
 
     <Card className="space-y-4 border border-line p-5 sm:p-6" aria-labelledby="identity-title">
-      <div><Heading id="identity-title" as="h2">Firebase sign-in</Heading><p className="mt-1 text-sm text-muted">Authentication state is held by Firebase for this browser tab session. The app never saves an ID token itself.</p></div>
+      <div><Heading id="identity-title" as="h2">Your account</Heading><p className="mt-1 text-sm text-muted">Google sign-in lasts for this browser tab session.</p></div>
       {authState === "loading" && <p role="status" className="text-sm text-muted">Checking sign-in status…</p>}
       {authState === "unavailable" && <div role="status" className="rounded-2xl bg-surface-muted p-4 text-sm leading-relaxed text-muted">Household sign-in is not configured for this app yet. You can continue using the separate local demo.</div>}
       {authState === "signed-out" && <Button onClick={handleSignIn} disabled={busy} aria-busy={busy}>{busy ? "Opening Google sign-in…" : "Continue with Google"}</Button>}
@@ -151,21 +151,21 @@ export function AccountConnection() {
       <form onSubmit={submitHousehold} className="space-y-3">
         <label htmlFor="household-id" className="block text-sm font-semibold text-foreground">Household ID</label>
         <Input id="household-id" value={householdId} onChange={(event) => updateHousehold(event.target.value)} autoComplete="off" spellCheck={false} maxLength={128} pattern="[A-Za-z0-9_-]{1,128}" placeholder="Enter household ID" aria-describedby="household-help" />
-        <p id="household-help" className="text-xs leading-relaxed text-muted">This value is sent only in the API’s `X-Household-ID` header. It is not remembered after leaving this page.</p>
+        <p id="household-help" className="text-xs leading-relaxed text-muted">Your household choice is cleared when you change accounts or leave this page.</p>
         <Button type="submit" variant="secondary">Use this household</Button>
       </form>
       {notice && <p role="status" className="text-sm text-muted">{notice}</p>}
     </Card>
 
     <section aria-labelledby="canonical-title" className="space-y-4">
-      <div><Heading id="canonical-title" as="h2">Read canonical records</Heading><p className="mt-1 text-sm leading-relaxed text-muted">Read-only for now. These records come from FastAPI, not the demo store. No synthetic browser data is sent.</p></div>
+      <div><Heading id="canonical-title" as="h2">View household records</Heading><p className="mt-1 text-sm leading-relaxed text-muted">You can view your connected household here. Demo records are kept in this browser and are never sent with these requests.</p></div>
       <div className="flex flex-col gap-3 sm:flex-row">
         <Button variant="primary" onClick={() => void loadRecords("kitchen")} disabled={!user || authState !== "signed-in" || !householdId.trim() || loadingKind !== null} aria-busy={loadingKind === "kitchen"}>{loadingKind === "kitchen" ? "Loading kitchen…" : "Load kitchen"}</Button>
         <Button variant="secondary" onClick={() => void loadRecords("shopping")} disabled={!user || authState !== "signed-in" || !householdId.trim() || loadingKind !== null} aria-busy={loadingKind === "shopping"}>{loadingKind === "shopping" ? "Loading shopping…" : "Load shopping"}</Button>
       </div>
       {dataError && <Card className="space-y-3 border border-danger/25 bg-danger-soft/40 p-4" role="alert"><p className="text-sm font-semibold text-danger">{dataError.message}</p>{dataError.requestId && <p className="text-xs text-muted">Request reference: {dataError.requestId}</p>}{dataError.code === "unauthenticated" && <Button size="sm" variant="secondary" onClick={handleSignIn} disabled={busy}>Sign in again</Button>}{dataError.code === "conflict" && <p className="text-xs text-muted">Reload the selected records to get the current version.</p>}{dataError.code === "rate_limited" && <p className="text-xs text-muted">Retry after waiting briefly.</p>}{dataError.code === "unavailable" && <p className="text-xs text-muted">Retry when the service is available.</p>}</Card>}
-      {loadingKind && <Card role="status" className="border border-line p-5 text-sm text-muted">Loading canonical {loadingKind} records…</Card>}
-      {data && data.records.length === 0 && <Card className="border border-dashed border-line p-6 text-center"><p className="font-semibold text-primary">No canonical {data.kind} records</p><p className="mt-1 text-sm text-muted">The API returned an empty list for this household.</p></Card>}
+      {loadingKind && <Card role="status" className="border border-line p-5 text-sm text-muted">Loading household {loadingKind} records…</Card>}
+      {data && data.records.length === 0 && <Card className="border border-dashed border-line p-6 text-center"><p className="font-semibold text-primary">No {data.kind} records</p><p className="mt-1 text-sm text-muted">There are no recorded items in this household list.</p></Card>}
       {data && data.records.length > 0 && <Card className="border border-line p-4 sm:p-5"><div className="mb-3 flex items-center justify-between gap-3"><Heading as="h3">{data.kind === "kitchen" ? "Kitchen" : "Shopping"}</Heading><Badge>{data.records.length} {data.records.length === 1 ? "record" : "records"}</Badge></div><ul className="divide-y divide-line">{data.kind === "kitchen" ? data.records.map((record) => <li key={record.item_id} className="py-3 first:pt-0 last:pb-0"><p className="font-semibold text-primary">{record.name}</p><p className="mt-1 text-sm text-muted">{record.amount === null ? "Amount unknown" : `${record.amount} ${record.unit}`} · {record.date_type === "UNKNOWN" ? "Date unknown" : record.date_value || record.date_type}</p><p className="mt-1 text-xs text-muted">Version {record.version} · Confirmed {formatDate(record.observed_at)}</p></li>) : data.records.map((record) => <li key={record.entry_id} className="py-3 first:pt-0 last:pb-0"><p className="font-semibold text-primary">{record.item_name}</p><p className="mt-1 text-sm text-muted">{record.desired_amount === null ? "Amount unspecified" : `${record.desired_amount} ${record.unit}`} · Version {record.version}</p><p className="mt-1 text-xs text-muted">Updated {formatDate(record.updated_at)}</p></li>)}</ul></Card>}
     </section>
   </div>;
