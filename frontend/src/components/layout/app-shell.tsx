@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <header className="sticky top-0 z-30 border-b border-line/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-4 sm:px-7">
         <Link href="/" aria-label="EcoLoop home" className="flex items-center gap-2.5 rounded-xl">
-          <span className="flex size-10 items-center justify-center rounded-2xl bg-primary-soft text-primary"><Icon name="leaf" size={22} /></span>
+          <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary"><Icon name="leaf" size={22} /></span>
           <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-tight text-primary">EcoLoop</span><span className="block text-[11px] font-medium text-muted">My kitchen</span></span>
         </Link>
         <div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from "react";
+import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "ghost" | "danger";
@@ -14,6 +14,6 @@ const variants = {
 };
 const sizes = { sm: "min-h-11 px-4 text-sm", md: "min-h-12 px-5 text-sm", lg: "min-h-14 px-6 text-base" };
 
-export function Button({ variant = "primary", size = "md", fullWidth, className = "", type = "button", ...props }: ButtonProps) {
-  return <button type={type} className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${fullWidth ? "w-full" : ""} ${className}`} {...props} />;
-}
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button({ variant = "primary", size = "md", fullWidth, className = "", type = "button", ...props }, ref) {
+  return <button ref={ref} type={type} className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]} ${sizes[size]} ${fullWidth ? "w-full" : ""} ${className}`} {...props} />;
+});
