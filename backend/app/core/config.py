@@ -14,9 +14,10 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
     ]
     MAX_REQUEST_BYTES: int = 256_000
+    GEMINI_API_KEY: SecretStr | None = None
     GOOGLE_API_KEY: SecretStr | None = None
     AGENT_PROVIDER: Literal["auto", "gemini_api", "vertex"] = "auto"
-    AGENT_MODEL: str = "gemini-2.5-flash-lite"
+    AGENT_MODEL: str = "gemini-3.1-flash-lite"
     AGENT_VERTEX_PROJECT_ID: str | None = None
     AGENT_VERTEX_LOCATION: str = "us-central1"
     AGENT_REQUEST_TIMEOUT_SECONDS: int = 20
