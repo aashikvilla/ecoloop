@@ -24,7 +24,7 @@ function ScopedAskAssistant() {
   const { user, householdId, auth } = useLiveHousehold();
   const params = useSearchParams();
   const itemId = params.get("item");
-  const [messages, setMessages] = useState<Message[]>([{ id: "welcome", role: "assistant", text: "Ask about your household food records. Responses are available only when the managed assistant is configured." }]);
+  const [messages, setMessages] = useState<Message[]>([{ id: "welcome", role: "assistant", text: "Ask about your household food records. Review suggestions before taking any action." }]);
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -56,14 +56,14 @@ function ScopedAskAssistant() {
       setNotice(result.cards.length ? "Review returned proposals below. Approval is unavailable and no action has been recorded." : "The assistant returned no proposal cards.");
     } catch (caught) {
       if (controller.signal.aborted) return;
-      setError(caught instanceof CanonicalApiError && (caught.code === "unavailable" || caught.code === "not_configured") ? "The managed household assistant is unavailable because its API or provider is not configured; try again later." : readError(caught));
+      setError(caught instanceof CanonicalApiError && caught.code === "unavailable" ? "The household assistant is temporarily unavailable. Try again later." : readError(caught));
     } finally { if (requestController.current === controller) requestController.current = null; setBusy(false); }
   }
   function submit(event: FormEvent) { event.preventDefault(); void send(prompt); }
   return <div className="mx-auto max-w-4xl space-y-5 px-4 pb-12 pt-6 sm:px-6 lg:pt-10">
-    <header><p className="text-xs font-bold uppercase tracking-wide text-muted">Ask</p><Heading as="h1" className="mt-1">Cook thoughtfully</Heading><p className="mt-2 text-sm leading-relaxed text-muted">Ask about household records. The managed assistant is not replaced with scripted sample responses.</p></header>
+    <header><p className="text-xs font-bold uppercase tracking-wide text-muted">Ask</p><Heading as="h1" className="mt-1">Cook thoughtfully</Heading><p className="mt-2 text-sm leading-relaxed text-muted">Ask for suggestions based on your household records. Review every proposal before taking action.</p></header>
     <LiveDestinationNotice />
-    <Card className="space-y-4 border border-line p-4 sm:p-5"><div><Heading as="h2">Conversation</Heading><p className="mt-1 text-sm text-muted">Requests go to the household assistant API. If its managed provider is unavailable, the API reports that state. Proposals do not change records; approval is not connected.</p></div><div aria-live="polite" className="space-y-3">{messages.slice(-8).map((entry) => <div key={entry.id} className={`max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-5 ${entry.role === "user" ? "ml-auto bg-primary text-white" : "bg-surface-muted text-foreground"}`}><p>{entry.text}</p></div>)}</div>
+    <Card className="space-y-4 border border-line p-4 sm:p-5"><div><Heading as="h2">Conversation</Heading><p className="mt-1 text-sm text-muted">Requests go to the household assistant API. Proposals do not change records; approval is not connected.</p></div><div aria-live="polite" className="space-y-3">{messages.slice(-8).map((entry) => <div key={entry.id} className={`max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-5 ${entry.role === "user" ? "ml-auto bg-primary text-white" : "bg-surface-muted text-foreground"}`}><p>{entry.text}</p></div>)}</div>
       <div className="flex flex-wrap gap-2">{["What can I make tonight?", "Should I buy tomatoes?", "Use what I have for lunch"].map((value) => <button type="button" key={value} onClick={() => void send(value)} disabled={busy} className="min-h-11 rounded-full bg-surface-muted px-4 text-sm text-primary disabled:opacity-50">{value}</button>)}</div>
       <form className="flex flex-col gap-2 sm:flex-row" onSubmit={submit}><label htmlFor="ask-prompt" className="sr-only">Ask a question</label><Input id="ask-prompt" className="flex-1" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask about a meal or what to buy" maxLength={8000} /><Button type="submit" disabled={busy || !prompt.trim()} aria-busy={busy}>{busy ? "Asking…" : "Send"}</Button></form>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}{notice && <p role="status" className="text-sm text-muted">{notice}</p>}
