@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Link href="/activity" className={`mt-7 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/activity" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="clock" size={19} />Activity</Link>
       <Link href="/settings" className={`mt-1 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="settings" size={19} />Settings</Link>
       <div className="absolute inset-x-4 bottom-6 rounded-2xl bg-primary-container p-4 text-white">
-        <p className="text-xs font-bold">{accountPage ? "Account connection" : canonicalPage ? "Household records" : "A small demo kitchen"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{accountPage || canonicalPage ? "Live records require sign-in, household membership and an available API." : "This separate demo uses this browser. No Google AI or managed memory is connected."}</p>
+        <p className="text-xs font-bold">{accountPage ? "Account connection" : canonicalPage ? "Household records" : "Household setup"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{accountPage || canonicalPage ? "Live records require sign-in, household membership and an available API." : "Some capture and managed preference features are unavailable until their services are connected."}</p>
       </div>
     </aside>
   </div>;

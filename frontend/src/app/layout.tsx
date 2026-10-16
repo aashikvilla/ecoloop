@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
-import { DemoProvider } from "@/lib/demo-store";
 import { LiveHouseholdProvider } from "@/lib/live-household";
 import { AppShell } from "@/components/layout/app-shell";
 import "./globals.css";
@@ -33,5 +32,5 @@ function ShellFallback() {
 }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  return <html lang="en" className={plusJakarta.variable}><body><Suspense fallback={<ShellFallback/>}><LiveHouseholdProvider><DemoProvider><AppShell>{children}</AppShell></DemoProvider></LiveHouseholdProvider></Suspense></body></html>;
+  return <html lang="en" className={plusJakarta.variable}><body><Suspense fallback={<ShellFallback/>}><LiveHouseholdProvider><AppShell>{children}</AppShell></LiveHouseholdProvider></Suspense></body></html>;
 }
