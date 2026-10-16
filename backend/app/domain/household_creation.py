@@ -12,6 +12,8 @@ from app.core.errors import DomainError
 from app.core.firestore import get_firestore
 from app.schemas.household import CreateHouseholdCommand
 
+MAX_HOUSEHOLD_CREATIONS_PER_UTC_DAY = 5
+
 
 def _payload_hash(command: CreateHouseholdCommand) -> str:
     canonical = json.dumps(command.model_dump(mode="json"), sort_keys=True, separators=(",", ":"))
@@ -19,9 +21,13 @@ def _payload_hash(command: CreateHouseholdCommand) -> str:
 
 
 def _request_ref(db: Any, uid: str, idempotency_key: str) -> Any:
-    actor_scope = hashlib.sha256(uid.encode("utf-8")).hexdigest()
+    actor_scope = _actor_scope(uid)
     key_scope = hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()
     return db.collection("users").document(actor_scope).collection("household_creation_requests").document(key_scope)
+
+
+def _actor_scope(uid: str) -> str:
+    return hashlib.sha256(uid.encode("utf-8")).hexdigest()
 
 
 def _validate_retry_result(
@@ -73,6 +79,13 @@ def create_household(uid: str, command: CreateHouseholdCommand) -> dict[str, str
     household_ref = db.collection("households").document(household_id)
     member_ref = household_ref.collection("members").document(uid)
     created_at = datetime.now(timezone.utc)
+    utc_day = created_at.date().isoformat()
+    quota_ref = (
+        db.collection("users")
+        .document(_actor_scope(uid))
+        .collection("household_creation_quotas")
+        .document(utc_day)
+    )
     result = {"household_id": household_id, "name": command.name, "role": "OWNER"}
 
     @firestore.transactional
@@ -81,10 +94,23 @@ def create_household(uid: str, command: CreateHouseholdCommand) -> dict[str, str
         if request_snapshot.exists:
             return _validate_retry_result(transaction, db, uid, request_snapshot, payload_hash)
 
+        quota_snapshot = quota_ref.get(transaction=transaction)
         household_snapshot = household_ref.get(transaction=transaction)
         member_snapshot = member_ref.get(transaction=transaction)
         if household_snapshot.exists or member_snapshot.exists:
             raise DomainError("IDEMPOTENCY_CONFLICT", "This request could not be safely replayed.", 409)
+
+        quota = quota_snapshot.to_dict() if quota_snapshot.exists else {"utc_day": utc_day, "count": 0}
+        quota_count = quota.get("count")
+        if (
+            quota.get("utc_day") != utc_day
+            or isinstance(quota_count, bool)
+            or not isinstance(quota_count, int)
+            or quota_count < 0
+        ):
+            raise DomainError("DATA_UNAVAILABLE", "Household creation limits could not be verified.", 503, True)
+        if quota_count >= MAX_HOUSEHOLD_CREATIONS_PER_UTC_DAY:
+            raise DomainError("HOUSEHOLD_CREATION_LIMIT", "The daily household creation limit has been reached.", 429, True)
 
         transaction.create(
             household_ref,
@@ -112,6 +138,10 @@ def create_household(uid: str, command: CreateHouseholdCommand) -> dict[str, str
                 "result": result,
                 "created_at": created_at,
             },
+        )
+        transaction.set(
+            quota_ref,
+            {"utc_day": utc_day, "count": quota_count + 1, "updated_at": created_at},
         )
         return result
 
