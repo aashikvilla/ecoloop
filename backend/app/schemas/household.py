@@ -57,6 +57,21 @@ class MeasurementBasis(StrEnum):
     UNKNOWN = "UNKNOWN"
 
 
+class ShareState(StrEnum):
+    OFFERED = "OFFERED"
+    ACCEPTED = "ACCEPTED"
+    HANDED_OVER = "HANDED_OVER"
+    CANCELLED = "CANCELLED"
+
+
+class ShareCondition(StrEnum):
+    UNSERVED_USER_REPORTED = "UNSERVED_USER_REPORTED"
+    EXPIRED = "EXPIRED"
+    SPOILED = "SPOILED"
+    PLATED = "PLATED"
+    UNKNOWN = "UNKNOWN"
+
+
 class FoodObservationInput(StrictModel):
     item_id: OpaqueId
     base_version: Annotated[StrictInt, Field(ge=0)]
@@ -126,6 +141,78 @@ class RecordOutcomeCommand(StrictModel):
             raise ValueError("storage must be provided only for a stored outcome")
         if self.reverses_event_id is not None:
             raise ValueError("outcome reversals are not supported until atomic reversal behavior is implemented")
+        if self.outcome_type == OutcomeType.HANDED_OVER:
+            raise ValueError("handed-over outcomes must be recorded through an eligible share log")
+        return self
+
+
+class CreateShareLogCommand(StrictModel):
+    schema_version: Literal[1] = 1
+    idempotency_key: IdempotencyKey
+    share_id: OpaqueId
+    item_id: OpaqueId
+    base_item_version: Annotated[StrictInt, Field(ge=1)]
+    recipient_label: Annotated[str, StringConstraints(min_length=1, max_length=120)]
+    amount: Amount | None = None
+    unit: UnitName | None = None
+    measurement_basis: MeasurementBasis = MeasurementBasis.UNKNOWN
+    condition: ShareCondition
+    freshness: Literal["UNKNOWN"] = "UNKNOWN"
+    note: Annotated[str, StringConstraints(max_length=500)] | None = None
+    occurred_at: datetime
+
+    @field_validator("occurred_at")
+    @classmethod
+    def require_timezone(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("occurred_at must include a timezone")
+        return value.astimezone(timezone.utc)
+
+    @model_validator(mode="after")
+    def validate_share(self) -> CreateShareLogCommand:
+        if (self.amount is None) != (self.unit is None):
+            raise ValueError("amount and unit must be provided together")
+        if self.amount is None and self.measurement_basis != MeasurementBasis.UNKNOWN:
+            raise ValueError("measurement_basis must be UNKNOWN when amount is unknown")
+        if self.amount is not None and self.measurement_basis == MeasurementBasis.UNKNOWN:
+            raise ValueError("a known amount requires a measurement basis")
+        return self
+
+
+class TransitionShareLogCommand(StrictModel):
+    schema_version: Literal[1] = 1
+    idempotency_key: IdempotencyKey
+    base_version: Annotated[StrictInt, Field(ge=1)]
+    state: Literal[ShareState.ACCEPTED, ShareState.HANDED_OVER, ShareState.CANCELLED]
+    occurred_at: datetime
+    condition: ShareCondition | None = None
+    expected_item_version: Annotated[StrictInt, Field(ge=1)] | None = None
+    amount: Amount | None = None
+    unit: UnitName | None = None
+    measurement_basis: MeasurementBasis = MeasurementBasis.UNKNOWN
+
+    @field_validator("occurred_at")
+    @classmethod
+    def require_timezone(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("occurred_at must include a timezone")
+        return value.astimezone(timezone.utc)
+
+    @model_validator(mode="after")
+    def validate_transition(self) -> TransitionShareLogCommand:
+        if (self.amount is None) != (self.unit is None):
+            raise ValueError("amount and unit must be provided together")
+        if self.state == ShareState.HANDED_OVER:
+            if self.expected_item_version is None:
+                raise ValueError("expected_item_version is required for a handover")
+            if self.condition is None:
+                raise ValueError("condition is required for a handover")
+            if self.amount is None and self.measurement_basis != MeasurementBasis.UNKNOWN:
+                raise ValueError("measurement_basis must be UNKNOWN when handover amount is unknown")
+            if self.amount is not None and self.measurement_basis == MeasurementBasis.UNKNOWN:
+                raise ValueError("a known handover amount requires a measurement basis")
+        elif self.expected_item_version is not None or self.amount is not None or self.unit is not None or self.measurement_basis != MeasurementBasis.UNKNOWN or self.condition is not None:
+            raise ValueError("handover quantity, condition and item version are only allowed for HANDED_OVER")
         return self
 
 
