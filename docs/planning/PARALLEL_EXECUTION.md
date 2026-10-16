@@ -75,3 +75,17 @@ Heartbeat at 19:04 IST found the prior three workers finished, the earlier coord
 - Managed cloud lane remains prepared but blocked by unchanged deferred billing. Full deployment/whole-product acceptance remains open. No main merge is eligible from this local batch.
 
 Transport allowlists routes/methods and trusted origin, bounds streamed responses, omits cookies and redirects, cancels requests and never retries writes. Commands stay disabled in the default build until live identity/database acceptance and approval to enable them. Existing demo state remains isolated; no media, proposals, outcomes or share writes are added by these UI workers.
+
+Third wave completed: commands `4f2a32a`, history `980d7fc`, stock hardening `fa64c64`; integrated application `f5c5683`, evidence/handoff `b22d067`. Root production build/type/lint and offline cross-language boundaries passed; browser sampled unavailable states at 360px/1440px. Full authenticated acceptance remains open. See [evidence](../evidence/account-commands-2026-10-16/README.md).
+
+## Fourth wave — observed outcomes and private sharing controls
+
+17:35 UTC continuation found ordinary usage reset (1% five-hour / 34% weekly used), all prior workers completed, no PR reviews/checks, and preserved unrelated sign-in/config/skill changes. The separate chat “Review implementation document” owns `codex/docs-cleanup` and `codex/real-household-agent`; no takeover or merge without explicit handoff/evidence. Its newer cloud work is separate from this chat’s local-only authorization.
+
+Plan: freeze transport/schema seams → implement two independent components → independent critical review → integrate sequentially → run bounded contract/package/browser acceptance → push evidence/live status and handoff. No main merge or paid/cloud actions.
+
+- `codex/canonical-outcome-controls` (journeys): new canonical-outcomes.ts, account/outcome-controls.tsx and implementation note; actual USED/STORED/DISCARDED/COMPOSTED commands only.
+- `codex/canonical-share-controls` (foundation): new canonical-sharing.ts, account/share-controls.tsx and implementation note; owner-reported offer/accept/cancel/expire/handover only, no recipient contact.
+- Existing backend worker: read-only cross-boundary critical review, no implementation overlap.
+- Integrator: shared safe PATCH transport `fc3889b`, own account composition hunk only, bounded proof/status. Preserve unrelated dirty sign-in changes unstaged.
+- Managed/cloud lane remains owned by the separate chat. Media/retention and full release acceptance remain prepared unfinished lanes.

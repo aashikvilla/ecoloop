@@ -4,13 +4,15 @@ The `/account` route is a secondary, read-only connection to canonical household
 
 ## Configuration
 
-Copy `frontend/.env.example` to a local environment file and set the public Firebase Web App values from the existing project plus `NEXT_PUBLIC_ECOLOOP_API_ORIGIN` to the exact authorized FastAPI service origin. Configure that app origin in backend CORS as well. Firebase web config values identify a Firebase app and are public client configuration; do not put service-account credentials or private keys in these variables. Firebase Auth must have Google sign-in enabled and the current hostname authorized. This implementation does not provision either setting.
+The frontend local environment uses the existing Web App in project `ecoloop-staging-20261015` (app ID `1:26177403871:web:8b3125a80812c8c28be26a`). Firebase Web config values identify a Firebase app and are public client configuration; do not put service-account credentials or private keys in these variables. The ignored local `.env.local` is not committed.
+
+Firebase Authentication must have Email/Password and Google sign-in enabled, and the current hostname authorized. The account UI supports email/password sign-in and account creation plus Google popup sign-in. Provider settings are managed in Firebase Authentication; frontend code does not enable them. Set `NEXT_PUBLIC_ECOLOOP_API_ORIGIN` to the exact authorized FastAPI service origin and configure that app origin in backend CORS before loading household records.
 
 With no complete Firebase config, `/account` displays an unavailable state and does not import or initialize Firebase Auth. The API origin must be a bare HTTPS origin. HTTP is accepted only for localhost, `127.0.0.1` or `::1` development.
 
 ## Authentication and scope
 
-The browser uses Firebase's modular Web Auth SDK with a user-initiated Google popup and browser-session persistence. The SDK owns authentication state and refresh behavior; the application never writes the ID token to local/session storage, a cookie, logs or telemetry. Sign-out clears the visible record snapshot before calling Firebase Auth.
+The browser uses Firebase's modular Web Auth SDK with email/password and a user-initiated Google popup, using browser-session persistence. The SDK owns authentication state and refresh behavior; the application never writes the ID token to local/session storage, a cookie, logs or telemetry. Sign-out clears the visible record snapshot before calling Firebase Auth.
 
 Household scope is entered explicitly on the page, validated against the backend's opaque-ID character/length contract, and held only in page memory. There is no default tenant, membership creation or provisioning. The backend is responsible for verifying Firebase identity and current active membership on every request.
 
