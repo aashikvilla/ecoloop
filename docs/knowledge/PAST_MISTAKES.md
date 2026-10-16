@@ -60,3 +60,7 @@ Prevention verified in native Sheets: completion checkbox plus status, evidence,
 ## 2026-10-16 — Reopening billing can affect other projects
 
 Observation: the only available billing account is closed but remains associated with another active project. Reopening it to unblock the hackathon could resume charges beyond EcoLoop. Prevention: enumerate linked projects and review their owners/resources before reopening an account; use a dedicated active account scoped to the hackathon project or obtain explicit account-owner approval, then configure the project budget and additional cost controls before enabling paid services.
+## 2026-10-17 — Validate the full provider request, then the actual provider
+
+`process_schema` alone accepted an assistant schema that the full GenAI converter rejected on discriminator/union fields. A subsequent full converter check passed a raw JSON Schema which the provider rejected with HTTP 400. Verify local schema construction, full request conversion, actual provider acceptance and final strict response validation as distinct boundaries. Preserve strict local validation when changing provider generation hints; a conversion success is not model-response evidence.
+

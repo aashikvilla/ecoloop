@@ -105,3 +105,14 @@ No `main` merge is eligible. Live account identity and indexed share/activity ac
 - [ ] M0–M5 phase exits remain gated by original prerequisites and reviewer evidence. This wave is local/API acceptance evidence only; no `main` merge eligibility is implied.
 
 Ordinary usage remained available (59% five-hour, 43% weekly consumed); no reset credit was consumed. No unit tests were run. No cloud deployment, billing change or index write was made. The frontend dev server remains available at `http://127.0.0.1:3003`; the local assistant backend on port 8001 was stopped after the schema-conversion failure.
+
+## Sixth wave — AI repair, feature audit and Cloud Run preparation
+
+17 October: latest direct user request authorizes checking/fixing the AI, reviewing remaining features with GPT-6 Luna/high workers, and beginning Cloud Run deployment preparation. Three isolated workers completed the AI schema work, agent/GenUI feature audit and read-only cloud/deployment preparation; root integrated reviewed commits sequentially and pushed bounded checkpoints. The separately owned historical agent/docs branches were not modified or merged.
+
+- AI: local numeric-literal/union conversion failures repaired; full ADK-to-GenAI request conversion checked offline. A synthetic live request reached Google and returned `400 INVALID_ARGUMENT`; no successful model response yet. Follow-up is bounded JSON-mode request investigation, retaining strict server card validation. See [AI evidence](../evidence/ai-schema-fix-2026-10-17/README.md).
+- Frontend: assistant timeout now allows the server's maximum model budget plus overhead. Ask conversation/session/card state remounts on auth/UID/household changes and aborts outstanding browser requests, independently reviewed. TypeScript and lint passed; no unit tests.
+- Feature audit: [report](../implementation/feature-genui-audit-2026-10-17.md) distinguishes coding workers from the single product agent, five fixed typed cards from complete interactive GenUI, and implemented account commands from unverified write acceptance. The five next lanes are intake/confirmation, agent/tools, managed sessions/preferences, proposal approval/actions, and deployment/whole-flow acceptance; at most three workers plus root.
+- Deployment: [reviewed helper](../../deploy/cloud-run.ps1) prepares private, tagged candidate revisions and explicit promotion/rollback. Provider calls stay disabled. APIs/runtime identity/image build and verified billing/cost gates are outstanding; no cloud changes or deployment performed.
+
+Current checkpoint/evidence and precise continuation are in [the session journal](../knowledge/sessions/2026-10-17-ai-cloud-run-review.md). PR #1 remains draft; no main merge or full phase closure is eligible.
