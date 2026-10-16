@@ -21,6 +21,8 @@ Observed root checks and limitations are recorded in [continuation evidence](../
 
 Final application checkpoint `f66b210`: default production build/TypeScript generated 14/14 pages; full lint, backend compile/lock and new unauthenticated route guards passed. Browser Account displayed unavailable/disabled reads, all five corrected Ask cards rendered, mobile/desktop samples had no horizontal overflow, and keyboard plan save retained the Tomato quantity at 6 pieces. Root's first browser pass exposed the overlong allowed-action lists; they were corrected and rebuilt before final evidence. Collected browser error logs were empty. Production server was restarted at port 3002 for review.
 
+Updated live MVPTasks rows 12, 27, 31 and 33 with local evidence links, ownership, reviewer and ISO date; readback preserved In progress, unchecked Done and Dependency open. Inspected the changed native Sheet row at normal zoom; existing font/reconnection warnings were visible, while the evidence label wrapped within its row. PR #1 title/body now reflects the integrated second wave and remains draft. All authored code/evidence is pushed; only the unrelated PDF is untracked.
+
 ## Remaining and continuation
 
 Canonical Kitchen/Shop mutations and conflict recovery still need browser integration; share/activity APIs need corresponding canonical UI. Intake/photo extraction, proposal storage/approval, private media, retention/deletion and production abuse controls remain incomplete. Real Gemini/ADK, managed Sessions and consented Memory Bank, live Firebase/Firestore/index proof and the deployed complete loop remain unverified. The billing account review and $10 notification budget/additional cost controls remain prerequisites before paid provisioning/deployment.
