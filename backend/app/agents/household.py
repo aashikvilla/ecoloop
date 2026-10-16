@@ -36,49 +36,12 @@ _session_service: InMemorySessionService | None = None
 _active_sessions: OrderedDict[tuple[str, str], float] = OrderedDict()
 
 
-def _make_provider_schema_compatible(schema: dict[str, Any]) -> None:
-    """Keep non-string Literal values out of Gemini's structured-output schema.
-
-    google-genai currently accepts only string values for JSON Schema ``const``
-    and ``enum``. The response is still validated against the strict local card
-    models after generation, so these provider-side primitive types are hints,
-    not a relaxation of the API contract.
-    """
-
-    def visit(value: Any) -> None:
-        if isinstance(value, dict):
-            literal = value.get("const")
-            if type(literal) is bool:
-                value.pop("const")
-                value.setdefault("type", "boolean")
-            elif type(literal) is int:
-                value.pop("const")
-                value.setdefault("type", "integer")
-            elif type(literal) is float:
-                value.pop("const")
-                value.setdefault("type", "number")
-            for nested in value.values():
-                visit(nested)
-        elif isinstance(value, list):
-            for nested in value:
-                visit(nested)
-
-    visit(schema)
-
-
 class AgentOutput(BaseModel):
     """Small transport schema; each card is subsequently validated strictly."""
 
     model_config = ConfigDict(extra="forbid")
     message: Annotated[str, StringConstraints(min_length=1, max_length=8_000)]
     cards: Annotated[list[ProposalCard], Field(max_length=20)] = Field(default_factory=list)
-
-    @classmethod
-    def model_json_schema(cls, **kwargs: Any) -> dict[str, Any]:
-        schema = super().model_json_schema(**kwargs)
-        _make_provider_schema_compatible(schema)
-        return schema
-
 
 HOUSEHOLD_INSTRUCTION = """
 You are EcoLoop, a practical household food planning assistant. Return one JSON object
@@ -212,11 +175,16 @@ async def _get_runner() -> tuple[Runner, InMemorySessionService]:
             model=settings.AGENT_MODEL,
             description="Suggests household food decisions from confirmed kitchen observations.",
             instruction=HOUSEHOLD_INSTRUCTION,
-            output_schema=AgentOutput,
             output_key="assistant_result",
+            # ADK output_schema lowers Pydantic's discriminated union to
+            # google-genai Schema, which rejects its oneOf/discriminator keys.
+            # Raw JSON Schema keeps the provider contract; local parsing below
+            # still validates AgentOutput and each strict ProposalCard.
             generate_content_config=types.GenerateContentConfig(
                 temperature=0.2,
                 max_output_tokens=settings.AGENT_MAX_OUTPUT_TOKENS,
+                response_mime_type="application/json",
+                response_json_schema=AgentOutput.model_json_schema(),
             ),
         )
         sessions = InMemorySessionService()
