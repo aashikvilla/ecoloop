@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,7 +7,9 @@ import { useDemo } from "@/lib/demo-store";
 import type { DateType, FoodCategory, FoodDraft, FoodItem, Storage, Unit } from "@/lib/contracts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ActionLink, Notice, PageIntro, Panel, QuietLink, UnitLabel } from "./ui";
+import { Notice, PageIntro, Panel, QuietLink, UnitLabel } from "./ui";
+import { LiveDestinationNotice, useLiveRecords } from "@/components/account/live-destination";
+import type { KitchenObservation } from "@/lib/canonical-api";
 
 const control = "min-h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 const categories: FoodCategory[] = ["vegetables", "fruit", "dairy", "pantry", "prepared"];
@@ -20,25 +21,27 @@ function dateLabel(date: string | null, type: DateType) {
 }
 
 export function KitchenInventory() {
-  const { items, hydrated } = useDemo();
+  const live = useLiveRecords("kitchen");
+  const items = live.records as KitchenObservation[];
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const filtered = items.filter((item) => {
     const matchesQuery = item.name.toLocaleLowerCase().includes(query.toLocaleLowerCase());
-    const matchesFilter = filter === "all" || (filter === "unknown" && (item.amount === null || item.dateType === "UNKNOWN"));
+    const matchesFilter = filter === "all" || (filter === "unknown" && (item.amount === null || item.date_type === "UNKNOWN"));
     return matchesQuery && matchesFilter;
   });
   return <div className="mx-auto max-w-5xl px-4 pb-10 pt-6 sm:px-6 lg:pt-10">
-    <PageIntro eyebrow="Kitchen" title="Know what you have" description="Keep a useful record of your food. Dates and amounts stay unknown until you confirm them." action={<ActionLink href="/kitchen/add">＋ Add food</ActionLink>} />
-    <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3"><Panel className="p-4"><p className="text-sm text-muted">Recorded items</p><p className="mt-1 text-2xl font-semibold text-foreground">{hydrated ? items.length : "—"}</p></Panel><Panel className="p-4"><p className="text-sm text-muted">Need a check</p><p className="mt-1 text-2xl font-semibold text-foreground">{hydrated ? items.filter((item) => item.amount === null || item.dateType === "UNKNOWN").length : "—"}</p></Panel><Panel className="col-span-2 hidden p-4 sm:col-span-1 sm:block"><p className="text-sm text-muted">Demo data</p><p className="mt-1 text-sm font-semibold text-primary">Stored in this browser</p></Panel></div>
+    <PageIntro eyebrow="Kitchen" title="Know what you have" description="Review confirmed household records returned by the API. Dates and amounts stay unknown until recorded." />
+    <LiveDestinationNotice />
+    {live.phase === "ready" && <div className="mb-5 grid grid-cols-2 gap-3"><Panel className="p-4"><p className="text-sm text-muted">Recorded items</p><p className="mt-1 text-2xl font-semibold text-foreground">{items.length}</p></Panel><Panel className="p-4"><p className="text-sm text-muted">Need a check</p><p className="mt-1 text-2xl font-semibold text-foreground">{items.filter((item) => item.amount === null || item.date_type === "UNKNOWN").length}</p></Panel></div>}
     <div className="mb-5 flex flex-col gap-3 sm:flex-row"><label className="sr-only" htmlFor="kitchen-search">Search kitchen</label><Input id="kitchen-search" className="border-border bg-surface text-foreground placeholder:text-muted/70" placeholder="Search your kitchen" value={query} onChange={(event) => setQuery(event.target.value)} /><div className="flex gap-2"><button onClick={() => setFilter("all")} aria-pressed={filter === "all"} className={`min-h-11 rounded-full px-4 text-sm font-medium ${filter === "all" ? "bg-primary text-white" : "bg-surface-muted text-primary"}`}>All items</button><button onClick={() => setFilter("unknown")} aria-pressed={filter === "unknown"} className={`min-h-11 rounded-full px-4 text-sm font-medium ${filter === "unknown" ? "bg-primary text-white" : "bg-surface-muted text-primary"}`}>Needs a check</button></div></div>
-    {!hydrated ? <Panel><p className="text-sm text-muted">Loading this browser’s demo kitchen…</p></Panel> : filtered.length === 0 ? <Panel><h2 className="text-lg font-semibold">{items.length ? "No matching food" : "Your kitchen is ready"}</h2><p className="mt-2 text-sm text-muted">{items.length ? "Try another search or clear the filter." : "Add one item manually to get started."}</p>{!items.length && <div className="mt-4"><ActionLink href="/kitchen/add">Add food</ActionLink></div>}</Panel> : <div className="grid gap-3 md:grid-cols-2">{filtered.map((item) => <KitchenItemCard key={item.id} item={item} />)}</div>}
+    {live.phase === "loading" && <div role="status"><Panel><p className="text-sm text-muted">Loading household kitchen…</p></Panel></div>}{live.phase === "error" && <div role="alert"><Panel><p className="text-sm text-danger">{live.error}</p><button className="mt-3 min-h-11 underline" onClick={live.refresh}>Retry</button></Panel></div>}{live.phase === "ready" && (filtered.length === 0 ? <Panel><h2 className="text-lg font-semibold">{items.length ? "No matching food" : "No confirmed food yet"}</h2><p className="mt-2 text-sm text-muted">{items.length ? "Try another search or clear the filter." : "The household API returned an empty kitchen. Canonical capture is not available from this destination yet."}</p></Panel> : <div className="grid gap-3 md:grid-cols-2">{filtered.map((item) => <CanonicalKitchenCard key={item.item_id} item={item} />)}</div>)}{live.phase === "idle" && <Panel><p className="text-sm text-muted">Sign in and choose a household to view its Kitchen. No browser demo records are substituted.</p></Panel>}
     <div className="mt-7 grid gap-3 sm:grid-cols-2"><Panel className="bg-surface-muted"><p className="text-xs font-semibold uppercase tracking-wide text-primary">A gentle reminder</p><h2 className="mt-2 text-lg font-semibold">Check, then choose</h2><p className="mt-1 text-sm leading-5 text-muted">A stored date or photo cannot tell whether food is safe to eat. Use your own observations.</p><QuietLink href="/ask">Ask about a meal</QuietLink></Panel><Panel><p className="text-xs font-semibold uppercase tracking-wide text-muted">Recorded activity</p><h2 className="mt-2 text-lg font-semibold">See what you logged</h2><p className="mt-1 text-sm text-muted">Confirmed items and outcomes stay separate from meal ideas.</p><QuietLink href="/activity">Open activity</QuietLink></Panel></div>
   </div>;
 }
 
-function KitchenItemCard({ item }: { item: FoodItem }) {
-  return <article className="rounded-3xl border border-border bg-surface p-4 shadow-sm"><div className="flex items-start gap-3">{item.category === "vegetables" || item.category === "fruit" ? <Image src="/artwork/produce-bowl.svg" alt="" aria-hidden="true" width={72} height={72} className="size-16 shrink-0 rounded-2xl bg-surface-muted object-cover" /> : <span aria-hidden="true" className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-surface-muted text-3xl">{item.category === "dairy" ? "🥛" : item.category === "pantry" ? "🍚" : "🍲"}</span>}<div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div><p className="text-xs font-medium uppercase tracking-wide text-muted">{item.category} · {item.storage}</p><h2 className="mt-1 text-lg font-semibold text-foreground"><Link className="rounded focus-visible:outline-2 focus-visible:outline-primary" href={`/kitchen/items/${encodeURIComponent(item.id)}`}>{item.name}</Link></h2></div><span className={`rounded-full px-3 py-1 text-xs font-medium ${item.amount === null || item.dateType === "UNKNOWN" ? "bg-accent/15 text-accent" : "bg-primary-container text-primary"}`}>{item.dateType === "UNKNOWN" ? "Check date" : "Recorded"}</span></div><p className="mt-1 text-sm text-muted"><UnitLabel amount={item.amount} unit={item.unit} /></p></div></div><p className="mt-3 border-t border-border pt-3 text-xs capitalize text-muted">{dateLabel(item.dateValue, item.dateType)} · {new Date(item.observedAt).toLocaleDateString()}</p><div className="mt-3 flex flex-wrap gap-2"><QuietLink href={`/kitchen/items/${encodeURIComponent(item.id)}`}>View item</QuietLink>{item.amount === null && <QuietLink href={`/kitchen/items/${encodeURIComponent(item.id)}`}>Confirm amount</QuietLink>}<QuietLink href="/shop">Add to shop</QuietLink></div></article>;
+function CanonicalKitchenCard({ item }: { item: KitchenObservation }) {
+  return <article className="rounded-3xl border border-border bg-surface p-4 shadow-sm"><div className="flex items-start gap-3"><span aria-hidden="true" className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-surface-muted text-3xl">🥬</span><div className="min-w-0 flex-1"><div className="flex items-start justify-between gap-2"><div><p className="text-xs font-medium uppercase tracking-wide text-muted">Household record · {item.storage ?? "Storage unknown"}</p><h2 className="mt-1 text-lg font-semibold text-foreground">{item.name}</h2></div><span className="rounded-full bg-accent/15 px-3 py-1 text-xs font-medium text-accent">{item.date_type === "UNKNOWN" ? "Date unknown" : "Recorded"}</span></div><p className="mt-1 text-sm text-muted"><UnitLabel amount={item.amount} unit={item.unit} /></p></div></div><p className="mt-3 border-t border-border pt-3 text-xs text-muted">{dateLabel(item.date_value, item.date_type as DateType)} · observed {new Date(item.observed_at).toLocaleDateString()}</p><p className="mt-2 text-xs text-muted">Check the item yourself. The API record does not assess condition or safety.</p></article>;
 }
 
 export function CaptureFood() {
