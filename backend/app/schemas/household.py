@@ -4,7 +4,7 @@ from datetime import date, datetime, timezone
 from enum import StrEnum
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, StringConstraints, StrictInt, field_validator, model_validator
 
 
 class StrictModel(BaseModel):
@@ -15,8 +15,20 @@ OpaqueId = Annotated[str, StringConstraints(min_length=1, max_length=128, patter
 ItemName = Annotated[str, StringConstraints(min_length=1, max_length=120)]
 UnitName = Annotated[str, StringConstraints(min_length=1, max_length=32, pattern=r"^[A-Za-z][A-Za-z0-9_-]*$")]
 IdempotencyKey = Annotated[str, StringConstraints(min_length=8, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")]
-Amount = Annotated[float, Field(gt=0, le=1_000_000, allow_inf_nan=False)]
-NonNegativeAmount = Annotated[float, Field(ge=0, le=1_000_000, allow_inf_nan=False)]
+
+
+def _reject_boolean_number(value: object) -> object:
+    if isinstance(value, bool):
+        raise ValueError("boolean values are not quantities")
+    return value
+
+
+Amount = Annotated[float, BeforeValidator(_reject_boolean_number), Field(gt=0, le=1_000_000, allow_inf_nan=False)]
+NonNegativeAmount = Annotated[
+    float,
+    BeforeValidator(_reject_boolean_number),
+    Field(ge=0, le=1_000_000, allow_inf_nan=False),
+]
 
 
 class DateType(StrEnum):
@@ -47,7 +59,7 @@ class MeasurementBasis(StrEnum):
 
 class FoodObservationInput(StrictModel):
     item_id: OpaqueId
-    base_version: Annotated[int, Field(ge=0)]
+    base_version: Annotated[StrictInt, Field(ge=0)]
     name: ItemName
     amount: Amount | None = None
     unit: UnitName | None = None
@@ -86,7 +98,7 @@ class RecordOutcomeCommand(StrictModel):
     idempotency_key: IdempotencyKey
     outcome_id: OpaqueId
     item_id: OpaqueId
-    base_version: Annotated[int, Field(ge=1)]
+    base_version: Annotated[StrictInt, Field(ge=1)]
     outcome_type: OutcomeType
     amount: Amount | None = None
     unit: UnitName | None = None
@@ -112,12 +124,14 @@ class RecordOutcomeCommand(StrictModel):
             raise ValueError("measured amount requires a measurement basis")
         if (self.storage is not None) != (self.outcome_type == OutcomeType.STORED):
             raise ValueError("storage must be provided only for a stored outcome")
+        if self.reverses_event_id is not None:
+            raise ValueError("outcome reversals are not supported until atomic reversal behavior is implemented")
         return self
 
 
 class ShoppingEntryInput(StrictModel):
     entry_id: OpaqueId
-    base_version: Annotated[int, Field(ge=0)]
+    base_version: Annotated[StrictInt, Field(ge=0)]
     item_name: ItemName
     desired_amount: Amount | None = None
     unit: UnitName | None = None
@@ -144,8 +158,8 @@ class ApiResult(StrictModel):
 class ProposalBase(StrictModel):
     proposal_id: OpaqueId
     schema_version: Literal[1] = 1
-    version: Annotated[int, Field(ge=1)]
-    base_version: Annotated[int, Field(ge=0)]
+    version: Annotated[StrictInt, Field(ge=1)]
+    base_version: Annotated[StrictInt, Field(ge=0)]
     scope: Literal["HOUSEHOLD"] = "HOUSEHOLD"
     status: Literal["PENDING"] = "PENDING"
     source_refs: Annotated[list[OpaqueId], Field(max_length=50)] = Field(default_factory=list)
@@ -196,14 +210,14 @@ class QuantityChange(StrictModel):
 class MealSuggestionCard(ProposalBase):
     type: Literal["MealSuggestion"]
     title: ItemName
-    servings: Annotated[int, Field(ge=1, le=100)]
+    servings: Annotated[StrictInt, Field(ge=1, le=100)]
     ingredients: Annotated[list[IngredientReference], Field(max_length=50)]
 
 
 class PortionAdjustmentCard(ProposalBase):
     type: Literal["PortionAdjustment"]
-    original_servings: Annotated[int, Field(ge=1, le=100)]
-    proposed_servings: Annotated[int, Field(ge=1, le=100)]
+    original_servings: Annotated[StrictInt, Field(ge=1, le=100)]
+    proposed_servings: Annotated[StrictInt, Field(ge=1, le=100)]
     changes: Annotated[list[QuantityChange], Field(max_length=50)]
 
 
@@ -254,12 +268,3 @@ class AssistantTurnRequest(StrictModel):
     text: Annotated[str, StringConstraints(min_length=1, max_length=8_000)]
     session_id: OpaqueId | None = None
     context_item_ids: Annotated[list[OpaqueId], Field(max_length=50)] = Field(default_factory=list)
-
-
-class ProviderUnavailable(StrictModel):
-    code: Literal["MANAGED_AGENT_UNAVAILABLE"] = "MANAGED_AGENT_UNAVAILABLE"
-    message: Literal["Managed assistant services are not configured for this environment."] = (
-        "Managed assistant services are not configured for this environment."
-    )
-    retryable: Literal[True] = True
-
