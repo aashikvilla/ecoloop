@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from enum import StrEnum
 from typing import Annotated, Literal
+from unicodedata import category
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, StringConstraints, StrictInt, field_validator, model_validator
 
@@ -15,6 +16,7 @@ OpaqueId = Annotated[str, StringConstraints(min_length=1, max_length=128, patter
 ItemName = Annotated[str, StringConstraints(min_length=1, max_length=120)]
 UnitName = Annotated[str, StringConstraints(min_length=1, max_length=32, pattern=r"^[A-Za-z][A-Za-z0-9_-]*$")]
 IdempotencyKey = Annotated[str, StringConstraints(min_length=8, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")]
+HouseholdDisplayName = Annotated[str, StringConstraints(min_length=1, max_length=60)]
 
 
 def _reject_boolean_number(value: object) -> object:
@@ -235,6 +237,19 @@ class ShoppingCommand(StrictModel):
     schema_version: Literal[1] = 1
     idempotency_key: IdempotencyKey
     entry: ShoppingEntryInput
+
+
+class CreateHouseholdCommand(StrictModel):
+    schema_version: Literal[1] = 1
+    idempotency_key: IdempotencyKey
+    name: HouseholdDisplayName
+
+    @field_validator("name")
+    @classmethod
+    def validate_display_name(cls, value: str) -> str:
+        if any(category(character) == "Cc" for character in value):
+            raise ValueError("name must be a single-line display name")
+        return value
 
 
 class ApiResult(StrictModel):
