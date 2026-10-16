@@ -172,8 +172,8 @@ def transition_share_log(principal: Principal, share_id: str, command: Transitio
             raise DomainError("VERSION_CONFLICT", "This share log changed. Reload it before continuing.", 409)
         current_state = share.get("state")
         allowed = {
-            ShareState.OFFERED.value: {ShareState.ACCEPTED.value, ShareState.CANCELLED.value},
-            ShareState.ACCEPTED.value: {ShareState.HANDED_OVER.value, ShareState.CANCELLED.value},
+            ShareState.OFFERED.value: {ShareState.ACCEPTED.value, ShareState.CANCELLED.value, ShareState.EXPIRED.value},
+            ShareState.ACCEPTED.value: {ShareState.HANDED_OVER.value, ShareState.CANCELLED.value, ShareState.EXPIRED.value},
         }
         if command.state.value not in allowed.get(current_state, set()):
             raise DomainError("STATE_CONFLICT", "This share state cannot transition to the requested state.", 409)
