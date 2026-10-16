@@ -63,3 +63,15 @@ Final integration application checkpoint `1be5345`: production build/TypeScript 
 Existing synthetic journeys remain usable while real services are unconfigured. Workers must report exact commits, observed checks and unverified boundaries; root integrates one branch at a time. Keep three worker slots maximum and preserve the unrelated user PDF.
 
 The hourly continuation now targets the current coordination chat (`01a142d3-49d5-7403-85fa-97d96b3a51c1`). Read the latest session/evidence before starting another batch; avoid relaunching these completed lanes. Remaining work includes canonical mutation UI, real intake/extraction and proposal approvals, private media and retention/deletion/abuse controls, managed ADK/Sessions/Memory Bank, live identity/database/index proof, and reviewed deployment/whole-journey acceptance. Access/billing blockers remain unchanged.
+
+## Third wave — local account commands and private history
+
+Heartbeat at 19:04 IST found the prior three workers finished, the earlier coordinator idle, no PR feedback/checks, and ordinary usage available (59% five-hour / 28% weekly consumed). Reuse the same Luna/high workers; no reset credits or paid services.
+
+- `codex/canonical-command-controls` (journeys): manual confirmed-fact and shopping command drafts, explicit preview/confirmation, version conflicts and stable retry keys. Own canonical-commands.ts, account/command-controls.tsx and its implementation note.
+- `codex/private-history-ui` (foundation): strict owner-private share/activity response parsing and explicit paginated read controls. Own canonical-history.ts, account/private-history.tsx and its implementation note.
+- `codex/canonical-stock-hardening` (backend): independent review identified unknown-amount stock reconciliation, sub-micro remainder rounding and malformed stored date eligibility. Own repository.py, sharing_activity.py and focused evidence note.
+- Integrator: shared bounded transport (`88cf265` pushed), account wiring, default-off browser command flag, sequential review/integration, authorized package/contract/browser acceptance and evidence.
+- Managed cloud lane remains prepared but blocked by unchanged deferred billing. Full deployment/whole-product acceptance remains open. No main merge is eligible from this local batch.
+
+Transport allowlists routes/methods and trusted origin, bounds streamed responses, omits cookies and redirects, cancels requests and never retries writes. Commands stay disabled in the default build until live identity/database acceptance and approval to enable them. Existing demo state remains isolated; no media, proposals, outcomes or share writes are added by these UI workers.

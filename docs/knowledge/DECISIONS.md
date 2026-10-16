@@ -1,5 +1,9 @@
 # Decision knowledge
 
+## Prepare account commands behind a default-off build flag (2026-10-16)
+
+Local Kitchen/Shopping command UI and private history may be implemented while billing is deferred. Keep browser commands disabled by default until live identity/database acceptance and approval to enable them. The public build flag is a release control, not an authorization boundary; FastAPI identity, membership, version and idempotency checks remain mandatory. Share/outcome writes, extraction and managed-agent operations remain separate unfinished units. Root owns the shared transport and account integration; feature workers own separate files.
+
 ## Demo-first parallel implementation (2026-10-16)
 
 Owner explicitly authorized coding, separate feature branches, GPT-6 Luna/high workers and regular pushed checkpoints. Implement a synthetic browser demo while billing is deferred, alongside a fail-closed canonical backend foundation. This is an execution exception for the hackathon, not cancellation of managed Gemini/ADK/context requirements. Keep authenticated data out of the local store; do not mark complete cloud phases from demo evidence. A single integrator owns shared files, coordinates up to three workers and prepares reviewable merges. Hourly continuation resumes unfinished authorized work when usage and access permit. See current execution plan/session.

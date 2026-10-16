@@ -4,6 +4,12 @@
 
 The shared card validator correctly rejected an action list longer than ten, but the scripted Ask producer emitted all twelve allowed action names for every card. Types, lint, builds and a valid backend wire fixture passed while every actual browser example disappeared. Use per-card allowed choices and verify the actual integrated producer in the production browser; a valid hand-authored fixture alone does not cover the product path.
 
+The next integration pass found the same class of mismatch in sharing history: the backend serialized equivalent timestamps as `Z` and `+00:00`, while the client compared raw strings. Run the actual producer through the actual consumer; compare timestamp instants with fractional precision instead of their formatting.
+
+## 2026-10-16 — Unknown outcomes invalidate known balances
+
+An unknown-quantity stock-changing event retained the old known balance and advanced its observation time. Clear quantity/unit or require reconciliation whenever a safe decrement cannot be determined. Avoid arbitrary decimal rounding that erases otherwise valid small quantities, and validate persisted date types/value consistency before eligibility decisions; validated commands do not guarantee every stored record is valid.
+
 ## 2026-10-16 — Public configuration and identity changes are integration boundaries
 
 Review caught public Firebase configuration read through a destructured environment object, which Next.js does not inline into browser bundles, and an authentication-error path that cleared the screen without cancelling an in-flight private read. Use literal `process.env.NEXT_PUBLIC_*` references; on account/scope/error changes cancel requests and clear both records and scope identifiers. An isolated worker typecheck cannot prove configuration delivery or private-data lifecycle; combine independent boundary review with production browser checks and later live identity proof.
