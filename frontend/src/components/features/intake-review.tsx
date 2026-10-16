@@ -89,8 +89,9 @@ function IntakeReviewForm({ auth, user, householdId, intakeId }: { auth: ReturnT
   }, [auth, householdId, intakeId, user]);
 
   useEffect(() => {
-    void load();
-    return () => { controller.current?.abort(); controller.current = null; };
+    let active = true;
+    void Promise.resolve().then(() => { if (active) return load(); });
+    return () => { active = false; controller.current?.abort(); controller.current = null; };
   }, [load]);
 
   function update(candidateId: string, patch: Partial<EditableCandidate>) {
@@ -176,7 +177,7 @@ function IntakeReviewForm({ auth, user, householdId, intakeId }: { auth: ReturnT
         <p className="mt-3 text-xs text-muted">Current entry: <UnitLabel amount={candidate.amount} unit={candidate.unit} /> · {candidate.date_value ? `${candidate.date_type.toLowerCase().replaceAll("_", " ")} · ${candidate.date_value}` : "Date unknown"} · Storage {candidate.storage ?? "unknown"}</p>
       </article>)}
       {error && <p role="alert" className="rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</p>}
-      {pending && <Panel><p role="alert" className="text-sm text-danger">The confirmation response was not received. Keep and retry this exact request, or reload the intake to check its current status.</p><button type="button" disabled={!enabled || phase === "busy"} onClick={() => void send(pending.command, pending.fingerprint)} className="mt-3 min-h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white disabled:opacity-55">Retry same confirmation</button></Panel>}
+      {pending && <Panel><p role="alert" className="text-sm text-danger">The confirmation response was not received. Keep and retry this exact request, or reload the intake to check its current status.</p><button type="button" disabled={!enabled} onClick={() => void send(pending.command, pending.fingerprint)} className="mt-3 min-h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white disabled:opacity-55">Retry same confirmation</button></Panel>}
       {!pending && candidates.length > 0 && <Panel className="space-y-3"><label className="flex min-h-11 items-start gap-3 text-sm"><input type="checkbox" className="mt-1 size-5 accent-[var(--color-primary)]" checked={reviewed} disabled={locked || selectedCount === 0} onChange={(event) => setReviewed(event.target.checked)} /><span>I reviewed the selected details and want to add {selectedCount} {selectedCount === 1 ? "record" : "records"} to Kitchen.</span></label><button type="button" disabled={!enabled || !reviewed || selectedCount === 0 || locked} onClick={prepareConfirmation} className="min-h-12 w-full rounded-full bg-primary px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-55">Confirm {selectedCount} {selectedCount === 1 ? "candidate" : "candidates"}</button></Panel>}
       <p className="text-center text-xs text-muted">Confirmation will not tell you whether food is safe to eat.</p>
       <QuietLink href="/kitchen">Cancel and return to Kitchen</QuietLink>
