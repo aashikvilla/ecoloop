@@ -1,17 +1,19 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, status
 
 from app.core.errors import DomainError
 from app.core.firestore import get_firestore
-from app.core.identity import Principal, current_principal
+from app.core.identity import Principal, authenticated_uid, current_principal
 from app.agents.household import generate_household_turn
+from app.domain.household_creation import create_household
 from app.domain.repository import confirm_facts, list_shopping_entries, record_outcome, save_shopping_entry
 from app.schemas.household import (
     ApiResult,
     AssistantEnvelope,
     AssistantTurnRequest,
     ConfirmFactsCommand,
+    CreateHouseholdCommand,
     RecordOutcomeCommand,
     ShoppingCommand,
 )
@@ -22,6 +24,15 @@ router = APIRouter()
 
 def _result(request_id: str, value: dict[str, Any]) -> ApiResult:
     return ApiResult(request_id=request_id, result=value)
+
+
+@router.post("/households", response_model=ApiResult, status_code=status.HTTP_201_CREATED)
+def household_create(
+    request: Request,
+    command: CreateHouseholdCommand,
+    uid: str = Depends(authenticated_uid),
+) -> ApiResult:
+    return _result(request.state.request_id, create_household(uid, command))
 
 
 @router.get("/kitchen", response_model=ApiResult)
