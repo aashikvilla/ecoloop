@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { LiveDestinationNotice } from "@/components/account/live-destination";
+import { AssistantCards } from "./assistant-cards";
 
 type Message = { id: string; role: "user" | "assistant"; text: string };
 function readError(error: unknown) { return error instanceof CanonicalApiError ? error.message : "The household assistant could not be reached. Try again."; }
@@ -24,11 +25,13 @@ export function AskAssistant() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [assistantResponse, setAssistantResponse] = useState<AssistantEnvelope | null>(null);
+  const [rejectedCards, setRejectedCards] = useState(0);
   async function send(text: string) {
     const value = text.trim();
     if (!value || busy) return;
     setMessages((current) => [...current, { id: crypto.randomUUID(), role: "user", text: value }]);
-    setPrompt(""); setError(""); setNotice("");
+    setPrompt(""); setError(""); setNotice(""); setAssistantResponse(null); setRejectedCards(0);
     if (auth !== "signed-in" || !user || !householdId) { setError("Sign in and choose a household before asking about its records."); return; }
     setBusy(true);
     try {
@@ -38,10 +41,12 @@ export function AskAssistant() {
       if (!parsed.ok) throw new Error(parsed.reason);
       const result: AssistantEnvelope = parsed.envelope;
       setSessionId(result.session_id);
-      setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", text: result.message }]);
-      setNotice(result.cards.length ? `${result.cards.length} proposal card(s) returned. Approval is unavailable and no action has been recorded.` : "The assistant returned no proposal cards.");
+      setAssistantResponse(result);
+      setRejectedCards(parsed.rejectedCards);
+      if (result.cards.length === 0) setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", text: result.message }]);
+      setNotice(result.cards.length ? "Review returned proposals below. Approval is unavailable and no action has been recorded." : "The assistant returned no proposal cards.");
     } catch (caught) {
-      setError(readError(caught));
+      setError(caught instanceof CanonicalApiError && (caught.code === "unavailable" || caught.code === "not_configured") ? "The managed household assistant is unavailable because its API or provider is not configured; try again later." : readError(caught));
     } finally { setBusy(false); }
   }
   function submit(event: FormEvent) { event.preventDefault(); void send(prompt); }
@@ -53,5 +58,6 @@ export function AskAssistant() {
       <form className="flex flex-col gap-2 sm:flex-row" onSubmit={submit}><label htmlFor="ask-prompt" className="sr-only">Ask a question</label><Input id="ask-prompt" className="flex-1" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask about a meal or what to buy" maxLength={8000} /><Button type="submit" disabled={busy || !prompt.trim()} aria-busy={busy}>{busy ? "Asking…" : "Send"}</Button></form>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}{notice && <p role="status" className="text-sm text-muted">{notice}</p>}
     </Card>
+    {assistantResponse && <AssistantCards envelope={assistantResponse} rejectedCards={rejectedCards} />}
   </div>;
 }

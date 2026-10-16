@@ -277,7 +277,7 @@ export function AccountConnection() {
         <Heading as="h1">Household connection</Heading>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
           Sign in to view records for a household you already belong to. These
-          records stay separate from this browser’s demo. Opening them does not
+          records are read from the household service. Opening them does not
           change your records or membership.
         </p>
       </header>
@@ -305,8 +305,8 @@ export function AccountConnection() {
             role="status"
             className="rounded-2xl bg-surface-muted p-4 text-sm leading-relaxed text-muted"
           >
-            Household sign-in is not configured for this app yet. You can
-            continue using the separate local demo.
+            Household sign-in is not configured for this app yet. No demo
+            account or local household records are provided here.
           </div>
         )}
         {authState === "signed-out" && (
