@@ -62,6 +62,7 @@ class ShareState(StrEnum):
     ACCEPTED = "ACCEPTED"
     HANDED_OVER = "HANDED_OVER"
     CANCELLED = "CANCELLED"
+    EXPIRED = "EXPIRED"
 
 
 class ShareCondition(StrEnum):
@@ -183,7 +184,7 @@ class TransitionShareLogCommand(StrictModel):
     schema_version: Literal[1] = 1
     idempotency_key: IdempotencyKey
     base_version: Annotated[StrictInt, Field(ge=1)]
-    state: Literal[ShareState.ACCEPTED, ShareState.HANDED_OVER, ShareState.CANCELLED]
+    state: Literal[ShareState.ACCEPTED, ShareState.HANDED_OVER, ShareState.CANCELLED, ShareState.EXPIRED]
     occurred_at: datetime
     condition: ShareCondition | None = None
     expected_item_version: Annotated[StrictInt, Field(ge=1)] | None = None
