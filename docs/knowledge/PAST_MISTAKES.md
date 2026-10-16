@@ -1,5 +1,10 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-16 — Stale source directories keep returning through pointers
+
+Observation: a superseded archive and consolidated reference pack remained in the checkout, and current instructions still linked to them. The entrypoint also pointed to an old session while later implementation records existed.
+Pattern: remove superseded material from the active checkout when Git history is sufficient; repair incoming links first. Keep one short entrypoint, one dated implementation snapshot, the live task-status authority and a correct latest-session pointer.
+
 ## 2026-10-16 — Validate the producer through the consumer
 
 The shared card validator correctly rejected an action list longer than ten, but the scripted Ask producer emitted all twelve allowed action names for every card. Types, lint, builds and a valid backend wire fixture passed while every actual browser example disappeared. Use per-card allowed choices and verify the actual integrated producer in the production browser; a valid hand-authored fixture alone does not cover the product path.

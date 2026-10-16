@@ -40,7 +40,7 @@ Learning metrics: activation rate with a defined eligible-session denominator; c
 
 ## 2. Design authority and screen map
 
-Use the user-supplied root HTML/PNG pairs under [prototypes](../prototypes/) as visual authority. They match the nested mobile export byte for byte. Preserve those exports unchanged. The detailed [Stitch audit](../replan/STITCH_AUDIT.md) records discrepancies and copy corrections.
+Use the user-supplied HTML/PNG pairs under [prototypes](../prototypes/) as visual authority. Preserve those canonical files unchanged. The [Stitch audit](../replan/STITCH_AUDIT.md) records discrepancies and copy corrections.
 
 Warm light surfaces, deep forest green, restrained terracotta, Plus Jakarta Sans, rounded cards and generous spacing are the baseline. Initial token values from the exported frontmatter/code: surface `#f3fbf6`, primary `#143529`, primary container `#2b4c3f`, secondary `#994529`, text `#151d1a`; cards approximately 24px radius. Match each screen when tokens disagree, then consolidate once in implementation. Test contrast; do not inherit an unverified AAA claim. Do not introduce dark-first enterprise styling. A dark variant requires its own design later.
 
@@ -277,7 +277,7 @@ No pricing total is fabricated. Measure per-turn input/output tokens, extraction
 
 Read the concise [decision register](DECISIONS.md). Household scope, Stitch direction and the managed context/card choices are carried forward from user/source decisions. Proposed implementation details are labeled recommendations. Open factual questions have implementation tasks, rather than blocking this documentation on repeated approval requests: cloud access, media/session retention durations, actual model/region, provider deletion behavior and exact merchant link permissions.
 
-Scope gears: SCOPE REDUCE is now the product choice. SCOPE HOLD governs implementation of the household loop. Ecosystem expansion is parked in the archive, not an active task queue. Future expansion should earn its place through household evidence and a separate reviewed decision.
+Scope gears: SCOPE REDUCE is now the product choice. SCOPE HOLD governs implementation of the household loop. Ecosystem expansion is not an active task queue. Future expansion should earn its place through household evidence and a separate reviewed decision.
 
 ## 11. Source provenance and limitations
 

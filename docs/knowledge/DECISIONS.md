@@ -14,9 +14,9 @@ Managed Sessions, consented Memory Bank and typed cards remain core. Actual hous
 Old DEC-PLAT register and ADRs remain historical sources. M0 resolves exact contracts and cloud access. Documentation/guidance only; recommendations do not imply deployment approval.
 
 
-## Consolidated pack precedence and archive (2026-10-15)
+## Superseded source material (2026-10-16)
 
-The newly added consolidated build pack is a detailed reference, not the current MVP authority. The current spec, decisions and phase checklist in `docs/planning/` govern. Current navigation is Home, Kitchen, Ask, Shop; sharing is an owner-recorded private log. Family invitations, recipient confirmations, live partner integrations and deposit/tote/marketplace flows are deferred. The pack's 13 explicitly legacy diagrams and exact duplicate Stitch export are preserved under `docs/archive/2026-10-15-pre-consumer-replan/`.
+The broad platform archive and consolidated build pack were removed from the active checkout to reduce stale discovery paths; Git history retains them. The current spec, decisions and implementation plan in `docs/planning/` govern. Current navigation is Home, Kitchen, Ask, Shop; sharing is an owner-recorded private log. Family invitations, recipient confirmations, live partner integrations and deposit/tote/marketplace flows are deferred. Canonical user-supplied Stitch PNG/HTML files remain under `docs/prototypes/`.
 
 Current user decisions: shared accessible UI primitives under `frontend/src/components/ui/`; shared navigation/layout under `frontend/src/components/layout/`; one central Tailwind v4 `@theme` token source in `frontend/src/app/globals.css`; mobile-first responsive development; Google Cloud/Gemini services for approved product integrations; no frontend/backend unit tests or dependencies. See [MVP-D15–16](../planning/DECISIONS.md).
 
