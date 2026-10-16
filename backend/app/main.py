@@ -1,5 +1,3 @@
-from uuid import uuid4
-
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.errors import DomainError, domain_error_handler, http_error_handler
+from app.core.middleware import RequestBoundaryMiddleware
 
 
 app = FastAPI(
@@ -28,43 +27,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-Household-ID"],
     max_age=600,
 )
-
-
-@app.middleware("http")
-async def request_context(request: Request, call_next):
-    request.state.request_id = uuid4().hex
-    content_length = request.headers.get("content-length")
-    if content_length is not None:
-        try:
-            if int(content_length) > settings.MAX_REQUEST_BYTES:
-                return JSONResponse(
-                    status_code=413,
-                    content={
-                        "error": {
-                            "code": "PAYLOAD_TOO_LARGE",
-                            "message": "The request exceeds the allowed size.",
-                            "retryable": False,
-                            "requestID": request.state.request_id,
-                        }
-                    },
-                )
-        except ValueError:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "error": {
-                        "code": "INVALID_CONTENT_LENGTH",
-                        "message": "The request could not be processed.",
-                        "retryable": False,
-                        "requestID": request.state.request_id,
-                    }
-                },
-            )
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = request.state.request_id
-    response.headers["Cache-Control"] = "no-store"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    return response
+app.add_middleware(RequestBoundaryMiddleware, max_request_bytes=settings.MAX_REQUEST_BYTES)
 
 
 app.add_exception_handler(DomainError, domain_error_handler)

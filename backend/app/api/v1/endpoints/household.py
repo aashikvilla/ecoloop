@@ -10,7 +10,6 @@ from app.schemas.household import (
     ApiResult,
     AssistantTurnRequest,
     ConfirmFactsCommand,
-    ProviderUnavailable,
     RecordOutcomeCommand,
     ShoppingCommand,
 )
@@ -76,10 +75,15 @@ def shopping(
     return _result(request.state.request_id, save_shopping_entry(principal, command))
 
 
-@router.post("/assistant/turns", response_model=ProviderUnavailable, status_code=503)
+@router.post("/assistant/turns", status_code=503)
 def assistant_unavailable(
     _: AssistantTurnRequest,
     __: Principal = Depends(current_principal),
-) -> ProviderUnavailable:
+) -> None:
     # Never substitute local scripts or fabricated memory for managed Gemini/ADK services.
-    return ProviderUnavailable()
+    raise DomainError(
+        "MANAGED_AGENT_UNAVAILABLE",
+        "Managed assistant services are not configured for this environment.",
+        503,
+        retryable=True,
+    )
