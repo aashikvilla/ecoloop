@@ -95,7 +95,8 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   const serialized = hasBody ? JSON.stringify(options.body) : undefined;
   if (serialized !== undefined && new TextEncoder().encode(serialized).length > 256_000) throw new CanonicalApiError("validation", "This change exceeds the supported request size.");
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12_000);
+  // Agent requests may use the server's maximum 60-second model budget.
+  const timeout = setTimeout(() => controller.abort(), resource === "assistant-turns" ? 70_000 : 12_000);
   const abort = () => controller.abort(options.signal?.reason);
   if (options.signal?.aborted) controller.abort(options.signal.reason);
   options.signal?.addEventListener("abort", abort, { once: true });
