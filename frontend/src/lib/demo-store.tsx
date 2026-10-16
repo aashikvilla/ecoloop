@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useSyncExternalStore, type ReactNode } from "react";
-import type { DemoState, FoodDraft, FoodItem, OutcomeType, Unit, PreparationStage, ShareLog, ShareState } from "./contracts";
+import type { DemoState, FoodDraft, FoodItem, OutcomeType, Unit, PreparationStage, ShareLog, ShareState, Storage } from "./contracts";
 import { isDemoState, validateFoodDraft, validateAmount } from "./demo-validation";
 
 const STORAGE_KEY = "ecoloop-isolated-demo-v1";
@@ -36,7 +36,7 @@ interface DemoContextValue extends DemoState {
   persistenceError: string | null;
   addItems: (drafts: FoodDraft[]) => void;
   updateItem: (itemId: string, patch: Partial<FoodDraft>) => void;
-  recordOutcome: (itemId: string, type: OutcomeType, amount: number | null, unit: Unit | null, note?: string) => void;
+  recordOutcome: (itemId: string, type: OutcomeType, amount: number | null, unit: Unit | null, note?: string, options?: { commandId?: string; storage?: Storage }) => void;
   addShopping: (name: string, amount?: number | null, unit?: Unit | null) => void;
   toggleShopping: (itemId: string) => void;
   removeShopping: (itemId: string) => void;
@@ -110,18 +110,26 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     commit((previous) => ({ ...previous, items: previous.items.map((entry) => entry.id === itemId ? { ...entry, ...patch, name: (patch.name ?? entry.name).trim(), version: entry.version + 1, observedAt: now() } : entry) }));
   }
 
-  function recordOutcome(itemId: string, type: OutcomeType, amount: number | null, unit: Unit | null, note = "") {
+  function recordOutcome(itemId: string, type: OutcomeType, amount: number | null, unit: Unit | null, note = "", options: { commandId?: string; storage?: Storage } = {}) {
+    if (options.commandId) {
+      const previous = getBrowserSnapshot().state.activities.find((event) => event.id === options.commandId);
+      if (previous) {
+        if (previous.itemId !== itemId || previous.type !== type || previous.amount !== amount || previous.unit !== unit) throw new Error("This saved action already has different details. Review the result before recording another action.");
+        return;
+      }
+    }
     const item = getBrowserSnapshot().state.items.find((entry) => entry.id === itemId);
     if (!item) throw new Error("This item is no longer in the kitchen.");
     validateAmount(amount, unit);
     if (type === "shared") validateShareDate(item);
-    if (type !== "stored" && amount !== null && item.amount !== null &&
+    if (type === "stored" && (!options.storage || !["fridge", "freezer", "pantry"].includes(options.storage))) throw new Error("Choose where you stored this food.");
+    if (amount !== null && item.amount !== null &&
       (item.unit !== unit || amount > item.amount)) throw new Error("Use the recorded unit and an amount no larger than the recorded stock.");
-    const event = { id: id(), type, itemName: item.name, amount, unit, measurementBasis: amount === null ? "unknown" as const : "user_estimated" as const, occurredAt: now(), note: amount === null && type !== "stored" ? `${note} Quantity unknown; recorded stock balance unchanged.`.trim() : note };
+    const event = { id: options.commandId ?? id(), itemId, type, itemName: item.name, amount, unit, measurementBasis: amount === null ? "unknown" as const : "user_estimated" as const, occurredAt: now(), note: type === "stored" ? `${note} Storage updated to ${options.storage}; quantity unchanged.`.trim() : amount === null ? `${note} Quantity unknown; recorded stock balance unchanged.`.trim() : note };
     commit((previous) => ({ ...previous, activities: [event, ...previous.activities], items: previous.items.map((entry) => {
       if (entry.id !== itemId) return entry;
       const remaining = type !== "stored" && amount !== null && entry.amount !== null && entry.unit === unit ? entry.amount - amount : entry.amount;
-      return { ...entry, amount: remaining, version: entry.version + 1, observedAt: event.occurredAt };
+      return { ...entry, amount: remaining, storage: type === "stored" ? options.storage! : entry.storage, version: entry.version + 1, observedAt: event.occurredAt };
     }) }));
   }
 
@@ -158,7 +166,8 @@ export function DemoProvider({ children }: { children: ReactNode }) {
       const log = getBrowserSnapshot().state.shareLogs.find((entry) => entry.id === logId);
       if (!log || log.state === "handed_over" || log.state === "cancelled") throw new Error("This share record is already closed or unavailable.");
       if (nextState === "accepted" && log.state !== "offered") throw new Error("Only an open offer can be marked accepted.");
-      if (nextState === "handed_over") recordOutcome(log.itemId, "shared", log.amount, log.unit, `Owner-reported handover to ${log.recipientLabel}. ${log.note}`);
+      if (nextState === "handed_over" && log.state !== "accepted") throw new Error("Record acceptance before confirming a handover.");
+      if (nextState === "handed_over") recordOutcome(log.itemId, "shared", log.amount, log.unit, `Owner-reported handover to ${log.recipientLabel}. ${log.note}`, { commandId: `handover:${log.id}` });
       commit((previous) => ({ ...previous, shareLogs: previous.shareLogs.map((entry) => entry.id === logId ? { ...entry, state: nextState, updatedAt: now() } : entry) }));
     },
     resetDemo() { commit(() => initialState()); },

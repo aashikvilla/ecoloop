@@ -31,6 +31,7 @@ export interface ShoppingItem {
 
 export interface ActivityEvent {
   id: string;
+  itemId?: string;
   type: OutcomeType | "confirmed" | "planned";
   itemName: string;
   amount: number | null;
