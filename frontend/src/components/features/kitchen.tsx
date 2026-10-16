@@ -41,7 +41,7 @@ function makeEntries(mode: IntakeMode, values: { name: string; amount: string; u
   if (mode === "TEXT") {
     const lines = values.text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
     if (lines.length === 0) throw new Error("Enter at least one food name, one per line.");
-    if (lines.length > 25) throw new Error("Enter no more than 25 food names at a time.");
+    if (lines.length > 10) throw new Error("Enter no more than 10 food names at a time.");
     if (lines.some((line) => line.length > 120 || /[\u0000-\u001f\u007f]/.test(line))) throw new Error("Each food name must be 120 characters or fewer.");
     return lines.map((name) => ({ name, amount: null, unit: null, date_value: null, date_type: "UNKNOWN", date_source: null, storage: null }));
   }
@@ -49,8 +49,9 @@ function makeEntries(mode: IntakeMode, values: { name: string; amount: string; u
   const name = values.name.trim();
   if (!name || name.length > 120 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error("Enter a food name up to 120 characters.");
   const amountText = values.amount.trim();
-  const amount = amountText ? Number(amountText) : null;
-  if (amount !== null && (!Number.isFinite(amount) || amount < 0 || amount > 1_000_000)) throw new Error("Enter an amount from 0 to 1,000,000, or leave it unknown.");
+  const enteredAmount = amountText ? Number(amountText) : null;
+  if (enteredAmount !== null && (!Number.isFinite(enteredAmount) || enteredAmount < 0 || enteredAmount > 1_000_000)) throw new Error("Enter a positive amount up to 1,000,000, or enter 0 / leave blank for unknown.");
+  const amount = enteredAmount === 0 ? null : enteredAmount;
   const unit = amount === null ? null : values.unit;
   if (amount !== null && !unit) throw new Error("Choose a unit for the amount.");
   const dateValue = values.date || null;
@@ -179,8 +180,8 @@ export function CaptureFood() {
         {mode === "MANUAL" ? <>
           <label className="block text-sm font-medium" htmlFor="intake-name">Food name<Input id="intake-name" required maxLength={120} value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. spinach" className="mt-1" /></label>
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block text-sm font-medium" htmlFor="intake-amount">Amount <span className="font-normal text-muted">(optional)</span><Input id="intake-amount" type="number" inputMode="decimal" min="0" max="1000000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Leave unknown" className="mt-1" /></label>
-            <label className="block text-sm font-medium" htmlFor="intake-unit">Unit{amount && <span className="text-danger"> · required</span>}<select id="intake-unit" required={Boolean(amount)} disabled={!amount} value={unit} onChange={(event) => setUnit(event.target.value)} className="mt-1 min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 disabled:opacity-60"><option value="">{amount ? "Choose a unit" : "Unknown"}</option>{["g", "kg", "ml", "l", "pieces", "portions"].map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
+            <label className="block text-sm font-medium" htmlFor="intake-amount">Amount <span className="font-normal text-muted">(optional)</span><Input id="intake-amount" type="number" inputMode="decimal" min="0" max="1000000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Blank or 0 = unknown" className="mt-1" /><span className="mt-1 block text-xs text-muted">Enter a positive amount; 0 leaves the amount unknown.</span></label>
+            <label className="block text-sm font-medium" htmlFor="intake-unit">Unit{amount && Number(amount) > 0 && <span className="text-danger"> · required</span>}<select id="intake-unit" required={Boolean(amount && Number(amount) > 0)} disabled={!amount || Number(amount) <= 0} value={unit} onChange={(event) => setUnit(event.target.value)} className="mt-1 min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 disabled:opacity-60"><option value="">{amount && Number(amount) > 0 ? "Choose a unit" : "Unknown"}</option>{["g", "kg", "ml", "l", "pieces", "portions"].map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block text-sm font-medium" htmlFor="intake-date">Date <span className="font-normal text-muted">(optional)</span><Input id="intake-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} className="mt-1" /></label>
@@ -188,7 +189,7 @@ export function CaptureFood() {
           </div>
           <label className="block text-sm font-medium" htmlFor="intake-storage">Storage <span className="font-normal text-muted">(optional)</span><select id="intake-storage" value={storage} onChange={(event) => setStorage(event.target.value)} className="mt-1 min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"><option value="">Unknown</option><option value="fridge">Fridge</option><option value="freezer">Freezer</option><option value="pantry">Pantry</option></select></label>
         </> : <>
-          <label className="block text-sm font-medium" htmlFor="intake-text">Food names <span className="font-normal text-muted">(one per line, up to 25)</span><textarea id="intake-text" required rows={7} maxLength={3500} value={text} onChange={(event) => setText(event.target.value)} placeholder={"Spinach\nRice\nTomatoes"} className="mt-1 w-full rounded-control border border-line bg-white px-4 py-3 text-ink placeholder:text-muted/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" /><span className="mt-1 block text-xs text-muted">Each name is up to 120 characters. Amount, date, and storage stay unknown.</span></label>
+          <label className="block text-sm font-medium" htmlFor="intake-text">Food names <span className="font-normal text-muted">(one per line, up to 10)</span><textarea id="intake-text" required rows={7} maxLength={3500} value={text} onChange={(event) => setText(event.target.value)} placeholder={"Spinach\nRice\nTomatoes"} className="mt-1 w-full rounded-control border border-line bg-white px-4 py-3 text-ink placeholder:text-muted/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" /><span className="mt-1 block text-xs text-muted">Each name is up to 120 characters. Amount, date, and storage stay unknown.</span></label>
         </>}
         {error && <div role="alert" className="rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

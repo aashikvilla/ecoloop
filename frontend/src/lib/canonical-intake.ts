@@ -31,7 +31,7 @@ export type IntakeResult = {
   candidates: IntakeCandidate[];
 };
 
-const MAX_ENTRIES = 25;
+const MAX_ENTRIES = 10;
 const dateTypes = new Set<IntakeDateType>(["USE_BY", "EXPIRY", "BEST_BEFORE", "USER_TARGET", "UNKNOWN"]);
 const uncertainties = new Set(["AMOUNT_UNKNOWN", "DATE_UNKNOWN", "STORAGE_UNKNOWN"]);
 
@@ -54,7 +54,7 @@ function validDate(value: unknown): value is string | null {
 function validEntry(value: unknown): value is IntakeEntry {
   return object(value)
     && typeof value.name === "string" && value.name.trim().length > 0 && value.name.length <= 120
-    && (value.amount === null || (typeof value.amount === "number" && Number.isFinite(value.amount) && value.amount >= 0 && value.amount <= 1_000_000))
+    && (value.amount === null || (typeof value.amount === "number" && Number.isFinite(value.amount) && value.amount > 0 && value.amount <= 1_000_000))
     && (value.amount === null ? value.unit === null : typeof value.unit === "string" && /^[A-Za-z][A-Za-z0-9_-]{0,31}$/.test(value.unit))
     && validDate(value.date_value)
     && typeof value.date_type === "string" && dateTypes.has(value.date_type as IntakeDateType)
