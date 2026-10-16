@@ -50,3 +50,14 @@ Hourly continuation is configured in the current chat. Resume only unfinished au
 Draft review: [PR #1](https://github.com/aashikvilla/ecoloop/pull/1). No reset credit was consumed. Deployment packaging is prepared, but Docker Desktop's Linux engine was unavailable, so no image build is claimed.
 
 Final integration application checkpoint `1be5345`: production build/TypeScript and full-src lint passed again. Browser confirmed loaded item form units, discard cancellation without stock change, reset focus return and final Home render with no collected page errors.
+
+## Second wave — authorized local implementation continuation
+
+16 October: owner asked to continue remaining work with GPT-6 Luna/high workers. Previous coordinator is idle. This chat is the active integrator on `codex/demo-integration`. This authorizes local implementation preparation; no paid calls, provisioning or deployment, and no full phase gate closes without its original proof.
+
+- [ ] `codex/typed-assistant-cards` (foundation worktree): five backend-aligned validated card types, safe malformed-card fallback, accessible React rendering and an explicitly scripted Ask example. Own new assistant-card files plus `components/features/ask.tsx` only.
+- [ ] `codex/canonical-share-activity` (backend worktree): owner-private sharing lifecycle and bounded activity API with membership/version/idempotency protection. Own backend plus `docs/implementation/share-activity.md` only. No provider calls or live writes.
+- [ ] `codex/firebase-browser-boundary` (journeys worktree): separately labeled account/sign-in and canonical API connection, unavailable by default without public configuration, no import/promotion of demo facts. Own new `app/account`, `components/account`, `lib/canonical*`, `lib/firebase*`, frontend dependency manifests and a named example config only.
+- [ ] Integrator: shared navigation link, seam/security review, type/lint/build and bounded browser/API acceptance, pushed checkpoints and progress handoff. No worker edits shared store/contracts/layout or root knowledge.
+
+Existing synthetic journeys remain usable while real services are unconfigured. Workers must report exact commits, observed checks and unverified boundaries; root integrates one branch at a time. Keep three worker slots maximum and preserve the unrelated user PDF.
