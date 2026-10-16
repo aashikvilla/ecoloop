@@ -20,4 +20,6 @@ Real bugs found: CSS layer ordering overrode semantic hero colors/link contrast;
 
 ## Continue
 
+Follow-up checkpoints: foundation `abb661e` improves truthful copy, date badges, loading labels and reset focus handling; backend `bf73c6d` adds pinned nonroot Cloud Run packaging. Docker CLI was present but its Linux engine unavailable, so image build/deploy remains unproved. Root convenience backend commands now use locked uv project resolution; importing the application through that project succeeded. Draft PR #1 is attached; hourly continuation remains active, quiet on unchanged access blockers. At the usage check, ordinary usage was available (61% of five-hour allowance consumed); no reset credit was used.
+
 Read current plan, latest branches and live Sheet before starting. Verify remote checkpoints and working tree; preserve unrelated `docs/6ea0cdb2-aa89-433f-9817-ad0a2c61c9c5.pdf`. Frontend production server was left at port 3002 for the demo. Resume canonical API integration and real managed-service work only under its documented access/billing gates. Do not report deployed readiness from local screenshots.

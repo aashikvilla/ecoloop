@@ -37,12 +37,14 @@ These boxes describe local demo checkpoints only. Full M0–M5 gates remain gove
 
 | Lane | Remote checkpoint | State |
 |---|---|---|
-| Foundation | `3e8943b` | Integrated; visual follow-up as needed |
+| Foundation | `abb661e` | Integrated; accessibility/copy follow-up included |
 | Household journeys | `84bd3a8` | Integrated; local flows checked |
-| Backend schema/security | `1ffd550` | Integrated; live Firebase proof pending |
+| Backend schema/security | `bf73c6d` | Integrated; container packaging prepared; live Firebase/image proof pending |
 | Managed agent and cloud | Not started | Blocked by deferred billing; no paid work |
 | Acceptance and release | `codex/demo-integration` | Local evidence recorded; deployed acceptance pending |
 
 Five lanes are prepared; the platform permits four simultaneous agents including the integrator, so launch at most three workers at once. Never let two agents own the same shared file. Use GPT-6 Luna/high workers as requested. Single integrator resolves shared contracts and merges sequentially. Main remains unchanged until actual phase prerequisites, evidence and exit review permit a merge. Push checkpoints before handoffs and never stage the unrelated user PDF.
 
 Hourly continuation is configured in the current chat. Resume only unfinished authorized work after checking limits/current branches; do not duplicate running work or repeatedly retry a billing blocker. A scheduled run needs the desktop app and computer available. It cannot create credits or enable billing.
+
+Draft review: [PR #1](https://github.com/aashikvilla/ecoloop/pull/1). No reset credit was consumed. Deployment packaging is prepared, but Docker Desktop's Linux engine was unavailable, so no image build is claimed.
