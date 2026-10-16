@@ -1,0 +1,22 @@
+# Build context is backend/; frontend and repository planning files are outside it.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*service-account*
+*credential*
+application_default_credentials.json
+firebase-adminsdk*.json
+.venv/
+.uv_cache/
+.cache/
+.git/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
