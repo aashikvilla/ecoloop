@@ -62,6 +62,14 @@ function validEntry(value: unknown): value is IntakeEntry {
     && (value.storage === null || (typeof value.storage === "string" && value.storage.length <= 120));
 }
 
+function validCandidate(value: unknown): value is IntakeCandidate {
+  if (!object(value) || !Array.isArray(value.uncertainty) || value.uncertainty.length > 3) return false;
+  const uncertainty = value.uncertainty;
+  return boundedId(value.candidate_id)
+    && validEntry(value)
+    && uncertainty.every((item) => typeof item === "string" && uncertainties.has(item));
+}
+
 function parseResult(payload: unknown): IntakeResult {
   if (!object(payload) || payload.schema_version !== 1 || !boundedId(payload.request_id) || !object(payload.result)) {
     throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected response.");
@@ -70,17 +78,18 @@ function parseResult(payload: unknown): IntakeResult {
   if (!boundedId(result.intake_id) || result.status !== "CANDIDATE" || !Array.isArray(result.candidates) || result.candidates.length > MAX_ENTRIES) {
     throw new CanonicalApiError("invalid_response", "The intake service returned an unexpected candidate result.", payload.request_id);
   }
-  const valid = result.candidates.every((candidate) => object(candidate)
-    && boundedId(candidate.candidate_id)
-    && validEntry(candidate)
-    && Array.isArray(candidate.uncertainty)
-    && candidate.uncertainty.length <= 3
-    && candidate.uncertainty.every((item) => typeof item === "string" && uncertainties.has(item)));
-  const ids = valid ? result.candidates.map((candidate) => (candidate as IntakeCandidate).candidate_id) : [];
-  if (!valid || new Set(ids).size !== ids.length) {
+  const candidates: IntakeCandidate[] = [];
+  for (const candidate of result.candidates) {
+    if (!validCandidate(candidate)) {
+      throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.", payload.request_id);
+    }
+    candidates.push(candidate);
+  }
+  const ids = candidates.map((candidate) => candidate.candidate_id);
+  if (new Set(ids).size !== ids.length) {
     throw new CanonicalApiError("invalid_response", "The intake service returned candidates that do not match the supported format.", payload.request_id);
   }
-  return result as IntakeResult;
+  return { intake_id: result.intake_id, status: "CANDIDATE", candidates };
 }
 
 function apiOrigin(): string {
