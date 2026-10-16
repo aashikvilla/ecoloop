@@ -95,20 +95,63 @@ CARD CONTRACT
 """.strip()
 
 
-def _provider() -> tuple[str, str, str | None]:
+def _provider_configuration() -> tuple[str, str, str | None] | None:
     requested = settings.AGENT_PROVIDER
-    key_setting = settings.GEMINI_API_KEY or settings.GOOGLE_API_KEY
-    key = key_setting.get_secret_value().strip() if key_setting else ""
-    project = settings.AGENT_VERTEX_PROJECT_ID or settings.FIREBASE_PROJECT_ID or os.getenv("GOOGLE_CLOUD_PROJECT")
-    if requested == "gemini_api" or (requested == "auto" and key):
-        if not key:
-            raise DomainError("AGENT_UNAVAILABLE", "Gemini API credentials are not configured.", 503, True)
+    gemini_key = settings.GEMINI_API_KEY.get_secret_value().strip() if settings.GEMINI_API_KEY else ""
+    google_key = settings.GOOGLE_API_KEY.get_secret_value().strip() if settings.GOOGLE_API_KEY else ""
+    key = gemini_key or google_key
+    project = settings.AGENT_VERTEX_PROJECT_ID or settings.FIREBASE_PROJECT_ID or settings.GOOGLE_CLOUD_PROJECT
+    if requested == "gemini_api":
+        if key:
+            return "gemini_api", key, None
+        return None
+    if requested == "vertex":
+        if project:
+            return "vertex", project, settings.AGENT_VERTEX_LOCATION
+        return None
+    if requested == "auto" and key:
         return "gemini_api", key, None
-    if requested == "vertex" or (requested == "auto" and project):
-        if not project:
-            raise DomainError("AGENT_UNAVAILABLE", "Vertex AI project configuration is missing.", 503, True)
+    if requested == "auto" and project:
         return "vertex", project, settings.AGENT_VERTEX_LOCATION
-    raise DomainError("AGENT_UNAVAILABLE", "No Gemini API key or Vertex AI project is configured.", 503, True)
+    return None
+
+
+def get_agent_provider_status() -> dict[str, str | bool]:
+    """Describe configured provider selection without validating credentials or calling it."""
+    configuration = _provider_configuration()
+    provider = configuration[0] if configuration else None
+    return {
+        "provider": {
+            "gemini_api": "gemini_developer_api",
+            "vertex": "vertex_ai",
+        }.get(provider, "unavailable"),
+        "configured": configuration is not None,
+        "enabled": settings.AGENT_ENABLED,
+        "status": (
+            "unavailable"
+            if configuration is None
+            else "configured" if settings.AGENT_ENABLED else "disabled"
+        ),
+        "runtime_check": "not_performed",
+        "session_store": "in_memory_unmanaged",
+        "managed_sessions": False,
+        "managed_memory": False,
+    }
+
+
+def _provider() -> tuple[str, str, str | None]:
+    if not settings.AGENT_ENABLED:
+        raise DomainError("AGENT_UNAVAILABLE", "The assistant provider is disabled.", 503, True)
+    configuration = _provider_configuration()
+    if configuration is None:
+        if settings.AGENT_PROVIDER == "gemini_api":
+            message = "Gemini Developer API credentials are not configured."
+        elif settings.AGENT_PROVIDER == "vertex":
+            message = "Vertex AI project configuration is missing."
+        else:
+            message = "No Gemini Developer API key or Vertex AI project is configured."
+        raise DomainError("AGENT_UNAVAILABLE", message, 503, True)
+    return configuration
 
 
 async def _get_runner() -> tuple[Runner, InMemorySessionService]:

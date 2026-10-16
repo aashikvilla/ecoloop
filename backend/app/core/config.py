@@ -1,7 +1,11 @@
+from pathlib import Path
 from typing import List, Literal
 from pydantic import field_validator
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
@@ -9,6 +13,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PORT: int = 8000
     FIREBASE_PROJECT_ID: str | None = None
+    GOOGLE_CLOUD_PROJECT: str | None = None
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
@@ -16,6 +21,7 @@ class Settings(BaseSettings):
     MAX_REQUEST_BYTES: int = 256_000
     GEMINI_API_KEY: SecretStr | None = None
     GOOGLE_API_KEY: SecretStr | None = None
+    AGENT_ENABLED: bool = False
     AGENT_PROVIDER: Literal["auto", "gemini_api", "vertex"] = "auto"
     AGENT_MODEL: str = "gemini-3.1-flash-lite"
     AGENT_VERTEX_PROJECT_ID: str | None = None
@@ -63,6 +69,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=True,
         extra="ignore",
+        env_file=BACKEND_DIR / ".env",
+        env_file_encoding="utf-8",
     )
 
 
