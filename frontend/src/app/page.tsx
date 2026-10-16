@@ -23,12 +23,12 @@ export default function HomePage() {
   const outcomeCount = activities.filter((event) => ["used", "stored", "shared", "discarded"].includes(event.type)).length;
   const knownAmounts = activities.filter((event) => event.measurementBasis !== "unknown" && event.amount !== null && event.unit !== null).length;
 
-  if (!hydrated) return <div className="space-y-4" aria-label="Loading demo kitchen"><div className="h-7 w-2/3 animate-pulse rounded-xl bg-surface-muted"/><div className="h-56 animate-pulse rounded-card bg-surface-muted"/><div className="h-32 animate-pulse rounded-card bg-surface-muted"/></div>;
+  if (!hydrated) return <div role="status" aria-label="Loading demo kitchen" className="space-y-4"><div className="h-7 w-2/3 animate-pulse rounded-xl bg-surface-muted"/><div className="h-56 animate-pulse rounded-card bg-surface-muted"/><div className="h-32 animate-pulse rounded-card bg-surface-muted"/></div>;
 
   return <div className="space-y-7 sm:space-y-9">
     <section className="space-y-1">
       <p className="text-xs font-extrabold uppercase tracking-[.14em] text-muted">Your little kitchen companion</p>
-      <Heading as="h1" className="max-w-2xl">Good evening! What would you like to make today?</Heading>
+      <Heading as="h1" className="max-w-2xl">What would you like to make today?</Heading>
       <p className="text-sm leading-relaxed text-muted">A simple note of what you have can make the next choice easier.</p>
     </section>
 
@@ -39,7 +39,7 @@ export default function HomePage() {
           <Badge tone="amber" className="bg-white/15 text-white">A DEMO DINNER IDEA</Badge>
           <span className="text-xs font-semibold text-white/75">For {mealPlan.servings} {mealPlan.servings === 1 ? "person" : "people"}</span>
         </div>
-        <div><Heading as="h2" className="text-white">Tomato and spinach pasta</Heading><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">A scripted idea inspired by this sample kitchen. Check the items yourself before cooking.</p></div>
+        <div><Heading as="h2" className="text-white">Tomato and spinach pasta</Heading><p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">A scripted sample idea. Check Kitchen for the items you currently have before you start.</p></div>
         <Link href="/ask" className="flex min-h-14 w-full items-center justify-between gap-3 rounded-full bg-white px-5 text-sm font-extrabold text-primary shadow-sm transition-colors hover:bg-primary-soft focus-visible:outline-white sm:max-w-sm">
           <span className="flex items-center gap-2"><Icon name="ask" size={21}/>Plan with EcoLoop</span><span className="flex size-8 items-center justify-center rounded-full bg-primary-soft"><Icon name="arrow" size={17}/></span>
         </Link>
@@ -54,12 +54,12 @@ export default function HomePage() {
     </section>
 
     <section aria-labelledby="attention-heading" className="space-y-3">
-      <div className="flex items-end justify-between gap-2"><div><Heading id="attention-heading" as="h2">Needs a little attention</Heading><p className="mt-1 text-xs text-muted">Dates and freshness are unknown unless you recorded them.</p></div><Link href="/kitchen" className="flex min-h-11 shrink-0 items-center gap-1 rounded-full px-3 text-xs font-bold text-primary hover:bg-primary-soft">View kitchen <Icon name="arrow" size={16}/></Link></div>
+      <div className="flex items-end justify-between gap-2"><div><Heading id="attention-heading" as="h2">From your kitchen</Heading><p className="mt-1 text-xs text-muted">Dates and freshness are unknown unless you recorded them.</p></div><Link href="/kitchen" className="flex min-h-11 shrink-0 items-center gap-1 rounded-full px-3 text-xs font-bold text-primary hover:bg-primary-soft">View kitchen <Icon name="arrow" size={16}/></Link></div>
       {focusItem ? <>
         <Card className="overflow-hidden border border-line/70 p-3 sm:p-4">
           <Link href={`/kitchen/items/${encodeURIComponent(focusItem.id)}`} className="block rounded-2xl focus-visible:outline-offset-2"><div className="flex gap-3">
-            <div className="relative size-[88px] shrink-0 overflow-hidden rounded-2xl bg-surface-muted sm:size-24"><Image src="/artwork/produce-bowl.svg" alt="Illustration of leafy greens and tomatoes" fill sizes="96px" className="object-cover"/></div>
-            <div className="min-w-0 flex-1 py-1"><Badge tone="terra" className="mb-1">Date not recorded</Badge><h3 className="truncate font-bold text-primary">{focusItem.name}</h3><p className="mt-0.5 text-sm text-muted">{amountLabel(focusItem.amount, focusItem.unit)}</p><p className="mt-1 text-xs leading-relaxed text-muted">Check this observation when you use it. A photo or date cannot tell us if food is safe.</p></div>
+            <div className="relative size-[88px] shrink-0 overflow-hidden rounded-2xl bg-surface-muted sm:size-24"><Image src="/artwork/produce-bowl.svg" alt="" aria-hidden="true" fill sizes="96px" className="object-cover"/></div>
+            <div className="min-w-0 flex-1 py-1"><Badge tone="terra" className="mb-1">{focusItem.dateValue && focusItem.dateType !== "UNKNOWN" ? `${focusItem.dateType.replaceAll("_", " ").toLowerCase()}: ${focusItem.dateValue}` : "Date not recorded"}</Badge><h3 className="truncate font-bold text-primary">{focusItem.name}</h3><p className="mt-0.5 text-sm text-muted">{amountLabel(focusItem.amount, focusItem.unit)}</p><p className="mt-1 text-xs leading-relaxed text-muted">Check this observation when you use it. A photo or date cannot tell us if food is safe.</p></div>
           </div></Link>
           <div className="mt-3 grid grid-cols-2 gap-2 border-t border-line pt-3">
             <Link href="/ask" className="flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-primary px-3 text-xs font-bold text-white"><Icon name="ask" size={16}/>Ask about it</Link>
@@ -75,7 +75,7 @@ export default function HomePage() {
         <div className="mb-3 flex items-center justify-between gap-2"><Heading id="activity-summary-heading" as="h2">Kitchen activity</Heading><span className="text-xs font-semibold text-muted">Recorded here</span></div>
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded-2xl bg-white p-3"><p className="text-2xl font-extrabold tracking-tight text-primary">{outcomeCount}</p><p className="mt-0.5 text-xs text-muted">Outcome notes recorded</p></div>
-          <div className="rounded-2xl bg-white p-3"><p className="text-2xl font-extrabold tracking-tight text-secondary">{knownAmounts}</p><p className="mt-0.5 text-xs text-muted">Notes with an amount</p></div>
+          <div className="rounded-2xl bg-white p-3"><p className="text-2xl font-extrabold tracking-tight text-secondary">{knownAmounts}</p><p className="mt-0.5 text-xs text-muted">Entries with an amount</p></div>
         </div>
         <div className="mt-3 flex items-center justify-between gap-3 text-xs leading-relaxed text-muted"><span>Plans and suggestions do not count as meals or food used.</span><Link href="/activity" className="flex min-h-11 shrink-0 items-center gap-1 font-bold text-primary">See activity <Icon name="arrow" size={15}/></Link></div>
       </Card>
