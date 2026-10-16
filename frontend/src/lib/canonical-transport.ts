@@ -26,7 +26,7 @@ function apiOrigin(): string {
   return url.origin;
 }
 
-function failure(status: number, body: unknown): CanonicalApiError {
+function failure(status: number, body: unknown, writing: boolean): CanonicalApiError {
   const error = typeof body === "object" && body !== null && "error" in body ? body.error : null;
   const ref = typeof error === "object" && error !== null && "requestID" in error && typeof error.requestID === "string" && error.requestID.length <= 128 ? error.requestID : undefined;
   if (status === 401) return new CanonicalApiError("unauthenticated", "Your sign-in is not accepted. Sign in again to continue.", ref);
@@ -34,7 +34,7 @@ function failure(status: number, body: unknown): CanonicalApiError {
   if (status === 409) return new CanonicalApiError("conflict", "This request conflicts with current records. Reload and review your choice.", ref);
   if (status === 400 || status === 413 || status === 422) return new CanonicalApiError("validation", "The household service rejected this request. Review the fields before trying again.", ref);
   if (status === 429) return new CanonicalApiError("rate_limited", "Too many requests were made. Wait before retrying.", ref);
-  if (status >= 500) return new CanonicalApiError("unavailable", "The service could not confirm this request. A change may still have been recorded; keep its original retry key.", ref);
+  if (status >= 500) return new CanonicalApiError("unavailable", writing ? "The service could not confirm this request. A change may still have been recorded; keep its original retry key." : "Household records are temporarily unavailable. Try loading them again later.", ref);
   return new CanonicalApiError("unexpected", "The household service could not confirm this request.", ref);
 }
 
@@ -91,14 +91,14 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   try {
     const response = await fetch(url, { method, body: serialized, headers: { Authorization: `Bearer ${idToken}`, "X-Household-ID": householdId, Accept: "application/json", ...(method === "POST" ? { "Content-Type": "application/json" } : {}) }, cache: "no-store", credentials: "omit", redirect: "error", signal: controller.signal });
     const body = await readJson(response);
-    if (!response.ok) throw failure(response.status, body);
+    if (!response.ok) throw failure(response.status, body, method === "POST");
     return body;
   } catch (error) {
     if (controller.signal.aborted) {
       if (options.signal?.aborted) throw new DOMException("Request cancelled", "AbortError");
-      throw new CanonicalApiError("timeout", "The request timed out. Keep the original retry key when retrying a change.");
+      throw new CanonicalApiError("timeout", method === "POST" ? "The request timed out. Keep the original retry key when retrying a change." : "Loading took too long. Check your connection and try again.");
     }
     if (error instanceof CanonicalApiError) throw error;
-    throw new CanonicalApiError("network", "The response could not be confirmed. Keep the original retry key when retrying a change.");
+    throw new CanonicalApiError("network", method === "POST" ? "The response could not be confirmed. Keep the original retry key when retrying a change." : "Household records could not be loaded. Check your connection and try again.");
   } finally { clearTimeout(timeout); options.signal?.removeEventListener("abort", abort); }
 }

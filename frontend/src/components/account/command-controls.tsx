@@ -203,7 +203,7 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
       try {
         onCommitted();
       } catch {
-        setNotice("The canonical command succeeded, but the page could not refresh its linked records. Reload current records to see the saved version.");
+        setNotice("The change was saved, but the page could not refresh its linked records. Reload current records to see the saved version.");
       }
     } catch (error) {
       if (!isCurrent(controller, currentScope)) return;
@@ -245,13 +245,13 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
 
   return <section aria-labelledby="canonical-command-title" className="space-y-5">
     <header>
-      <Badge tone={enabled ? "green" : "amber"} className="mb-3">{enabled ? "EXPLICIT HOUSEHOLD COMMANDS" : "LIVE WRITES UNAVAILABLE"}</Badge>
-      <Heading id="canonical-command-title" as="h2">Confirm canonical records</Heading>
+      <Badge tone={enabled ? "green" : "amber"} className="mb-3">{enabled ? "REVIEW HOUSEHOLD CHANGES" : "CHANGES UNAVAILABLE"}</Badge>
+      <Heading id="canonical-command-title" as="h2">Update household records</Heading>
       <p className="mt-2 text-sm leading-relaxed text-muted">These controls write only after you review the exact command and confirm it. They never use the local demo store.</p>
     </header>
 
-    {!enabled && <Card role="status" className="border border-line bg-surface-muted p-4 text-sm leading-relaxed text-muted">Live household writes are unavailable in this environment. No read or write requests will be sent from these controls.</Card>}
-    {enabled && !/^[A-Za-z0-9_-]{1,128}$/.test(householdId) && <Card role="status" className="border border-line bg-surface-muted p-4 text-sm leading-relaxed text-muted">Choose a valid household in the account section before loading or changing canonical records.</Card>}
+    {!enabled && <Card role="status" className="border border-line bg-surface-muted p-4 text-sm leading-relaxed text-muted">Household changes are not enabled for this app yet.</Card>}
+    {enabled && !/^[A-Za-z0-9_-]{1,128}$/.test(householdId) && <Card role="status" className="border border-line bg-surface-muted p-4 text-sm leading-relaxed text-muted">Choose a valid household in the account section before loading or changing household records.</Card>}
 
     <Card className="space-y-4 border border-line p-5 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><Heading as="h3">Kitchen fact</Heading><p className="mt-1 text-sm leading-relaxed text-muted">Create a new observation or edit a record read from this household. Known dates are labeled as user provided, and unknown dates stay unknown.</p></div><Button size="sm" variant="secondary" onClick={() => void loadRecords("kitchen")} disabled={!scopeReady || operation !== null || (pending !== null && pending.status !== "conflict")} aria-busy={operation === "load-kitchen"}>{operation === "load-kitchen" ? "Loading…" : "Load current kitchen"}</Button></div>
@@ -270,7 +270,7 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
     </Card>
 
     <Card className="space-y-4 border border-line p-5 sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><Heading as="h3">Shopping entry</Heading><p className="mt-1 text-sm leading-relaxed text-muted">Create or edit an entry in this household’s canonical shopping list. Saving a list entry does not imply a purchase or change kitchen stock.</p></div><Button size="sm" variant="secondary" onClick={() => void loadRecords("shopping")} disabled={!scopeReady || operation !== null || (pending !== null && pending.status !== "conflict")} aria-busy={operation === "load-shopping"}>{operation === "load-shopping" ? "Loading…" : "Load current shopping"}</Button></div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><Heading as="h3">Shopping entry</Heading><p className="mt-1 text-sm leading-relaxed text-muted">Create or edit an entry in this household’s household shopping list. Saving a list entry does not imply a purchase or change kitchen stock.</p></div><Button size="sm" variant="secondary" onClick={() => void loadRecords("shopping")} disabled={!scopeReady || operation !== null || (pending !== null && pending.status !== "conflict")} aria-busy={operation === "load-shopping"}>{operation === "load-shopping" ? "Loading…" : "Load current shopping"}</Button></div>
       {shoppingRecords && <p role="status" className="text-xs text-muted">{shoppingRecords.length === 0 ? "No current shopping entries." : `${shoppingRecords.length} current ${shoppingRecords.length === 1 ? "entry" : "entries"} loaded.`} Read again before editing after a conflict.</p>}
       <form onSubmit={reviewShopping} className="space-y-4">
         <fieldset disabled={locked} className="space-y-4 disabled:opacity-70">
@@ -294,9 +294,9 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
 function PendingReview({ pending, sending, onConfirm, onRetry, onDiscardAndReload, canRetrySame }: { pending: PendingCommand; sending: boolean; onConfirm: () => void; onRetry: () => void; onDiscardAndReload: () => void; canRetrySame: boolean }) {
   const isFood = pending.kind === "kitchen";
   return <Card className="space-y-4 border-2 border-primary/20 p-5 sm:p-6">
-    <div><Badge tone={pending.status === "conflict" ? "amber" : "green"} className="mb-3">{pending.status === "conflict" ? "REVIEW REQUIRED" : "PENDING COMMAND"}</Badge><Heading as="h3">{pending.status === "conflict" ? "Records changed" : "Review before sending"}</Heading><p className="mt-1 text-sm leading-relaxed text-muted">{pending.status === "conflict" ? "This command was rejected because the canonical record changed. Reload the latest record, review it, and create a new command." : "The exact fields below will be sent once you confirm. This action writes to the selected household."}</p></div>
+    <div><Badge tone={pending.status === "conflict" ? "amber" : "green"} className="mb-3">{pending.status === "conflict" ? "REVIEW REQUIRED" : "PENDING COMMAND"}</Badge><Heading as="h3">{pending.status === "conflict" ? "Records changed" : "Review before sending"}</Heading><p className="mt-1 text-sm leading-relaxed text-muted">{pending.status === "conflict" ? "This command was rejected because the household record changed. Reload the latest record, review it, and create a new command." : "The exact fields below will be sent once you confirm. This action writes to the selected household."}</p></div>
     {isFood ? <FoodPreview command={(pending as Extract<PendingCommand, { kind: "kitchen" }>).command} /> : <ShoppingPreview command={(pending as Extract<PendingCommand, { kind: "shopping" }>).command} />}
-    <p className="break-all text-xs text-muted">Idempotency key: {isFood ? (pending as Extract<PendingCommand, { kind: "kitchen" }>).command.idempotency_key : (pending as Extract<PendingCommand, { kind: "shopping" }>).command.idempotency_key}</p>
+    <p className="break-all text-xs text-muted">Retry key: {isFood ? (pending as Extract<PendingCommand, { kind: "kitchen" }>).command.idempotency_key : (pending as Extract<PendingCommand, { kind: "shopping" }>).command.idempotency_key}</p>
     {(pending.status === "ambiguous" || pending.status === "ready") && <p role="status" className="text-sm text-muted">If the connection failed before the response arrived, retrying uses this same payload and key. The app will not retry automatically.</p>}
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
       {pending.status === "ready" && <Button onClick={onConfirm} disabled={sending} aria-busy={sending}>{sending ? "Sending command…" : "Confirm and send"}</Button>}

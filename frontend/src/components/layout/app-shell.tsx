@@ -39,7 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-tight text-primary">EcoLoop</span><span className="block text-[11px] font-medium text-muted">My kitchen</span></span>
         </Link>
         <div className="flex items-center gap-2">
-          <Badge tone="amber" className="text-[9px] sm:text-xs">{accountPage ? "ACCOUNT · READ ONLY" : "DEMO · LOCAL ONLY"}</Badge>
+          <Badge tone="amber" className="text-[9px] sm:text-xs">{accountPage ? "HOUSEHOLD ACCOUNT" : "DEMO · LOCAL ONLY"}</Badge>
           <Link href="/settings" aria-label="Open settings" className={`flex size-11 items-center justify-center rounded-full transition-colors hover:bg-surface-muted ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted"}`}><Icon name="settings" size={20} /></Link>
         </div>
       </div>
@@ -61,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Link href="/activity" className={`mt-7 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/activity" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="clock" size={19} />Activity</Link>
       <Link href="/settings" className={`mt-1 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="settings" size={19} />Settings</Link>
       <div className="absolute inset-x-4 bottom-6 rounded-2xl bg-primary-container p-4 text-white">
-        <p className="text-xs font-bold">{accountPage ? "Account connection" : "A small demo kitchen"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{accountPage ? "Authorized household reads stay separate from this browser’s demo." : "Changes stay in this browser. No Google AI or managed memory is connected."}</p>
+        <p className="text-xs font-bold">{accountPage ? "Account connection" : "A small demo kitchen"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{accountPage ? "Connected household records stay separate from this browser’s demo." : "Changes stay in this browser. No Google AI or managed memory is connected."}</p>
       </div>
     </aside>
   </div>;

@@ -1,7 +1,7 @@
 "use client";
 
 import type { User } from "firebase/auth";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,6 +9,8 @@ import { Heading } from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { getFirebaseClient } from "@/lib/firebase-client";
 import { CanonicalApiError, readCanonicalRecords, type CanonicalData } from "@/lib/canonical-api";
+import { CanonicalCommandControls } from "./command-controls";
+import { PrivateHistory } from "./private-history";
 
 type AuthState = "loading" | "unavailable" | "signed-out" | "signed-in" | "error";
 
@@ -18,6 +20,8 @@ export function AccountConnection() {
   const [busy, setBusy] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [householdId, setHouseholdId] = useState("");
+  const [selectedHousehold, setSelectedHousehold] = useState("");
+  const [revision, setRevision] = useState(0);
   const [data, setData] = useState<CanonicalData | null>(null);
   const [dataError, setDataError] = useState<CanonicalApiError | null>(null);
   const [loadingKind, setLoadingKind] = useState<"kitchen" | "shopping" | null>(null);
@@ -42,6 +46,7 @@ export function AccountConnection() {
           setLoadingKind(null);
           setNotice(nextUser ? "" : identityRef.current ? "Signed out. Loaded household records were cleared from this page." : "");
           setHouseholdId("");
+          setSelectedHousehold("");
           identityRef.current = nextKey;
         }
         setUser(nextUser);
@@ -55,6 +60,7 @@ export function AccountConnection() {
         setLoadingKind(null);
         setNotice("");
         setHouseholdId("");
+        setSelectedHousehold("");
         setUser(null);
         setAuthState("error");
         setAuthError(authMessage(error));
@@ -64,6 +70,11 @@ export function AccountConnection() {
     });
     return () => { active = false; requestRef.current?.abort(); unsubscribe(); };
   }, []);
+
+  const getIdToken = useCallback(async () => {
+    if (!user) throw new CanonicalApiError("unauthenticated", "Sign in before accessing household records.");
+    return user.getIdToken();
+  }, [user]);
 
   function clearRecords(message = "") {
     requestRef.current?.abort();
@@ -89,6 +100,7 @@ export function AccountConnection() {
   async function handleSignOut() {
     clearRecords();
     setHouseholdId("");
+    setSelectedHousehold("");
     setBusy(true); setAuthError("");
     try {
       const firebase = await getFirebaseClient();
@@ -102,6 +114,7 @@ export function AccountConnection() {
 
   function updateHousehold(value: string) {
     setHouseholdId(value);
+    setSelectedHousehold("");
     clearRecords();
   }
 
@@ -114,7 +127,7 @@ export function AccountConnection() {
     try {
       const token = await user.getIdToken();
       if (controller.signal.aborted) return;
-      const result = await readCanonicalRecords(kind, token, householdId.trim(), controller.signal);
+      const result = await readCanonicalRecords(kind, token, selectedHousehold, controller.signal);
       if (!controller.signal.aborted && identityRef.current === user.uid) setData(result);
     } catch (error) {
       if (controller.signal.aborted) return;
@@ -126,12 +139,21 @@ export function AccountConnection() {
 
   function submitHousehold(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    clearRecords("Household scope changed. Load records again to fetch data for this household.");
+    const scope = householdId.trim();
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(scope)) return;
+    setSelectedHousehold(scope);
+    setRevision((value) => value + 1);
+    clearRecords("Household selected. Load records to check your access.");
+  }
+
+  function commandCommitted() {
+    clearRecords("Change recorded. Reload household lists to see the latest versions.");
+    setRevision((value) => value + 1);
   }
 
   return <div className="mx-auto max-w-3xl space-y-6">
     <header>
-      <Badge tone="amber" className="mb-3">ACCOUNT · READ ONLY</Badge>
+      <Badge tone="amber" className="mb-3">HOUSEHOLD ACCOUNT</Badge>
       <Heading as="h1">Household connection</Heading>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">Sign in to view records for a household you already belong to. These records stay separate from this browser’s demo. Opening them does not change your records or membership.</p>
     </header>
@@ -160,14 +182,18 @@ export function AccountConnection() {
     <section aria-labelledby="canonical-title" className="space-y-4">
       <div><Heading id="canonical-title" as="h2">View household records</Heading><p className="mt-1 text-sm leading-relaxed text-muted">You can view your connected household here. Demo records are kept in this browser and are never sent with these requests.</p></div>
       <div className="flex flex-col gap-3 sm:flex-row">
-        <Button variant="primary" onClick={() => void loadRecords("kitchen")} disabled={!user || authState !== "signed-in" || !householdId.trim() || loadingKind !== null} aria-busy={loadingKind === "kitchen"}>{loadingKind === "kitchen" ? "Loading kitchen…" : "Load kitchen"}</Button>
-        <Button variant="secondary" onClick={() => void loadRecords("shopping")} disabled={!user || authState !== "signed-in" || !householdId.trim() || loadingKind !== null} aria-busy={loadingKind === "shopping"}>{loadingKind === "shopping" ? "Loading shopping…" : "Load shopping"}</Button>
+        <Button variant="primary" onClick={() => void loadRecords("kitchen")} disabled={!user || authState !== "signed-in" || !selectedHousehold || loadingKind !== null} aria-busy={loadingKind === "kitchen"}>{loadingKind === "kitchen" ? "Loading kitchen…" : "Load kitchen"}</Button>
+        <Button variant="secondary" onClick={() => void loadRecords("shopping")} disabled={!user || authState !== "signed-in" || !selectedHousehold || loadingKind !== null} aria-busy={loadingKind === "shopping"}>{loadingKind === "shopping" ? "Loading shopping…" : "Load shopping"}</Button>
       </div>
       {dataError && <Card className="space-y-3 border border-danger/25 bg-danger-soft/40 p-4" role="alert"><p className="text-sm font-semibold text-danger">{dataError.message}</p>{dataError.requestId && <p className="text-xs text-muted">Request reference: {dataError.requestId}</p>}{dataError.code === "unauthenticated" && <Button size="sm" variant="secondary" onClick={handleSignIn} disabled={busy}>Sign in again</Button>}{dataError.code === "conflict" && <p className="text-xs text-muted">Reload the selected records to get the current version.</p>}{dataError.code === "rate_limited" && <p className="text-xs text-muted">Retry after waiting briefly.</p>}{dataError.code === "unavailable" && <p className="text-xs text-muted">Retry when the service is available.</p>}</Card>}
       {loadingKind && <Card role="status" className="border border-line p-5 text-sm text-muted">Loading household {loadingKind} records…</Card>}
       {data && data.records.length === 0 && <Card className="border border-dashed border-line p-6 text-center"><p className="font-semibold text-primary">No {data.kind} records</p><p className="mt-1 text-sm text-muted">There are no recorded items in this household list.</p></Card>}
       {data && data.records.length > 0 && <Card className="border border-line p-4 sm:p-5"><div className="mb-3 flex items-center justify-between gap-3"><Heading as="h3">{data.kind === "kitchen" ? "Kitchen" : "Shopping"}</Heading><Badge>{data.records.length} {data.records.length === 1 ? "record" : "records"}</Badge></div><ul className="divide-y divide-line">{data.kind === "kitchen" ? data.records.map((record) => <li key={record.item_id} className="py-3 first:pt-0 last:pb-0"><p className="font-semibold text-primary">{record.name}</p><p className="mt-1 text-sm text-muted">{record.amount === null ? "Amount unknown" : `${record.amount} ${record.unit}`} · {record.date_type === "UNKNOWN" ? "Date unknown" : record.date_value || record.date_type}</p><p className="mt-1 text-xs text-muted">Version {record.version} · Confirmed {formatDate(record.observed_at)}</p></li>) : data.records.map((record) => <li key={record.entry_id} className="py-3 first:pt-0 last:pb-0"><p className="font-semibold text-primary">{record.item_name}</p><p className="mt-1 text-sm text-muted">{record.desired_amount === null ? "Amount unspecified" : `${record.desired_amount} ${record.unit}`} · Version {record.version}</p><p className="mt-1 text-xs text-muted">Updated {formatDate(record.updated_at)}</p></li>)}</ul></Card>}
     </section>
+    {user && authState === "signed-in" && selectedHousehold ? <div key={`${user.uid}:${selectedHousehold}:${revision}`} className="space-y-6">
+      <CanonicalCommandControls getIdToken={getIdToken} householdId={selectedHousehold} enabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"} onCommitted={commandCommitted} />
+      <PrivateHistory getIdToken={getIdToken} householdId={selectedHousehold} ownerUid={user.uid} />
+    </div> : <Card className="border border-line p-5 text-sm leading-relaxed text-muted">Sign in and select a household to access private history. Household changes remain unavailable until this app’s connection has been verified and enabled.</Card>}
   </div>;
 }
 
