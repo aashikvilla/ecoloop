@@ -1,6 +1,6 @@
 # Local demo acceptance — 16 October 2026
 
-Reviewer: root integrator. Application checkpoint: `94a292c`. Production Next.js server at `http://127.0.0.1:3002`; headless Chrome, 360×800 and 1440×1000. Synthetic browser data only. This record proves local interactions; it does not prove Firebase, deployed authorization, Gemini, managed Sessions/Memory Bank, or food safety.
+Reviewer: root integrator. Initial application checkpoint: `94a292c`; final follow-up checkpoint: `1be5345`. Production Next.js server at `http://127.0.0.1:3002`; headless Chrome, 360×800 and 1440×1000. Synthetic browser data only. This record proves local interactions; it does not prove Firebase, deployed authorization, Gemini, managed Sessions/Memory Bank, or food safety.
 
 ## Observed checks
 
@@ -16,6 +16,7 @@ Reviewer: root integrator. Application checkpoint: `94a292c`. Production Next.js
 - [x] Missing item route displayed `Item not found` with recovery navigation.
 - [x] Photo mode explicitly reported extraction unavailable and offered manual entry. Manual entry with unknown amount reached review with null amount/unit. No image upload or AI call was made.
 - [x] Production browser error collection was empty at the end of the flows.
+- [x] Final integrated `1be5345` production build/TypeScript generated 13/13 pages again; full-src ESLint exited 0 without warnings. Reloaded saved item initialized the correction unit to `pieces`. Discard requested explicit confirmation and left stock at 2; cancelling retained stock at 2. Reset Escape returned focus to `Reset this demo`. Refreshed final Home screenshots and browser error collection was empty.
 - [x] Inspected mobile Home, Kitchen and review screenshots plus desktop Ask/Shop. Measured document widths 345 at viewport 360 and 1425 at viewport 1440: no horizontal overflow in these samples. This is a sampled visual/keyboard review, not a complete accessibility audit.
 
 The browser CLI's coordinate clicks did not consistently activate offscreen/sticky-header targets. Focus + Enter/Space was used for reliable native keyboard activation. The first capture was submitted via browser `requestSubmit`; a second manual capture reached review through native keyboard submission. No unit tests were added or run.
@@ -28,6 +29,7 @@ The browser CLI's coordinate clicks did not consistently activate offscreen/stic
 - [Desktop Ask](ask-desktop.png), [desktop Shop](shop-desktop.png), [desktop Activity](activity-desktop.png)
 
 Full-page browser captures place sticky/fixed navigation at the current scroll offset; this explains their position within tall captures.
+Home images show the final follow-up; other images document the initial integrated flow before the accessibility/refinement pass.
 
 ## Remaining proof and implementation
 
