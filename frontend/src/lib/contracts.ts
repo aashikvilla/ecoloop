@@ -42,6 +42,19 @@ export interface ActivityEvent {
 
 export interface Preference { id: string; text: string }
 export interface MealPlan { servings: number; stage: PreparationStage }
+export type ShareState = "offered" | "accepted" | "handed_over" | "cancelled";
+export interface ShareLog {
+  id: string;
+  itemId: string;
+  itemName: string;
+  recipientLabel: string;
+  amount: number | null;
+  unit: Unit | null;
+  state: ShareState;
+  note: string;
+  updatedAt: string;
+  ownerReported: true;
+}
 
 export interface DemoState {
   schemaVersion: 1;
@@ -50,4 +63,5 @@ export interface DemoState {
   activities: ActivityEvent[];
   preferences: Preference[];
   mealPlan: MealPlan;
+  shareLogs: ShareLog[];
 }
