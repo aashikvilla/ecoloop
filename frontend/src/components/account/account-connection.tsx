@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { getFirebaseClient } from "@/lib/firebase-client";
+import { useLiveHousehold } from "@/lib/live-household";
 import {
   CanonicalApiError,
   readCanonicalRecords,
@@ -30,6 +31,7 @@ type AuthState =
   | "error";
 
 export function AccountConnection() {
+  const liveHousehold = useLiveHousehold();
   const [authState, setAuthState] = useState<AuthState>("loading");
   const [authError, setAuthError] = useState("");
   const [email, setEmail] = useState("");
@@ -184,6 +186,7 @@ export function AccountConnection() {
     clearRecords();
     setHouseholdId("");
     setSelectedHousehold("");
+    liveHousehold.setHouseholdId("");
     setBusy(true);
     setAuthError("");
     try {
@@ -202,6 +205,7 @@ export function AccountConnection() {
     setHouseholdId(value);
     setSelectedHousehold("");
     clearRecords();
+    liveHousehold.setHouseholdId("");
   }
 
   async function loadRecords(kind: "kitchen" | "shopping") {
@@ -252,6 +256,7 @@ export function AccountConnection() {
     const scope = householdId.trim();
     if (!/^[A-Za-z0-9_-]{1,128}$/.test(scope)) return;
     setSelectedHousehold(scope);
+    liveHousehold.setHouseholdId(scope);
     setRevision((value) => value + 1);
     clearRecords("Household selected. Load records to check your access.");
   }
@@ -440,8 +445,8 @@ export function AccountConnection() {
             aria-describedby="household-help"
           />
           <p id="household-help" className="text-xs leading-relaxed text-muted">
-            Your household choice is cleared when you change accounts or leave
-            this page.
+            Your household choice is kept in this tab to load the four main
+            destinations and is cleared when you change accounts or sign out.
           </p>
           <Button type="submit" variant="secondary">
             Use this household

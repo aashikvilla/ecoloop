@@ -7,10 +7,10 @@ export class CanonicalApiError extends Error {
   }
 }
 
-export type CanonicalResource = "kitchen" | "shopping" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity";
+export type CanonicalResource = "kitchen" | "shopping" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "assistant-turns";
 export type CanonicalRequestOptions = { method?: "GET" | "POST" | "PATCH"; recordId?: string; body?: unknown; signal?: AbortSignal; query?: { limit?: number; cursor?: string } };
 const methods: Record<CanonicalResource, readonly string[]> = {
-  kitchen: ["GET"], shopping: ["GET", "POST"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"],
+  kitchen: ["GET"], shopping: ["GET", "POST"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "assistant-turns": ["POST"],
 };
 const RESPONSE_BYTES = 512_000;
 
@@ -66,10 +66,12 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   if (!Object.hasOwn(methods, resource) || !methods[resource].includes(method)) throw new CanonicalApiError("validation", "This household operation is not supported.");
   if (!idToken || idToken.length > 8192 || /[\r\n]/.test(idToken)) throw new CanonicalApiError("unauthenticated", "Sign in before accessing household records.");
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(householdId)) throw new CanonicalApiError("validation", "Enter a valid household ID.");
-  const writing = method !== "GET";
+  const writing = method !== "GET" && resource !== "assistant-turns";
   if (writing && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS !== "true") throw new CanonicalApiError("not_configured", "Household changes are not enabled for this app yet.");
   let path = `/api/v1/${resource}`;
-  if (resource === "share-transition") {
+  if (resource === "assistant-turns") {
+    path = "/api/v1/assistant/turns";
+  } else if (resource === "share-transition") {
     if (typeof options.recordId !== "string" || !/^[A-Za-z0-9._:-]{1,128}$/.test(options.recordId) || [".", ".."].includes(options.recordId)) throw new CanonicalApiError("validation", "Choose a valid sharing record.");
     path = `/api/v1/share-logs/${encodeURIComponent(options.recordId)}`;
   } else if (options.recordId !== undefined) throw new CanonicalApiError("validation", "A record reference is not supported for this operation.");
@@ -86,8 +88,9 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
       url.searchParams.set("cursor", cursor);
     }
   }
-  if ((!writing && options.body !== undefined) || (writing && options.body === undefined)) throw new CanonicalApiError("validation", "The household request body is invalid.");
-  const serialized = writing ? JSON.stringify(options.body) : undefined;
+  const hasBody = method !== "GET";
+  if ((!hasBody && options.body !== undefined) || (hasBody && options.body === undefined)) throw new CanonicalApiError("validation", "The household request body is invalid.");
+  const serialized = hasBody ? JSON.stringify(options.body) : undefined;
   if (serialized !== undefined && new TextEncoder().encode(serialized).length > 256_000) throw new CanonicalApiError("validation", "This change exceeds the supported request size.");
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
@@ -95,7 +98,7 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   if (options.signal?.aborted) controller.abort(options.signal.reason);
   options.signal?.addEventListener("abort", abort, { once: true });
   try {
-    const response = await fetch(url, { method, body: serialized, headers: { Authorization: `Bearer ${idToken}`, "X-Household-ID": householdId, Accept: "application/json", ...(writing ? { "Content-Type": "application/json" } : {}) }, cache: "no-store", credentials: "omit", redirect: "error", signal: controller.signal });
+    const response = await fetch(url, { method, body: serialized, headers: { Authorization: `Bearer ${idToken}`, "X-Household-ID": householdId, Accept: "application/json", ...(hasBody ? { "Content-Type": "application/json" } : {}) }, cache: "no-store", credentials: "omit", redirect: "error", signal: controller.signal });
     const body = await readJson(response);
     if (!response.ok) throw failure(response.status, body, writing);
     return body;

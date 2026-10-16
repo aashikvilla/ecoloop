@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { useDemo } from "@/lib/demo-store";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 
@@ -29,7 +28,7 @@ function DestinationNav({ pathname }: { pathname: string }) {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const accountPage = pathname === "/account" || pathname.startsWith("/account/");
-  const { hydrated, persistenceError } = useDemo();
+  const canonicalPage = ["/", "/kitchen", "/ask", "/shop", "/activity"].includes(pathname);
   return <div className="min-h-screen bg-background text-foreground">
     <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
     <header className="sticky top-0 z-30 border-b border-line/70 bg-background/90 backdrop-blur-xl">
@@ -39,14 +38,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-tight text-primary">EcoLoop</span><span className="block text-[11px] font-medium text-muted">My kitchen</span></span>
         </Link>
         <div className="flex items-center gap-2">
-          <Badge tone="amber" className="text-[9px] sm:text-xs">{accountPage ? "HOUSEHOLD ACCOUNT" : "DEMO · LOCAL ONLY"}</Badge>
+          <Badge tone="amber" className="text-[9px] sm:text-xs">{accountPage ? "HOUSEHOLD ACCOUNT" : canonicalPage ? "HOUSEHOLD DATA" : "DEMO · LOCAL ONLY"}</Badge>
           <Link href="/settings" aria-label="Open settings" className={`flex size-11 items-center justify-center rounded-full transition-colors hover:bg-surface-muted ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted"}`}><Icon name="settings" size={20} /></Link>
         </div>
       </div>
     </header>
     <div className="mx-auto min-h-[calc(100vh-68px)] max-w-6xl px-4 pb-28 pt-5 sm:ml-[208px] sm:px-7 sm:pb-12 sm:pt-8">
-      {!accountPage && persistenceError && <div role="status" className="mb-4 rounded-2xl border border-secondary/20 bg-secondary-soft/70 px-4 py-3 text-sm text-secondary">{persistenceError}</div>}
-      {!accountPage && !hydrated && <div role="status" className="sr-only">Loading this browser’s demo data</div>}
       <main id="main-content">{children}</main>
     </div>
     <div className="fixed inset-x-0 bottom-3 z-40 mx-auto w-full max-w-[460px] px-4 safe-bottom sm:hidden"><DestinationNav pathname={pathname} /></div>
@@ -61,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Link href="/activity" className={`mt-7 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/activity" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="clock" size={19} />Activity</Link>
       <Link href="/settings" className={`mt-1 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="settings" size={19} />Settings</Link>
       <div className="absolute inset-x-4 bottom-6 rounded-2xl bg-primary-container p-4 text-white">
-        <p className="text-xs font-bold">{accountPage ? "Account connection" : "A small demo kitchen"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{accountPage ? "Connected household records stay separate from this browser’s demo." : "Changes stay in this browser. No Google AI or managed memory is connected."}</p>
+        <p className="text-xs font-bold">{accountPage ? "Account connection" : canonicalPage ? "Household records" : "Household setup"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{accountPage || canonicalPage ? "Live records require sign-in, household membership and an available API." : "Some capture and managed preference features are unavailable until their services are connected."}</p>
       </div>
     </aside>
   </div>;

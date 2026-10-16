@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-17 — Cross-worktree dependency junctions can mutate the source checkout
+
+Observation: pointing an isolated worktree's `node_modules` junction at the primary checkout let `npm ci` traverse into and attempt to remove source dependencies; Turbopack also rejected the external junction. Prevention: install from the lockfile inside the target worktree. Never run dependency-cleaning commands through a junction to another checkout.
+
 ## 2026-10-16 — Stale source directories keep returning through pointers
 
 Observation: a superseded archive and consolidated reference pack remained in the checkout, and current instructions still linked to them. The entrypoint also pointed to an old session while later implementation records existed.
