@@ -1,0 +1,104 @@
+export type ApiFailureCode = "not_configured" | "bad_origin" | "unauthenticated" | "forbidden" | "conflict" | "validation" | "rate_limited" | "unavailable" | "timeout" | "network" | "invalid_response" | "unexpected";
+
+export class CanonicalApiError extends Error {
+  constructor(readonly code: ApiFailureCode, message: string, readonly requestId?: string) {
+    super(message);
+    this.name = "CanonicalApiError";
+  }
+}
+
+export type CanonicalResource = "kitchen" | "shopping" | "facts/confirm" | "outcomes" | "share-logs" | "activity";
+export type CanonicalRequestOptions = { method?: "GET" | "POST"; body?: unknown; signal?: AbortSignal; query?: { limit?: number; cursor?: string } };
+const methods: Record<CanonicalResource, readonly string[]> = {
+  kitchen: ["GET"], shopping: ["GET", "POST"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET"], activity: ["GET"],
+};
+const RESPONSE_BYTES = 512_000;
+
+function apiOrigin(): string {
+  const configured = process.env.NEXT_PUBLIC_ECOLOOP_API_ORIGIN?.trim();
+  if (!configured) throw new CanonicalApiError("not_configured", "Household connection is not configured yet.");
+  let url: URL;
+  try { url = new URL(configured); } catch { throw new CanonicalApiError("bad_origin", "The household connection address is invalid."); }
+  const loopback = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+  if ((url.protocol !== "https:" && !(url.protocol === "http:" && loopback)) || url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
+    throw new CanonicalApiError("bad_origin", "The household connection requires HTTPS outside local development.");
+  }
+  return url.origin;
+}
+
+function failure(status: number, body: unknown): CanonicalApiError {
+  const error = typeof body === "object" && body !== null && "error" in body ? body.error : null;
+  const ref = typeof error === "object" && error !== null && "requestID" in error && typeof error.requestID === "string" && error.requestID.length <= 128 ? error.requestID : undefined;
+  if (status === 401) return new CanonicalApiError("unauthenticated", "Your sign-in is not accepted. Sign in again to continue.", ref);
+  if (status === 403) return new CanonicalApiError("forbidden", "This account cannot access that household. Check the household ID.", ref);
+  if (status === 409) return new CanonicalApiError("conflict", "This request conflicts with current records. Reload and review your choice.", ref);
+  if (status === 400 || status === 413 || status === 422) return new CanonicalApiError("validation", "The household service rejected this request. Review the fields before trying again.", ref);
+  if (status === 429) return new CanonicalApiError("rate_limited", "Too many requests were made. Wait before retrying.", ref);
+  if (status >= 500) return new CanonicalApiError("unavailable", "The service could not confirm this request. A change may still have been recorded; keep its original retry key.", ref);
+  return new CanonicalApiError("unexpected", "The household service could not confirm this request.", ref);
+}
+
+async function readJson(response: Response): Promise<unknown> {
+  if (Number(response.headers.get("content-length")) > RESPONSE_BYTES) {
+    await response.body?.cancel();
+    throw new CanonicalApiError("invalid_response", "The household response exceeded the supported size.");
+  }
+  if (!response.body) throw new CanonicalApiError("invalid_response", "The household service returned an empty response.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let bytes = 0; let text = "";
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      bytes += chunk.value.byteLength;
+      if (bytes > RESPONSE_BYTES) { await reader.cancel(); throw new CanonicalApiError("invalid_response", "The household response exceeded the supported size."); }
+      text += decoder.decode(chunk.value, { stream: true });
+    }
+    text += decoder.decode();
+  } finally { reader.releaseLock(); }
+  try { return JSON.parse(text) as unknown; } catch { throw new CanonicalApiError("invalid_response", "The household service returned unreadable data."); }
+}
+
+/** Fixed household endpoints only; callers own command and result schema validation. Never retries. */
+export async function canonicalRequest(resource: CanonicalResource, idToken: string, householdId: string, options: CanonicalRequestOptions = {}): Promise<unknown> {
+  const method = options.method ?? "GET";
+  if (!Object.hasOwn(methods, resource) || !methods[resource].includes(method)) throw new CanonicalApiError("validation", "This household operation is not supported.");
+  if (!idToken || idToken.length > 8192 || /[\r\n]/.test(idToken)) throw new CanonicalApiError("unauthenticated", "Sign in before accessing household records.");
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(householdId)) throw new CanonicalApiError("validation", "Enter a valid household ID.");
+  if (method === "POST" && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS !== "true") throw new CanonicalApiError("not_configured", "Household changes are not enabled for this app yet.");
+  const url = new URL(`/api/v1/${resource}`, apiOrigin());
+  if (options.query) {
+    if (method !== "GET" || !["share-logs", "activity"].includes(resource)) throw new CanonicalApiError("validation", "Pagination is not supported for this operation.");
+    const { limit, cursor } = options.query;
+    if (limit !== undefined) {
+      if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new CanonicalApiError("validation", "Choose a page size between 1 and 100.");
+      url.searchParams.set("limit", String(limit));
+    }
+    if (cursor !== undefined) {
+      if (typeof cursor !== "string" || !cursor || cursor.length > 256) throw new CanonicalApiError("validation", "The history page reference is invalid.");
+      url.searchParams.set("cursor", cursor);
+    }
+  }
+  if ((method === "GET" && options.body !== undefined) || (method === "POST" && options.body === undefined)) throw new CanonicalApiError("validation", "The household request body is invalid.");
+  const serialized = method === "POST" ? JSON.stringify(options.body) : undefined;
+  if (serialized !== undefined && new TextEncoder().encode(serialized).length > 256_000) throw new CanonicalApiError("validation", "This change exceeds the supported request size.");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12_000);
+  const abort = () => controller.abort(options.signal?.reason);
+  if (options.signal?.aborted) controller.abort(options.signal.reason);
+  options.signal?.addEventListener("abort", abort, { once: true });
+  try {
+    const response = await fetch(url, { method, body: serialized, headers: { Authorization: `Bearer ${idToken}`, "X-Household-ID": householdId, Accept: "application/json", ...(method === "POST" ? { "Content-Type": "application/json" } : {}) }, cache: "no-store", credentials: "omit", redirect: "error", signal: controller.signal });
+    const body = await readJson(response);
+    if (!response.ok) throw failure(response.status, body);
+    return body;
+  } catch (error) {
+    if (controller.signal.aborted) {
+      if (options.signal?.aborted) throw new DOMException("Request cancelled", "AbortError");
+      throw new CanonicalApiError("timeout", "The request timed out. Keep the original retry key when retrying a change.");
+    }
+    if (error instanceof CanonicalApiError) throw error;
+    throw new CanonicalApiError("network", "The response could not be confirmed. Keep the original retry key when retrying a change.");
+  } finally { clearTimeout(timeout); options.signal?.removeEventListener("abort", abort); }
+}
