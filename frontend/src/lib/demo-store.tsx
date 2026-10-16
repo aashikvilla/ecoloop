@@ -111,10 +111,12 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   }
 
   function recordOutcome(itemId: string, type: OutcomeType, amount: number | null, unit: Unit | null, note = "", options: { commandId?: string; storage?: Storage } = {}) {
+    if (note.length > 500 || (options.commandId && (!/^[A-Za-z0-9:_-]+$/.test(options.commandId) || options.commandId.length > 128))) throw new Error("Use a short note and a valid action identifier.");
+    const requestFingerprint = JSON.stringify({ itemId, type, amount, unit, note, storage: options.storage ?? null });
     if (options.commandId) {
       const previous = getBrowserSnapshot().state.activities.find((event) => event.id === options.commandId);
       if (previous) {
-        if (previous.itemId !== itemId || previous.type !== type || previous.amount !== amount || previous.unit !== unit) throw new Error("This saved action already has different details. Review the result before recording another action.");
+        if (previous.requestFingerprint !== requestFingerprint) throw new Error("This saved action already has different details. Review the result before recording another action.");
         return;
       }
     }
@@ -125,10 +127,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
     if (type === "stored" && (!options.storage || !["fridge", "freezer", "pantry"].includes(options.storage))) throw new Error("Choose where you stored this food.");
     if (amount !== null && item.amount !== null &&
       (item.unit !== unit || amount > item.amount)) throw new Error("Use the recorded unit and an amount no larger than the recorded stock.");
-    const event = { id: options.commandId ?? id(), itemId, type, itemName: item.name, amount, unit, measurementBasis: amount === null ? "unknown" as const : "user_estimated" as const, occurredAt: now(), note: type === "stored" ? `${note} Storage updated to ${options.storage}; quantity unchanged.`.trim() : amount === null ? `${note} Quantity unknown; recorded stock balance unchanged.`.trim() : note };
+    const event = { id: options.commandId ?? id(), itemId, requestFingerprint, type, itemName: item.name, amount, unit, measurementBasis: amount === null ? "unknown" as const : "user_estimated" as const, occurredAt: now(), note: type === "stored" ? `${note} Storage updated to ${options.storage}; quantity unchanged.`.trim() : amount === null ? `${note} Quantity unknown; recorded stock balance unchanged.`.trim() : note };
     commit((previous) => ({ ...previous, activities: [event, ...previous.activities], items: previous.items.map((entry) => {
       if (entry.id !== itemId) return entry;
-      const remaining = type !== "stored" && amount !== null && entry.amount !== null && entry.unit === unit ? entry.amount - amount : entry.amount;
+      const remaining = type !== "stored" && amount !== null && entry.amount !== null && entry.unit === unit ? Number((entry.amount - amount).toFixed(6)) : entry.amount;
       return { ...entry, amount: remaining, storage: type === "stored" ? options.storage! : entry.storage, version: entry.version + 1, observedAt: event.occurredAt };
     }) }));
   }
