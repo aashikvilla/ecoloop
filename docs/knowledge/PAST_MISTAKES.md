@@ -20,7 +20,7 @@ CSS reset rules outside cascade layers defeated token utilities; provider hydrat
 
 ## 2026-10-16 — Retry identity must describe the actual command
 
-A retry key without payload/actor binding can hide a different action or expose another actor's result. Scope keys to authenticated actor and household, compare full payload fingerprints, and retain explicit outcome timestamps/version checks. Demo share acceptance must never reduce stock; only an idempotent confirmed handover can record the outgoing quantity.
+A retry key without payload/actor binding can hide a different action or expose another actor's result. Scope keys to authenticated actor and household, compare full payload fingerprints, and retain explicit outcome timestamps/version checks. Keep the same key available when a request has an unknown outcome: unmounting or aborting during sign-out or household changes does not prove the server did not commit. Demo share acceptance must never reduce stock; only an idempotent confirmed handover can record the outgoing quantity.
 
 ## 2026-10-15 — Scope reduction must reach active instructions
 Newer consumer sources retained managed Sessions/Memory Bank and typed cards while older guidance prescribed operator workflows. Some archived benchmarks fabricated passes. Reconcile source precedence, archive stale packages together and update discovery descriptions. Simpler UI does not cancel explicit technical decisions; screenshots do not prove live integrations or impact.
