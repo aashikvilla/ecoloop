@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-16 — Validate the producer through the consumer
+
+The shared card validator correctly rejected an action list longer than ten, but the scripted Ask producer emitted all twelve allowed action names for every card. Types, lint, builds and a valid backend wire fixture passed while every actual browser example disappeared. Use per-card allowed choices and verify the actual integrated producer in the production browser; a valid hand-authored fixture alone does not cover the product path.
+
 ## 2026-10-16 — Public configuration and identity changes are integration boundaries
 
 Review caught public Firebase configuration read through a destructured environment object, which Next.js does not inline into browser bundles, and an authentication-error path that cleared the screen without cancelling an in-flight private read. Use literal `process.env.NEXT_PUBLIC_*` references; on account/scope/error changes cancel requests and clear both records and scope identifiers. An isolated worker typecheck cannot prove configuration delivery or private-data lifecycle; combine independent boundary review with production browser checks and later live identity proof.

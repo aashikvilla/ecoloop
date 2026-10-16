@@ -11,7 +11,7 @@ import { ActionLink, Notice, PageIntro, Panel, QuietLink } from "./ui";
 import { AssistantCards } from "./assistant-cards";
 
 const field = "min-h-11 rounded-xl border border-border bg-surface px-3 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
-const approvalActions = ["APPROVE", "EDIT", "DISMISS", "ADD", "SKIP", "CONFIRM_STOCK", "USE", "STORE", "SHARE", "DISCARD", "COMPOST", "CONSENT"] as const;
+const approvalActions = ["APPROVE", "EDIT", "DISMISS"] as const;
 
 type Message = { id: string; role: "user" | "assistant"; text: string };
 const prompts = ["What can I make tonight?", "Should I buy tomatoes?", "Use what I have for lunch"];
@@ -56,9 +56,9 @@ export function AskAssistant() {
       cards: [
         { ...proposal("demo-meal-suggestion"), type: "MealSuggestion", title: suggestion.title, servings: mealPlan.servings, ingredients },
         { ...proposal("demo-portion-adjustment"), type: "PortionAdjustment", original_servings: mealPlan.servings, proposed_servings: Math.min(mealPlan.servings + 1, 100), changes: [{ item_id: ingredients[0]?.item_id ?? null, name: ingredients[0]?.name ?? "Ingredient", original_amount: null, proposed_amount: null, unit: null, reason: "Choose an amount after checking what is available." }] },
-        { ...proposal("demo-buy-check"), type: "BuyCheck", item_name: buyName, stock_state: stock ? "CONFIRMED" : "NOT_FOUND", shopping_action: stock ? "CONFIRM_STOCK" : "ADD" },
-        { ...proposal("demo-food-action"), type: "FoodAction", item_id: foodItemId, action: "USE", amount: null, unit: null },
-        { ...proposal("demo-preference-consent"), type: "PreferenceConsent", preference_key: "meal_style", proposed_text: "I prefer simple weeknight meals.", requires_explicit_consent: true },
+        { ...proposal("demo-buy-check"), allowed_actions: ["ADD", "SKIP", "EDIT", "CONFIRM_STOCK"], type: "BuyCheck", item_name: buyName, stock_state: stock ? "CONFIRMED" : "NOT_FOUND", shopping_action: stock ? "CONFIRM_STOCK" : "ADD" },
+        { ...proposal("demo-food-action"), allowed_actions: ["USE", "DISMISS"], type: "FoodAction", item_id: foodItemId, action: "USE", amount: null, unit: null },
+        { ...proposal("demo-preference-consent"), allowed_actions: ["CONSENT", "DISMISS"], type: "PreferenceConsent", preference_key: "meal_style", proposed_text: "I prefer simple weeknight meals.", requires_explicit_consent: true },
       ],
     };
   }, [contextItem?.id, items, mealPlan.servings, suggestion]);
