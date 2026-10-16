@@ -5,9 +5,11 @@ from fastapi import APIRouter, Depends, Request
 from app.core.errors import DomainError
 from app.core.firestore import get_firestore
 from app.core.identity import Principal, current_principal
+from app.agents.household import generate_household_turn
 from app.domain.repository import confirm_facts, list_shopping_entries, record_outcome, save_shopping_entry
 from app.schemas.household import (
     ApiResult,
+    AssistantEnvelope,
     AssistantTurnRequest,
     ConfirmFactsCommand,
     RecordOutcomeCommand,
@@ -75,15 +77,10 @@ def shopping(
     return _result(request.state.request_id, save_shopping_entry(principal, command))
 
 
-@router.post("/assistant/turns", status_code=503)
-def assistant_unavailable(
-    _: AssistantTurnRequest,
-    __: Principal = Depends(current_principal),
-) -> None:
-    # Never substitute local scripts or fabricated memory for managed Gemini/ADK services.
-    raise DomainError(
-        "MANAGED_AGENT_UNAVAILABLE",
-        "Managed assistant services are not configured for this environment.",
-        503,
-        retryable=True,
-    )
+@router.post("/assistant/turns", response_model=AssistantEnvelope)
+async def assistant_turn(
+    request: Request,
+    command: AssistantTurnRequest,
+    principal: Principal = Depends(current_principal),
+) -> AssistantEnvelope:
+    return await generate_household_turn(principal, command, request.state.request_id)
