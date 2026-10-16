@@ -11,11 +11,11 @@ uv sync --locked
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
-Runtime configuration comes from process environment variables. `.env.example` is a reference only; the application does not load `.env` files. Firebase Admin uses Application Default Credentials or the Cloud Run service identity. No service account key belongs in this repository.
+Runtime configuration comes from process environment variables, which take precedence over `backend/.env` for local development. The `.env` file is git-ignored; never commit or print its values. `.env.example` is safe to copy as a starting point. Assistant calls require the explicit `AGENT_ENABLED=true` opt-in; provider credentials alone do not enable them. Firebase Admin uses Application Default Credentials or the Cloud Run service identity. No service account key belongs in this repository.
 
 ## API
 
-- `GET /api/v1/health` — liveness only; it does not prove Firebase access.
+- `GET /api/v1/health` — API liveness plus the configured assistant provider (`gemini_developer_api`, `vertex_ai`, or `unavailable`) and opt-in status. Provider reporting does not call the model or validate runtime credentials; health does not prove Firebase access. The current assistant still uses unmanaged in-memory ADK sessions and has no managed Memory Bank integration.
 - `GET /api/v1/kitchen` and `/api/v1/shopping` — require `Authorization: Bearer <Firebase ID token>` and `X-Household-ID`.
 - `POST /api/v1/facts/confirm`, `/api/v1/outcomes`, and `/api/v1/shopping` — strict versioned commands with idempotency keys.
 - `GET|POST /api/v1/share-logs`, `PATCH /api/v1/share-logs/{share_id}`, and `GET /api/v1/activity` — owner-private share lifecycle and bounded owner-recorded activity; only an eligible confirmed handover can create a `HANDED_OVER` outcome.

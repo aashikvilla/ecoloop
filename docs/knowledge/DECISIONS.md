@@ -23,3 +23,7 @@ Current user decisions: shared accessible UI primitives under `frontend/src/comp
 ## Single hackathon environment (2026-10-16)
 
 Use one named Google Cloud/Firebase project and one environment for the hackathon by default; do not add staging/production separation unless the owner explicitly asks. Current project ID is `ecoloop-staging-20261015` (immutable); display name is “EcoLoop Hackathon.” Existing billing is off. The only listed billing account is closed and still linked to another active project, so inspect account-wide impact before reopening. The credits page failed to load; balance is unknown. See MVP-D17–18 and the current cloud setup session.
+
+## Require explicit local assistant activation (2026-10-17)
+
+Load local backend settings from the ignored `backend/.env` for development, with process environment taking precedence. Provider credentials and automatic provider selection do not authorize model calls: `AGENT_ENABLED` defaults to false and must be set true explicitly. Health reports the selected configured provider and activation state without validating credentials or calling a provider. Managed Sessions, Memory Bank and managed Agent Runtime remain separate unfinished requirements.
