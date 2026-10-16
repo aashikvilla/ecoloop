@@ -1,0 +1,11 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // FastAPI is the only canonical household read/write authority in this foundation.
+    // Firebase Admin SDK bypasses these rules, so every server query still checks scope.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

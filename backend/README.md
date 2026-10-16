@@ -1,44 +1,23 @@
-# EcoLoop Backend (FastAPI)
+# EcoLoop household API
 
-FastAPI service powering the EcoLoop circular economy platform.
+FastAPI is the canonical authority for authenticated household reads and mutations. Firebase ID tokens are verified by Firebase Admin; every request also resolves the requested household's active membership from Firestore. Missing identity, missing membership, or an unavailable verifier/data service fails closed. The anonymous browser demo remains local to the frontend and has no backend shortcut.
 
-## Features
-- **FastAPI 0.115+** with automatic Swagger (`/api/v1/docs`) & ReDoc (`/api/v1/redoc`)
-- **Pydantic v2** validation and settings management
-- **CORS enabled** for Next.js frontend integration
-- **Clean modular architecture** (`app/api/v1`, `app/core`, `app/schemas`)
+## Local setup
 
-## Getting Started
+Python 3.12 and `uv` are used. Dependencies are locked in `uv.lock`; `requirements.txt` is an exported, hash-pinned snapshot.
 
-### 1. Requirements
-- Python 3.12+ (or [`uv`](https://github.com/astral-sh/uv))
-
-### 2. Environment Setup
-```bash
-# Using uv (fastest)
-uv venv
-# On Windows:
-.venv\Scripts\activate
-# On Linux/macOS:
-source .venv/bin/activate
-
-uv pip install -r requirements.txt
+```powershell
+uv sync --locked
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
-Or using standard `pip`:
-```bash
-python -m venv .venv
-# On Windows:
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
+Runtime configuration comes from process environment variables. `.env.example` is a reference only; the application does not load `.env` files. Firebase Admin uses Application Default Credentials or the Cloud Run service identity. No service account key belongs in this repository.
 
-### 3. Run the Development Server
-```bash
-uvicorn app.main:app --reload --port 8000
-```
+## API
 
-### 4. Interactive API Documentation
-- Swagger UI: [http://localhost:8000/api/v1/docs](http://localhost:8000/api/v1/docs)
-- OpenAPI Spec: [http://localhost:8000/api/v1/openapi.json](http://localhost:8000/api/v1/openapi.json)
-- Health Check: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
+- `GET /api/v1/health` — liveness only; it does not prove Firebase access.
+- `GET /api/v1/kitchen` and `/api/v1/shopping` — require `Authorization: Bearer <Firebase ID token>` and `X-Household-ID`.
+- `POST /api/v1/facts/confirm`, `/api/v1/outcomes`, and `/api/v1/shopping` — strict versioned commands with idempotency keys.
+- `POST /api/v1/assistant/turns` — verifies identity and membership, then returns an explicit unavailable response until managed Gemini/ADK/Session/Memory Bank integration is configured.
+
+Errors use a uniform safe envelope with a server generated request ID. Request payloads, identity tokens, membership contents, and provider data are not logged by application code. See [`docs/implementation/backend-foundation.md`](../docs/implementation/backend-foundation.md) for the storage and deletion groundwork and local evidence.
