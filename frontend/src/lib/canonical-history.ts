@@ -76,11 +76,26 @@ function text(value: unknown, max: number, min = 0): value is string {
 }
 function timestamp(value: unknown): value is string {
   if (typeof value !== "string" || value.length > 40) return false;
-  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/);
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})$/);
   if (!match || !Number.isFinite(Date.parse(value))) return false;
   const [, year, month, day, hour, minute, second] = match;
   const utcDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
-  return utcDate.getUTCFullYear() === Number(year) && utcDate.getUTCMonth() === Number(month) - 1 && utcDate.getUTCDate() === Number(day) && Number(hour) <= 23 && Number(minute) <= 59 && Number(second) <= 59;
+  const zone = match[8];
+  const zoneHour = zone === "Z" ? 0 : Number(zone.slice(1, 3));
+  const zoneMinute = zone === "Z" ? 0 : Number(zone.slice(4, 6));
+  return utcDate.getUTCFullYear() === Number(year) && utcDate.getUTCMonth() === Number(month) - 1 && utcDate.getUTCDate() === Number(day) && Number(hour) <= 23 && Number(minute) <= 59 && Number(second) <= 59 && (!match[7] || match[7].length <= 9) && zoneHour <= 23 && zoneMinute <= 59;
+}
+function timestampParts(value: string): { seconds: number; nanoseconds: number } {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})$/)!;
+  const [, year, month, day, hour, minute, second, fraction, zone] = match;
+  const localSeconds = Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second)) / 1000;
+  const offsetSeconds = zone === "Z" ? 0 : (zone[0] === "+" ? 1 : -1) * (Number(zone.slice(1, 3)) * 60 + Number(zone.slice(4, 6))) * 60;
+  return { seconds: localSeconds - offsetSeconds, nanoseconds: Number((fraction ?? "").padEnd(9, "0")) };
+}
+function compareTimestamps(left: string, right: string): number {
+  const leftParts = timestampParts(left);
+  const rightParts = timestampParts(right);
+  return leftParts.seconds - rightParts.seconds || leftParts.nanoseconds - rightParts.nanoseconds;
 }
 function quantity(amount: unknown, unit: unknown, basis: unknown): amount is number | null {
   if (amount === null) return unit === null && basis === "UNKNOWN";
@@ -118,9 +133,9 @@ function validShare(value: unknown, householdId: string, ownerUid: string): valu
     typeof value.condition !== "string" || !conditions.has(value.condition)) return false;
 
   const history = value.history as ShareHistoryEvent[];
-  if (history.length !== value.version || history[0].state !== "OFFERED" || history.at(-1)?.state !== value.state || value.occurred_at !== history[0].occurred_at) return false;
+  if (history.length !== value.version || history[0].state !== "OFFERED" || history.at(-1)?.state !== value.state || compareTimestamps(value.occurred_at, history[0].occurred_at) !== 0) return false;
   for (let index = 1; index < history.length; index += 1) {
-    if (Date.parse(history[index].occurred_at) <= Date.parse(history[index - 1].occurred_at)) return false;
+    if (compareTimestamps(history[index].occurred_at, history[index - 1].occurred_at) <= 0) return false;
     const previous = history[index - 1].state;
     const next = history[index].state;
     const allowed = previous === "OFFERED"
