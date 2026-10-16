@@ -17,6 +17,10 @@ Managed Sessions, consented Memory Bank and typed cards remain core. Actual hous
 
 Old DEC-PLAT register and ADRs remain historical sources. M0 resolves exact contracts and cloud access. Documentation/guidance only; recommendations do not imply deployment approval.
 
+## Confirm selected intake candidates atomically (2026-10-17)
+
+Candidate review remains separate from canonical Kitchen facts until the owner confirms selected rows. A creator-scoped intake confirmation transaction checks current membership, intake version, candidate ownership and absent item IDs, writes selected observations once, and leaves unselected rows pending. Reuse each server-generated candidate ID as its canonical item ID so retries cannot create duplicates. Bind idempotency to the target intake as well as actor and command. Browser writes remain behind the default-off command flag until live acceptance is reviewed.
+
 
 ## Superseded source material (2026-10-16)
 

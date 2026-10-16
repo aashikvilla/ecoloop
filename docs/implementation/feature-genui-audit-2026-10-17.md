@@ -2,6 +2,8 @@
 
 Audit base: `cc7e12d4669ab579bc5ac130e21efb3700fbd9b8` (`codex/demo-integration`). This is a read-only source review; no application checks, model calls, environment-file reads, or cloud writes were performed. Project authority read: `AGENTS.md`, current MVP spec, implementation plan, architecture/decisions/past-mistakes, and latest session `2026-10-17-household-onboarding-live-acceptance.md`.
 
+This is a dated audit snapshot. Its statements about AI availability are superseded by the later [AI/Cloud Run review session](../knowledge/sessions/2026-10-17-ai-cloud-run-review.md); its manual-intake review/confirmation status is superseded by the [eighth-wave implementation](../knowledge/sessions/2026-10-17-intake-review-confirmation.md). The remaining runtime, managed-service and release gaps still apply.
+
 ## Direct answer
 
 There is an ADK-based **single runtime agent** scaffold, a server-side Gemini provider path, and five typed card schemas with fixed React renderers. The live Ask path has not succeeded: its only documented synthetic attempt failed before a Gemini request because the ADK/GenAI output-schema conversion rejects numeric `Literal` values. The agent is not managed Agent Runtime, its sessions are in-process memory, Memory Bank is absent, and no ADK tools or runtime subagents are configured. The “agents” in the parallel-execution journal are coding workers/branches; they are not cooperating agents in the shipped household application.

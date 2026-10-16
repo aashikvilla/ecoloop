@@ -63,3 +63,7 @@ Observation: the only available billing account is closed but remains associated
 ## 2026-10-17 — Validate the full provider request, then the actual provider
 
 `process_schema` alone accepted an assistant schema that the full GenAI converter rejected on discriminator/union fields. A subsequent full converter check passed a raw JSON Schema which the provider rejected with HTTP 400. Verify local schema construction, full request conversion, actual provider acceptance and final strict response validation as distinct boundaries. Preserve strict local validation when changing provider generation hints; a conversion success is not model-response evidence.
+
+## 2026-10-17 — Validate wrapped API responses at the client boundary
+
+Candidate GET/confirm endpoints correctly returned the shared `ApiResult` envelope, but the first UI parser version expected the nested intake fields at the top level. An independent review caught that this would make every valid read/confirmation appear malformed before browser acceptance. Parse and validate the common envelope once, then pass only its result to route-specific schema parsers; verify the actual shared contract at integration.
