@@ -32,7 +32,7 @@ export default function HomePage() {
       <p className="text-sm leading-relaxed text-muted">A simple note of what you have can make the next choice easier.</p>
     </section>
 
-    <Card className="relative overflow-hidden bg-primary-container p-5 text-white shadow-[0_18px_40px_-22px_rgba(20,53,41,.7)] sm:p-7">
+    <Card className="relative overflow-hidden bg-primary-container p-5 text-white shadow-card sm:p-7">
       <div aria-hidden="true" className="absolute -right-12 -top-16 size-56 rounded-full bg-white/[.07]" />
       <div className="relative space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">

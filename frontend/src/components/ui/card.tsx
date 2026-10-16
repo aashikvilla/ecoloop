@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from "react";
 
 export function Card({ className = "", ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={`rounded-card bg-surface-card shadow-card ${className}`} {...props} />;
+  return <div className={`ecoloop-card ${className}`} {...props} />;
 }

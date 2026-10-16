@@ -9,8 +9,8 @@ const outcomes = ["used", "stored", "shared", "discarded", "confirmed", "planned
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === "object" && !Array.isArray(value);
 const shortText = (value: unknown, max = 120): value is string => typeof value === "string" && value.trim().length > 0 && value.length <= max;
 const timestamp = (value: unknown) => typeof value === "string" && Number.isFinite(Date.parse(value));
-const quantity = (amount: unknown, unit: unknown) => (amount === null || (typeof amount === "number" && Number.isFinite(amount) && amount >= 0 && typeof unit === "string" && units.includes(unit))) && (unit === null || (typeof unit === "string" && units.includes(unit)));
-const list = (value: unknown, check: (entry: unknown) => boolean) => Array.isArray(value) && value.length <= 1000 && value.every(check);
+const quantity = (amount: unknown, unit: unknown) => (amount === null && unit === null) || (typeof amount === "number" && Number.isFinite(amount) && amount >= 0 && typeof unit === "string" && units.includes(unit));
+const list = (value: unknown, check: (entry: unknown) => boolean) => Array.isArray(value) && value.length <= 1000 && value.every(check) && new Set(value.map((entry: Record<string, unknown>) => entry.id)).size === value.length;
 
 export function validateAmount(amount: number | null, unit: Unit | null) {
   if (!quantity(amount, unit) || (amount !== null && amount <= 0)) throw new Error("Enter a positive amount and its unit, or leave the amount unknown.");
