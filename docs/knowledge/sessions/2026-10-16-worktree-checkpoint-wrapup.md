@@ -24,3 +24,11 @@ The separate cloud setup checkpoint enabled the Firestore API, created the Stand
 ## Review finding
 
 Read-only review found a high-risk retry gap: a pending command's idempotency key is component-local and may disappear on sign-out/household change while the server may still commit. Until fixed, preserve the same key for retry after unknown outcomes or prevent scope changes until the write outcome is known. Verify with a delayed committed POST, scope switch, and retry.
+
+## Integration follow-up — 16 October 2026
+
+Owner asked to merge the worktree branches. Merged `codex/docs-cleanup`, `codex/real-household-agent`, `codex/canonical-outcome-controls`, and `codex/canonical-share-controls` sequentially into `codex/demo-integration`; `codex/canonical-stock-hardening` was already an ancestor. The only conflict was `backend/.env.example`; resolution retained the established Firebase project and port 3002 CORS origins, then added the agent's optional provider/model settings. The unrelated user PDF remains present.
+
+Integrated checks passed: `git diff --check`, frontend lint, `npx tsc --noEmit`, frontend production build (14 pages), `uv lock --check`, backend compileall, and API/agent imports with JSON schema construction. No unit tests or live Gemini/Auth/Cloud Run calls were run.
+
+Pushed integration head `3760159` to the existing PR #1 branch. The PR remains open and draft. `main` was not merged: the active implementation plan still has M0 acceptance/access/review prerequisites open, the account page does not yet mount the new outcome/sharing controls, and the retry-key review finding above remains open.
