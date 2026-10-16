@@ -29,6 +29,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const accountPage = pathname === "/account" || pathname.startsWith("/account/");
   const canonicalPage = ["/", "/kitchen", "/ask", "/shop", "/activity"].includes(pathname);
+  const settingsPage = pathname === "/settings";
+  const statusLabel = accountPage ? "HOUSEHOLD ACCOUNT" : canonicalPage ? "HOUSEHOLD DATA" : settingsPage ? "HOUSEHOLD SETTINGS" : "FEATURE UNAVAILABLE";
   return <div className="min-h-screen bg-background text-foreground">
     <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
     <header className="sticky top-0 z-30 border-b border-line/70 bg-background/90 backdrop-blur-xl">
@@ -38,7 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-tight text-primary">EcoLoop</span><span className="block text-[11px] font-medium text-muted">My kitchen</span></span>
         </Link>
         <div className="flex items-center gap-2">
-          <Badge tone="amber" className="text-[9px] sm:text-xs">{accountPage ? "HOUSEHOLD ACCOUNT" : canonicalPage ? "HOUSEHOLD DATA" : "DEMO · LOCAL ONLY"}</Badge>
+          <Badge tone="amber" className="text-[9px] sm:text-xs">{statusLabel}</Badge>
           <Link href="/settings" aria-label="Open settings" className={`flex size-11 items-center justify-center rounded-full transition-colors hover:bg-surface-muted ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted"}`}><Icon name="settings" size={20} /></Link>
         </div>
       </div>
@@ -58,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Link href="/activity" className={`mt-7 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/activity" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="clock" size={19} />Activity</Link>
       <Link href="/settings" className={`mt-1 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="settings" size={19} />Settings</Link>
       <div className="absolute inset-x-4 bottom-6 rounded-2xl bg-primary-container p-4 text-white">
-        <p className="text-xs font-bold">{accountPage ? "Account connection" : canonicalPage ? "Household records" : "Household setup"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{accountPage || canonicalPage ? "Live records require sign-in, household membership and an available API." : "Some capture and managed preference features are unavailable until their services are connected."}</p>
+        <p className="text-xs font-bold">{accountPage ? "Account connection" : canonicalPage ? "Household records" : settingsPage ? "Household settings" : "Unavailable feature"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{accountPage || canonicalPage ? "Live records require sign-in, household membership and an available API." : settingsPage ? "Managed preference controls are not connected." : "This capture or item route has no canonical read or write flow yet."}</p>
       </div>
     </aside>
   </div>;

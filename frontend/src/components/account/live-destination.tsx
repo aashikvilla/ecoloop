@@ -61,7 +61,7 @@ export function LiveDestinationNotice({ children }: { children?: ReactNode }) {
     if (/^[A-Za-z0-9_-]{1,128}$/.test(value)) setHouseholdId(value);
   }
   return <Card className="mb-4 space-y-3 border border-line p-4">
-    <div><p className="font-semibold text-primary">Connected household data</p><p className="mt-1 text-sm leading-relaxed text-muted">These destinations show only records returned by the household API. Browser demo records are not substituted.</p></div>
+    <div><p className="font-semibold text-primary">Connected household data</p><p className="mt-1 text-sm leading-relaxed text-muted">These destinations show only records returned by the household API. No local sample records are substituted.</p></div>
     {auth === "loading" && <p role="status" className="text-sm text-muted">Checking household sign-in…</p>}
     {auth === "unavailable" && <p role="status" className="text-sm text-secondary">Household sign-in is unavailable because public Firebase configuration is missing.</p>}
     {auth === "error" && <p role="alert" className="text-sm text-danger">Household sign-in could not be initialized. Reload or open <Link className="underline" href="/account">Account</Link> to retry.</p>}
