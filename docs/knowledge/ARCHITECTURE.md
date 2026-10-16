@@ -1,5 +1,5 @@
 # Architecture knowledge
-16 October 2026 — current authority: [household specification](../planning/CURRENT_MVP_SPEC.md), sections 4–7. Household browser demo and secure FastAPI/Firestore groundwork are implemented. Cloud deployment and managed-service behavior remain unproved.
+17 October 2026 — current authority: [household specification](../planning/CURRENT_MVP_SPEC.md), sections 4–7. Canonical API reads now back the household destinations. Authenticated cloud connectivity and deployment remain unproved.
 
 Planned: Next.js/App Hosting; FastAPI/Cloud Run canonical authority; real Gemini and one ADK orchestrator; managed Sessions and consented Memory Bank; preferred managed Runtime. Fallback needs concrete blocker and equivalent proof. Firestore owns confirmed facts/actions/outcomes; memory stores approved preferences. Five typed cards. Private owner-recorded sharing log; real community/commerce operations deferred.
 

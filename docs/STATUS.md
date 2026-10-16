@@ -1,32 +1,34 @@
 # EcoLoop implementation status
 
-Updated 16 October 2026. This is a repository snapshot, not synchronized with the live MVPTasks Sheet. The Sheet remains the only authority for task status and completion.
+Updated 17 October 2026. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
 
-## Implemented locally
+## Local application
 
-- Home, Kitchen, Ask and Shop run as an isolated browser demo backed by synthetic browser state. Capture, review, suggested actions and scripted Ask examples are not canonical household writes or Gemini responses.
-- FastAPI includes authenticated, household-scoped API boundaries, Firestore repository transactions, owner-private sharing/activity endpoints and version/idempotency checks. The code exists; live identity, authorization, data and transaction behavior still need proof.
-- `/account` provides Google sign-in code and separate read-only Kitchen/Shopping reads. Firebase Web configuration and Authentication setup are prerequisites; no live sign-in or household read is claimed.
-- Canonical command UI code exists behind an opt-in flag. It remains disabled until live identity, membership, Firestore and conflict/retry behavior are verified. The Home/Kitchen/Ask/Shop demo store is still separate from canonical API data.
-- Five fixed assistant card renderers validate backend-shaped envelopes. Current demo examples are scripted; they are not model output and cannot approve canonical actions.
+- Home, Kitchen, Ask, Shop and Activity read only from authenticated household API routes. No browser DemoStore or mock-record fallback remains. Loading, signed-out, empty, error and unavailable states are explicit.
+- Capture/review, item details, outcome writes, private-share writes, assistant approval and managed preferences are not connected to canonical flows. Their routes show unavailable states instead of writing local sample data. Account supports manual fact confirmation, shopping commands and private-history reads; writes remain disabled by `NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS=false`.
+- Firebase browser sign-in code supports Email/Password and Google, and selected household scope is shared across destinations in the current tab. Firebase Authentication is not initialized, so live sign-in is not possible yet.
+- The API enforces Firebase identity plus active household membership and exposes Firestore-backed reads/commands. Local settings load the ignored `backend/.env`; the assistant requires `AGENT_ENABLED=true`. Current health reports the Gemini Developer API as selected/configured but disabled, without probing it or making a model call.
 
-## Cloud and model state
+## Cloud state
 
-- Google Cloud/Firebase project: `ecoloop-staging-20261015` (display name “EcoLoop Hackathon”). It is the one hackathon project and environment; its immutable ID still contains “staging”.
-- Firestore Standard database was created in `asia-south1` (Mumbai). The create response reported `freeTier: true`; billing remains off. Deny-all Firestore security rules were compiled and deployed. Indexes are not deployed. A data-only seed created and read back five synthetic documents: one household, one member and three food observations. The records carry `synthetic: true`; food dates are `UNKNOWN`. This proves the seed write/read and rules deployment only, not application authorization or canonical flows.
-- Firebase Authentication is not initialized. The seed's Auth user step returned `CONFIGURATION_NOT_FOUND` and was skipped; no judge Auth user exists yet. Initialize Authentication in Firebase Console and enable a sign-in provider before creating it. Current `/account` UI uses Google sign-in; email/password judge sign-in UI is not implemented.
-- Gemini/ADK endpoint code is pushed on `codex/real-household-agent` at `f1301ef`; it is not integrated here or verified against Gemini. It uses scoped temporary process-local sessions, not managed Sessions or Memory Bank. No live Gemini response, managed ADK orchestration, managed Sessions or consented Memory Bank is claimed.
-- Cloud Run and Firebase App Hosting are not deployed or configured. Billing is off and any paid hosting/model deployment is blocked pending owner review of billing scope, project-linked resources and cost controls.
+- Project `ecoloop-staging-20261015` (“EcoLoop Hackathon”); Firestore Native Standard database exists in `asia-south1`. Five synthetic seed records were created/read back. Client Firestore rules deny all direct client access; server Admin SDK access still requires verified identity and explicit membership.
+- Required share/activity indexes are declared in code but not deployed. Auth configuration is missing (`CONFIGURATION_NOT_FOUND`), and the matching judge Auth user has not been created.
+- The backend contains ADK `LlmAgent` code with temporary in-memory sessions. No managed Agent Engine/Vertex runtime, managed Sessions, Memory Bank, or Cloud Run service is deployed. Cloud Run, Cloud Build and Artifact Registry APIs are disabled. Billing is not linked.
 
-## Next actions
+## Verification performed
 
-- [ ] Initialize Firebase Authentication in the console and enable the provider needed for the intended sign-in flow.
-- [ ] After Auth initialization, create the synthetic judge Auth user with the seed helper; keep its password out of chat, source control and logs. The five data-only seed documents already exist and the helper will not overwrite them.
-- [ ] Deploy the required Firestore indexes and verify API reads/writes, identity, active membership, version conflicts and idempotent retries. Client Firestore rules currently deny all client access by design.
-- [ ] Integrate and verify the Gemini/ADK branch using only synthetic inputs until privacy, consent and retention decisions are implemented.
-- [ ] Add the missing judge email/password UI or use the supported Google sign-in identity with a matching seeded membership; do not assume the two identities are interchangeable.
-- [ ] Connect approved Home/Kitchen/Ask/Shop actions to canonical APIs without silently treating demo state as household truth.
-- [ ] Complete managed Sessions, consented Memory Bank, deletion/revocation behavior and two-session evidence.
-- [ ] Revisit deployment only after owner-approved billing and cost controls, then complete end-to-end and accessibility acceptance.
+- Frontend production build generated 14/14 pages successfully; TypeScript and ESLint passed. No frontend/backend unit tests were added or run.
+- Backend Python compile and locked dependency checks passed. Local `/api/v1/health` reported assistant disabled, runtime unchecked, managed Sessions false and managed Memory Bank false. An unauthenticated `/api/v1/kitchen` request returned 401.
+- No authenticated Firestore API read, model call, cloud provisioning, index deployment, or Cloud Run deployment was performed. Full end-to-end acceptance remains open.
 
-For developer onboarding and exact local commands, see [SETUP.md](SETUP.md). For architecture boundaries, see [knowledge/ARCHITECTURE.md](knowledge/ARCHITECTURE.md) and the [current specification](planning/CURRENT_MVP_SPEC.md).
+## Required next steps
+
+1. In Firebase Console, initialize Authentication; enable Email/Password and Google sign-in and authorize `localhost`. Then create or verify the synthetic judge user with UID `ecoloop-judge-demo`, matching household `judge-demo-household`.
+2. Sign in through the app and verify authenticated Kitchen/Shopping reads, membership denial for a wrong household, and share/activity history after deploying the required indexes.
+3. Implement and review canonical capture/intake, item detail, outcome/share UI, proposal persistence/approval, and managed preference correction/deletion. Keep the write flag off until live identity, transaction and idempotency acceptance passes.
+4. `AGENT_VERTEX_PROJECT_ID` is the Cloud project ID for Vertex AI requests, not an agent resource ID. The current project ID is `ecoloop-staging-20261015`; leave it unset for Gemini Developer API. Assistant calls remain disabled until provider, privacy, consent and cost review is complete.
+5. Before deployment, review the billing account and every linked project, project IAM, secrets, region, budget alerts and cost controls. Enable required APIs and prepare Cloud Run/App Hosting only after that review and authorization.
+
+The current integration is on `codex/demo-integration` and PR #1 remains a draft. It has not been merged to `main`; cloud and end-to-end phase gates remain open.
+
+For local setup, see [SETUP.md](SETUP.md). For architecture boundaries, see [knowledge/ARCHITECTURE.md](knowledge/ARCHITECTURE.md) and the [current specification](planning/CURRENT_MVP_SPEC.md).

@@ -1,5 +1,9 @@
 # Decision knowledge
 
+## Use canonical API data in household destinations (2026-10-17)
+
+Home, Kitchen, Ask, Shop and Activity must read household data from the authenticated API. Do not fall back to browser-generated records when auth, membership, API, assistant, capture, outcome, sharing or managed preference services are unavailable; show an explicit unavailable state instead. Keep canonical writes disabled until identity, database and idempotency acceptance is reviewed.
+
 ## Prepare account commands behind a default-off build flag (2026-10-16)
 
 Local Kitchen/Shopping command UI and private history may be implemented while billing is deferred. Keep browser commands disabled by default until live identity/database acceptance and approval to enable them. The public build flag is a release control, not an authorization boundary; FastAPI identity, membership, version and idempotency checks remain mandatory. Share/outcome writes, extraction and managed-agent operations remain separate unfinished units. Root owns the shared transport and account integration; feature workers own separate files.
