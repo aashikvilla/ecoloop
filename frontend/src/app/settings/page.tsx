@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -51,6 +52,8 @@ export default function SettingsPage() {
 
   return <div className="mx-auto max-w-3xl space-y-7">
     <header><Badge tone="amber" className="mb-3">LOCAL DEMO SETTINGS</Badge><Heading as="h1">Your preferences, your choice</Heading><p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">Save a short phrase to make this demo feel more personal. Nothing is sent to an AI service or managed memory.</p></header>
+
+    <Card className="border border-line p-5 sm:p-6"><Heading as="h2">Account connection</Heading><p className="mt-2 text-sm leading-relaxed text-muted">Check sign-in and household access separately from this browser’s demo records.</p><Link href="/account" className="mt-3 inline-flex min-h-11 items-center rounded-control px-3 text-sm font-semibold text-primary underline underline-offset-4">Open account connection</Link></Card>
 
     <Card className="border border-line p-5 sm:p-6">
       <div className="mb-5 flex items-start gap-3"><span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary-soft text-primary"><Icon name="ask" size={21}/></span><div><Heading as="h2">A preference for this demo</Heading><p className="mt-1 text-sm text-muted">For example: “I prefer vegetarian weeknight meals.”</p></div></div>
