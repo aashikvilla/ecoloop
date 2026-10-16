@@ -16,15 +16,15 @@ The local backend config targets project `ecoloop-staging-20261015`; CORS must i
 
 The Firebase Web app is registered in the existing project. Obtain its public Web configuration with `firebase apps:sdkconfig WEB <WEB_APP_ID>` after selecting the correct project; see the [Firebase CLI reference](https://firebase.google.com/docs/cli). Copy its `apiKey`, `authDomain`, `projectId` and `appId` into the matching `NEXT_PUBLIC_FIREBASE_*` variables in `frontend/.env.local`, and set `NEXT_PUBLIC_ECOLOOP_API_ORIGIN=http://localhost:8000`. These values identify the Web app; never place service-account credentials or private keys in browser variables.
 
-Firebase Authentication is not initialized yet (`CONFIGURATION_NOT_FOUND`). In Firebase Console, initialize Authentication, enable Email/Password and Google providers, and authorize `localhost`. The `/account` UI supports both providers. The seeded household membership UID is `ecoloop-judge-demo` and its household is `judge-demo-household`; the judge Auth user has not been created. Do not assume a Google account UID matches that membership.
+Firebase Authentication is initialized in the Console. Email/Password and Google providers are enabled; `localhost` and `127.0.0.1` are authorized for local development, along with the project's default Firebase domains. The Google OAuth display name is EcoLoop and its support email is the owner-approved account. The `/account` UI supports both providers. The seeded household membership UID is `ecoloop-judge-demo` and its household is `judge-demo-household`; the matching Auth user has not been created. Do not assume a Google account UID matches that membership.
 
-The `--apply --data-only` run has already created and read back five synthetic Firestore documents: a root household, one membership and three food observations with `synthetic: true` and unknown dates. It did not create an Auth user because Authentication is not initialized. After Authentication and Email/Password are enabled, the seed helper can create the isolated judge Auth user. Set `ECOLOOP_JUDGE_PASSWORD` in a local secret manager or process environment (at least 16 characters; never paste it into chat, commit it, or print it to logs), then run from the repository root:
+The `--apply --data-only` run has already created and read back five synthetic Firestore documents: a root household, one membership and three food observations with `synthetic: true` and unknown dates. It did not create an Auth user. After choosing a local judge password, the seed helper can create the isolated judge Auth user. Set `ECOLOOP_JUDGE_PASSWORD` in a local secret manager or process environment (at least 16 characters; never paste it into chat, commit it, or print it to logs), then run from the repository root:
 
 ```powershell
 uv run --project backend python backend/scripts/seed_judge.py --apply
 ```
 
-The helper requires Application Default Credentials and targets the single hackathon project. It creates only missing records, does not overwrite the five existing synthetic documents, and reads back expected paths. Inspect its output. The `/account` route already has an email/password sign-in form; do not run the helper until Firebase Authentication and that provider have been initialized.
+The helper requires Application Default Credentials and targets the single hackathon project. It creates only missing records, does not overwrite the five existing synthetic documents, and reads back expected paths. Inspect its output. The `/account` route already has an email/password sign-in form. This seed operation creates a Firebase Auth user and is separate from enabling the providers.
 
 ## Gemini API key for synthetic development
 
