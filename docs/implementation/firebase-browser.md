@@ -20,10 +20,10 @@ Household scope is entered explicitly on the page, validated against the backend
 
 Only these fixed reads are exposed:
 
-| Request | Headers | Response envelope |
-| --- | --- | --- |
-| `GET /api/v1/kitchen` | `Authorization: Bearer <Firebase ID token>`, `X-Household-ID: <explicit ID>` | `{ schema_version: 1, request_id, result: { observations: [...] } }` |
-| `GET /api/v1/shopping` | `Authorization: Bearer <Firebase ID token>`, `X-Household-ID: <explicit ID>` | `{ schema_version: 1, request_id, result: { entries: [...] } }` |
+| Request                | Headers                                                                      | Response envelope                                                    |
+| ---------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `GET /api/v1/kitchen`  | `Authorization: Bearer <Firebase ID token>`, `X-Household-ID: <explicit ID>` | `{ schema_version: 1, request_id, result: { observations: [...] } }` |
+| `GET /api/v1/shopping` | `Authorization: Bearer <Firebase ID token>`, `X-Household-ID: <explicit ID>` | `{ schema_version: 1, request_id, result: { entries: [...] } }`      |
 
 Both calls use `cache: no-store`, omit cookies, reject redirects, have a 12 second timeout, accept cancellation, and validate record fields before display. The API helper has no generic path or method parameter, so callers cannot send mutations or model-controlled URLs. Writes to facts, outcomes or shopping are not available in this browser connection.
 
