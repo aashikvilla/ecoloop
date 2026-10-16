@@ -48,27 +48,6 @@ export type ShoppingCommand = {
   };
 };
 
-export type KitchenRecord = {
-  item_id: string;
-  name: string;
-  amount: number | null;
-  unit: string | null;
-  date_value: string | null;
-  date_type: CanonicalDateType;
-  storage: string | null;
-  version: number;
-  observed_at: string;
-};
-
-export type ShoppingRecord = {
-  entry_id: string;
-  item_name: string;
-  desired_amount: number | null;
-  unit: string | null;
-  version: number;
-  updated_at: string;
-};
-
 export class CommandValidationError extends Error {
   constructor(message: string, readonly field?: string) {
     super(message);
@@ -172,14 +151,6 @@ function nonEmptyText(value: unknown, max: number): value is string {
   return typeof value === "string" && value.length > 0 && value.length <= max;
 }
 
-function nullableText(value: unknown, max: number): value is string | null {
-  return value === null || (typeof value === "string" && value.length <= max);
-}
-
-function parseAmount(value: unknown): value is number | null {
-  return value === null || (typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1_000_000);
-}
-
 function positiveVersion(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
 }
@@ -188,63 +159,11 @@ function parseTimestamp(value: unknown): value is string {
   return nonEmptyText(value, 40) && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value) && !Number.isNaN(Date.parse(value));
 }
 
-function validRecordId(value: unknown): value is string {
-  return nonEmptyText(value, 128) && opaqueIdPattern.test(value);
-}
-
 function parseApiResult(value: unknown, label: string): { requestId: string; result: Record<string, unknown> } {
   if (!asObject(value) || value.schema_version !== 1 || !nonEmptyText(value.request_id, 128) || !asObject(value.result)) {
     throw new CommandValidationError(`The API returned an unexpected ${label} response. The write status is unknown; reload records before trying another command.`);
   }
   return { requestId: value.request_id, result: value.result };
-}
-
-export function parseKitchenRead(value: unknown): KitchenRecord[] {
-  const envelope = parseApiResult(value, "kitchen read");
-  const observations = envelope.result.observations;
-  const dateTypeSet = dateTypes;
-  if (!Array.isArray(observations) || observations.length > 200) throw new CommandValidationError("The kitchen response did not match the supported format.");
-  const rows = observations.map((record): KitchenRecord => {
-    if (!asObject(record)
-      || !validRecordId(record.item_id)
-      || !nonEmptyText(record.name, 120)
-      || !parseAmount(record.amount)
-      || !nullableText(record.unit, 32)
-      || !(record.date_value === null || (typeof record.date_value === "string" && validDateOnly(record.date_value)))
-      || typeof record.date_type !== "string"
-      || !dateTypeSet.has(record.date_type as CanonicalDateType)
-      || (record.date_value === null ? record.date_type !== "UNKNOWN" : record.date_type === "UNKNOWN")
-      || !nullableText(record.storage, 120)
-      || !positiveVersion(record.version)
-      || !parseTimestamp(record.observed_at)
-      || !((record.amount === null && record.unit === null) || (typeof record.amount === "number" && typeof record.unit === "string" && unitPattern.test(record.unit)))) {
-      throw new CommandValidationError("The kitchen response contained a record that does not match the supported format.");
-    }
-    return record as KitchenRecord;
-  });
-  if (new Set(rows.map((row) => row.item_id)).size !== rows.length) throw new CommandValidationError("The kitchen response contained duplicate item IDs.");
-  return rows;
-}
-
-export function parseShoppingRead(value: unknown): ShoppingRecord[] {
-  const envelope = parseApiResult(value, "shopping read");
-  const entries = envelope.result.entries;
-  if (!Array.isArray(entries) || entries.length > 200) throw new CommandValidationError("The shopping response did not match the supported format.");
-  const rows = entries.map((record): ShoppingRecord => {
-    if (!asObject(record)
-      || !validRecordId(record.entry_id)
-      || !nonEmptyText(record.item_name, 120)
-      || !parseAmount(record.desired_amount)
-      || !nullableText(record.unit, 32)
-      || !positiveVersion(record.version)
-      || !parseTimestamp(record.updated_at)
-      || !((record.desired_amount === null && record.unit === null) || (typeof record.desired_amount === "number" && typeof record.unit === "string" && unitPattern.test(record.unit)))) {
-      throw new CommandValidationError("The shopping response contained an entry that does not match the supported format.");
-    }
-    return record as ShoppingRecord;
-  });
-  if (new Set(rows.map((row) => row.entry_id)).size !== rows.length) throw new CommandValidationError("The shopping response contained duplicate entry IDs.");
-  return rows;
 }
 
 export function parseFoodConfirmationResult(value: unknown, command: FoodObservationCommand): { requestId: string; itemVersion: number; confirmedAt: string } {

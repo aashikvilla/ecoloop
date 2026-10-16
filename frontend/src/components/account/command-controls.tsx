@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
+import { readCanonicalRecords, type KitchenObservation, type ShoppingEntry } from "@/lib/canonical-api";
 import { CanonicalApiError, canonicalRequest } from "@/lib/canonical-transport";
 import {
   buildFoodObservationCommand,
@@ -14,15 +15,11 @@ import {
   createIdempotencyKey,
   createOpaqueId,
   parseFoodConfirmationResult,
-  parseKitchenRead,
-  parseShoppingRead,
   parseShoppingSaveResult,
   type FoodDraft,
   type FoodObservationCommand,
-  type KitchenRecord,
   type ShoppingCommand,
   type ShoppingDraft,
-  type ShoppingRecord,
 } from "@/lib/canonical-commands";
 
 export type CanonicalCommandControlsProps = {
@@ -49,13 +46,14 @@ function readableError(error: unknown): WriteError {
 }
 
 function isAmbiguous(error: unknown): boolean {
-  if (error instanceof CanonicalApiError) return error.code === "network" || error.code === "timeout" || error.code === "unavailable";
-  return !(error instanceof CommandValidationError);
+  if (error instanceof CanonicalApiError) return ["network", "timeout", "unavailable", "invalid_response", "unexpected"].includes(error.code);
+  if (error instanceof CommandValidationError) return true;
+  return true;
 }
 
 export function CanonicalCommandControls({ getIdToken, householdId, enabled, onCommitted }: CanonicalCommandControlsProps) {
-  const [kitchenRecords, setKitchenRecords] = useState<KitchenRecord[] | null>(null);
-  const [shoppingRecords, setShoppingRecords] = useState<ShoppingRecord[] | null>(null);
+  const [kitchenRecords, setKitchenRecords] = useState<KitchenObservation[] | null>(null);
+  const [shoppingRecords, setShoppingRecords] = useState<ShoppingEntry[] | null>(null);
   const [foodDraft, setFoodDraft] = useState<FoodDraft>(emptyFoodDraft);
   const [shoppingDraft, setShoppingDraft] = useState<ShoppingDraft>(emptyShoppingDraft);
   const [pending, setPending] = useState<PendingCommand | null>(null);
@@ -85,17 +83,8 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
     requestRef.current?.abort();
     requestRef.current = null;
     operationRef.current = false;
-    setKitchenRecords(null);
-    setShoppingRecords(null);
-    setFoodDraft(emptyFoodDraft());
-    setShoppingDraft(emptyShoppingDraft());
-    setPending(null);
-    setOperation(null);
-    setReadError(null);
-    setWriteError(null);
-    setNotice("");
     return () => requestRef.current?.abort();
-  }, [enabled, householdId]);
+  }, [scopeKey]);
 
   async function loadRecords(kind: "kitchen" | "shopping", discardPending = false) {
     if (!scopeReady || operation !== null || operationRef.current) return;
@@ -110,10 +99,10 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
     try {
       const token = await getIdToken();
       if (!isCurrent(controller, currentScope)) return;
-      const response = await canonicalRequest(kind, token, householdId, { method: "GET", signal: controller.signal });
+      const response = await readCanonicalRecords(kind, token, householdId, controller.signal);
       if (!isCurrent(controller, currentScope)) return;
-      if (kind === "kitchen") {
-        const records = parseKitchenRead(response);
+      if (response.kind === "kitchen") {
+        const records = response.records;
         setKitchenRecords(records);
         if (discardPending && pending?.kind === "kitchen") {
           const selected = records.find((record) => record.item_id === foodDraft.itemId);
@@ -123,7 +112,7 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
           setNotice("Latest kitchen records loaded. Review the form again before sending a new command.");
         }
       } else {
-        const records = parseShoppingRead(response);
+        const records = response.records;
         setShoppingRecords(records);
         if (discardPending && pending?.kind === "shopping") {
           const selected = records.find((record) => record.entry_id === shoppingDraft.entryId);
@@ -135,6 +124,8 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
       }
     } catch (error) {
       if (!isCurrent(controller, currentScope)) return;
+      setKitchenRecords(null);
+      setShoppingRecords(null);
       setReadError(readableError(error));
     } finally {
       finishOperation(controller);
@@ -216,6 +207,8 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
       }
     } catch (error) {
       if (!isCurrent(controller, currentScope)) return;
+      setKitchenRecords(null);
+      setShoppingRecords(null);
       setWriteError(readableError(error));
       setPending({ ...exactPending, status: error instanceof CanonicalApiError && error.code === "conflict" ? "conflict" : isAmbiguous(error) ? "ambiguous" : "rejected" });
     } finally {
@@ -223,11 +216,11 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
     }
   }
 
-  function foodDraftFromRecord(record: KitchenRecord): FoodDraft {
-    return { itemId: record.item_id, baseVersion: record.version, name: record.name, amount: record.amount === null ? "" : String(record.amount), unit: record.unit ?? "", dateValue: record.date_value ?? "", dateType: record.date_type, storage: record.storage ?? "" };
+  function foodDraftFromRecord(record: KitchenObservation): FoodDraft {
+    return { itemId: record.item_id, baseVersion: record.version, name: record.name, amount: record.amount === null ? "" : String(record.amount), unit: record.unit ?? "", dateValue: record.date_value ?? "", dateType: record.date_type as FoodDraft["dateType"], storage: record.storage ?? "" };
   }
 
-  function shoppingDraftFromRecord(record: ShoppingRecord): ShoppingDraft {
+  function shoppingDraftFromRecord(record: ShoppingEntry): ShoppingDraft {
     return { entryId: record.entry_id, baseVersion: record.version, itemName: record.item_name, desiredAmount: record.desired_amount === null ? "" : String(record.desired_amount), unit: record.unit ?? "" };
   }
 
@@ -267,7 +260,7 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
         <fieldset disabled={locked} className="space-y-4 disabled:opacity-70">
           {kitchenRecords && kitchenRecords.length > 0 && <div className="space-y-2"><label htmlFor="canonical-food-record" className="block text-sm font-semibold text-foreground">Record to edit</label><select id="canonical-food-record" className="min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" value={foodDraft.itemId} onChange={(event) => changeFoodSelection(event.target.value)}><option value="">Create a new kitchen record</option>{kitchenRecords.map((record) => <option key={record.item_id} value={record.item_id}>{record.name} · version {record.version}{record.amount === 0 ? " · zero amount" : ""}</option>)}</select></div>}
           <div className="space-y-2"><label htmlFor="canonical-food-name" className="block text-sm font-semibold text-foreground">Item name</label><Input id="canonical-food-name" value={foodDraft.name} onChange={(event) => setFoodDraft({ ...foodDraft, name: event.target.value })} maxLength={120} required /></div>
-          <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><label htmlFor="canonical-food-amount" className="block text-sm font-semibold text-foreground">Amount <span className="font-normal text-muted">(optional)</span></label><Input id="canonical-food-amount" type="number" min="0.000001" max="1000000" step="any" inputMode="decimal" value={foodDraft.amount} onChange={(event) => setFoodDraft({ ...foodDraft, amount: event.target.value })} /></div><div className="space-y-2"><label htmlFor="canonical-food-unit" className="block text-sm font-semibold text-foreground">Unit <span className="font-normal text-muted">(required with amount)</span></label><Input id="canonical-food-unit" value={foodDraft.unit} onChange={(event) => setFoodDraft({ ...foodDraft, unit: event.target.value })} maxLength={32} placeholder="e.g. piece, g, ml" /></div></div>
+          <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><label htmlFor="canonical-food-amount" className="block text-sm font-semibold text-foreground">Amount <span className="font-normal text-muted">(optional)</span></label><Input id="canonical-food-amount" type="number" min="0" max="1000000" step="any" inputMode="decimal" value={foodDraft.amount} onChange={(event) => setFoodDraft({ ...foodDraft, amount: event.target.value })} /></div><div className="space-y-2"><label htmlFor="canonical-food-unit" className="block text-sm font-semibold text-foreground">Unit <span className="font-normal text-muted">(required with amount)</span></label><Input id="canonical-food-unit" value={foodDraft.unit} onChange={(event) => setFoodDraft({ ...foodDraft, unit: event.target.value })} maxLength={32} placeholder="e.g. piece, g, ml" /></div></div>
           <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><label htmlFor="canonical-food-date" className="block text-sm font-semibold text-foreground">Date <span className="font-normal text-muted">(optional)</span></label><Input id="canonical-food-date" type="date" value={foodDraft.dateValue} onChange={(event) => setFoodDraft({ ...foodDraft, dateValue: event.target.value })} /></div><div className="space-y-2"><label htmlFor="canonical-food-date-type" className="block text-sm font-semibold text-foreground">Date type</label><select id="canonical-food-date-type" className="min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" value={foodDraft.dateType} onChange={(event) => setFoodDraft({ ...foodDraft, dateType: event.target.value as FoodDraft["dateType"] })}><option value="UNKNOWN">Unknown</option><option value="USE_BY">Use by</option><option value="EXPIRY">Expiry</option><option value="BEST_BEFORE">Best before</option><option value="USER_TARGET">My target date</option></select><p className="text-xs text-muted">A date is recorded as user provided. This label does not certify safety.</p></div></div>
           <div className="space-y-2"><label htmlFor="canonical-food-storage" className="block text-sm font-semibold text-foreground">Storage note <span className="font-normal text-muted">(optional)</span></label><Input id="canonical-food-storage" value={foodDraft.storage} onChange={(event) => setFoodDraft({ ...foodDraft, storage: event.target.value })} maxLength={120} placeholder="Where it is stored" /></div>
           <p className="text-xs text-muted">{foodDraft.itemId ? `Record ${foodDraft.itemId} · base version ${foodDraft.baseVersion}` : "A new record ID is generated when you review this command."}</p>
@@ -283,7 +276,7 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
         <fieldset disabled={locked} className="space-y-4 disabled:opacity-70">
           {shoppingRecords && shoppingRecords.length > 0 && <div className="space-y-2"><label htmlFor="canonical-shopping-record" className="block text-sm font-semibold text-foreground">Entry to edit</label><select id="canonical-shopping-record" className="min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" value={shoppingDraft.entryId} onChange={(event) => changeShoppingSelection(event.target.value)}><option value="">Create a new shopping entry</option>{shoppingRecords.map((record) => <option key={record.entry_id} value={record.entry_id}>{record.item_name} · version {record.version}</option>)}</select></div>}
           <div className="space-y-2"><label htmlFor="canonical-shopping-name" className="block text-sm font-semibold text-foreground">Item name</label><Input id="canonical-shopping-name" value={shoppingDraft.itemName} onChange={(event) => setShoppingDraft({ ...shoppingDraft, itemName: event.target.value })} maxLength={120} required /></div>
-          <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><label htmlFor="canonical-shopping-amount" className="block text-sm font-semibold text-foreground">Desired amount <span className="font-normal text-muted">(optional)</span></label><Input id="canonical-shopping-amount" type="number" min="0.000001" max="1000000" step="any" inputMode="decimal" value={shoppingDraft.desiredAmount} onChange={(event) => setShoppingDraft({ ...shoppingDraft, desiredAmount: event.target.value })} /></div><div className="space-y-2"><label htmlFor="canonical-shopping-unit" className="block text-sm font-semibold text-foreground">Unit <span className="font-normal text-muted">(required with amount)</span></label><Input id="canonical-shopping-unit" value={shoppingDraft.unit} onChange={(event) => setShoppingDraft({ ...shoppingDraft, unit: event.target.value })} maxLength={32} placeholder="e.g. piece, g, ml" /></div></div>
+          <div className="grid gap-3 sm:grid-cols-2"><div className="space-y-2"><label htmlFor="canonical-shopping-amount" className="block text-sm font-semibold text-foreground">Desired amount <span className="font-normal text-muted">(optional)</span></label><Input id="canonical-shopping-amount" type="number" min="0" max="1000000" step="any" inputMode="decimal" value={shoppingDraft.desiredAmount} onChange={(event) => setShoppingDraft({ ...shoppingDraft, desiredAmount: event.target.value })} /></div><div className="space-y-2"><label htmlFor="canonical-shopping-unit" className="block text-sm font-semibold text-foreground">Unit <span className="font-normal text-muted">(required with amount)</span></label><Input id="canonical-shopping-unit" value={shoppingDraft.unit} onChange={(event) => setShoppingDraft({ ...shoppingDraft, unit: event.target.value })} maxLength={32} placeholder="e.g. piece, g, ml" /></div></div>
           <p className="text-xs text-muted">{shoppingDraft.entryId ? `Entry ${shoppingDraft.entryId} · base version ${shoppingDraft.baseVersion}` : "A new entry ID is generated when you review this command."}</p>
         </fieldset>
         <Button type="submit" variant="secondary" disabled={locked}>Review shopping save</Button>
