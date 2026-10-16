@@ -66,7 +66,12 @@ function intakeMessage(error: unknown): string {
 }
 
 export function CaptureFood() {
-  const { auth, user, householdId } = useLiveHousehold();
+  const household = useLiveHousehold();
+  const scopeKey = household.auth === "signed-in" && household.user && household.householdId ? `${household.user.uid}:${household.householdId}` : "no-household";
+  return <CaptureFoodForm key={scopeKey} auth={household.auth} user={household.user} householdId={household.householdId} />;
+}
+
+function CaptureFoodForm({ auth, user, householdId }: Pick<ReturnType<typeof useLiveHousehold>, "auth" | "user" | "householdId">) {
   const [mode, setMode] = useState<IntakeMode>("MANUAL");
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -80,24 +85,11 @@ export function CaptureFood() {
   const [result, setResult] = useState<IntakeResult | null>(null);
   const [pending, setPending] = useState<{ command: IntakeCommand; fingerprint: string } | null>(null);
   const controller = useRef<AbortController | null>(null);
-  const scopeKey = auth === "signed-in" && user && householdId ? `${user.uid}:${householdId}` : "";
-  const activeScope = useRef(scopeKey);
-  activeScope.current = scopeKey;
-  const previousScope = useRef(scopeKey);
   const enabled = process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true";
 
   useEffect(() => {
-    if (previousScope.current !== scopeKey) {
-      controller.current?.abort();
-      controller.current = null;
-      setPhase("idle");
-      setError("");
-      setResult(null);
-      setPending(null);
-      previousScope.current = scopeKey;
-    }
     return () => controller.current?.abort();
-  }, [scopeKey]);
+  }, []);
 
   async function send(command: IntakeCommand, fingerprint: string) {
     if (auth !== "signed-in" || !user || !householdId) {
@@ -111,7 +103,6 @@ export function CaptureFood() {
       return;
     }
     const requestController = new AbortController();
-    const requestScope = scopeKey;
     controller.current = requestController;
     setPending({ command, fingerprint });
     setPhase("busy");
@@ -121,13 +112,12 @@ export function CaptureFood() {
       const token = await user.getIdToken();
       if (requestController.signal.aborted) return;
       const response = await submitIntake(token, householdId, command, requestController.signal);
-      if (!requestController.signal.aborted && activeScope.current === requestScope) {
+      if (!requestController.signal.aborted) {
         setResult(response);
         setPending(null);
         setPhase("success");
       }
     } catch (failure) {
-      if (activeScope.current !== requestScope) return;
       if (requestController.signal.aborted) {
         setPhase("cancelled");
         setError("You stopped waiting. The service may still have received this request; retry these exact entries to safely check the same intake.");
