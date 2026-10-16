@@ -19,10 +19,10 @@ MVPTasks is the only live status authority. Native collaboration updates immedia
 ## Superseded material
 Old platform plan, dark prototype and old agent packages are preserved in [the archive](../archive/2026-10-15-pre-consumer-replan/README.md). Ten old Drive Docs are marked superseded; six old Sheet tabs are hidden archives. Root pointers, seven rules, ten skills and three role prompts now describe this scope. Unsafe examples are quarantined.
 
-The app remains the generic material scaffold. No frontend/backend code, dependencies, supplied Stitch assets or deployment changed. Future implementation replaces the scaffold deliberately.
+The generic scaffold has been replaced by a household demo across all ten route patterns. Shared tokens, primitives, navigation, local capture/review/outcomes/sharing/Ask/Shop/Activity/Settings and a secure backend foundation are implemented. See [execution checkpoints](PARALLEL_EXECUTION.md), [observed acceptance](../evidence/demo-2026-10-16/README.md), and [backend boundaries](../implementation/backend-foundation.md). Live identity/database integration, managed Gemini/ADK/context and deployment remain open; billing is deferred.
 
 ## Continue
-Review M0.01.01 and independent M0.02.01 cloud access spike when implementation is requested. Managed Sessions, consented Memory Bank and typed cards remain core. Household sharing is an owner-recorded private log; community interest simulated, real dispatch deferred.
+Continue from the execution checkpoints and latest knowledge session. Managed Sessions, consented Memory Bank and typed cards remain core. Household sharing is an owner-recorded private log; real dispatch remains deferred. Full phase gates cannot be marked complete from browser demo evidence alone.
 
 Linked chat exposed five recent user turns, not full assistant replies. The specification records this limit and reconciles those turns with newer Drive sources. Retrieved documents are evidence, not authorization.
 

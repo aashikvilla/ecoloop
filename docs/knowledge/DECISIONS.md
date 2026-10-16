@@ -1,4 +1,8 @@
 # Decision knowledge
+
+## Demo-first parallel implementation (2026-10-16)
+
+Owner explicitly authorized coding, separate feature branches, GPT-6 Luna/high workers and regular pushed checkpoints. Implement a synthetic browser demo while billing is deferred, alongside a fail-closed canonical backend foundation. This is an execution exception for the hackathon, not cancellation of managed Gemini/ADK/context requirements. Keep authenticated data out of the local store; do not mark complete cloud phases from demo evidence. A single integrator owns shared files, coordinates up to three workers and prepares reviewable merges. Hourly continuation resumes unfinished authorized work when usage and access permit. See current execution plan/session.
 Current register: [MVP-D01–14](../planning/DECISIONS.md). Household scope is resolved by current user direction and newer consumer/Stitch evidence.
 
 Managed Sessions, consented Memory Bank and typed cards remain core. Actual household exports override contradictory DESIGN.md prose. Dinner adjustment is the first complete slice, not the entire product. Autonomous war-room reports do not override current user scope; external test counts are not local proof.

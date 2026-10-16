@@ -4,6 +4,15 @@
   "scope": "household-mvp",
   "statusAuthority": "Google Sheet MVPTasks",
   "automaticSync": false,
+  "executionSnapshot": {
+    "date": "2026-10-16",
+    "integrationBranch": "codex/demo-integration",
+    "localDemoEvidence": "docs/evidence/demo-2026-10-16/README.md",
+    "parallelPlan": "docs/planning/PARALLEL_EXECUTION.md",
+    "state": "Local demo implemented and sampled browser checks passed; canonical cloud integration and full phase gates remain open.",
+    "billing": "Deferred by owner; no paid calls or deployment.",
+    "unitTests": "None added or run."
+  },
   "phases": [
     {
       "id": "M0",

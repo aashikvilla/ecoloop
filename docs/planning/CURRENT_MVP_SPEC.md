@@ -1,6 +1,8 @@
 # EcoLoop household MVP — consolidated product and technical specification
 
-Version 1.0 · 15 October 2026 · Status: current planning baseline, implementation pending.
+Version 1.1 · 16 October 2026 · Status: current product contract; local demo and backend foundation implemented, managed cloud integration pending.
+
+Implementation evidence: [demo acceptance record](../evidence/demo-2026-10-16/README.md) and [parallel execution](PARALLEL_EXECUTION.md). Browser demo data is synthetic and isolated; scripted Ask responses are not Gemini. The requirements below still govern the complete cloud product.
 
 This document replaces the broad sustainability platform blueprint for the current release. It brings product, user journeys, screen behavior, architecture and low-level contracts into one coding-agent entrypoint. The companion [implementation plan](IMPLEMENTATION_PLAN.md) owns decomposition; the live Sheet owns execution status. No cloud, partner, safety or performance capability is claimed as implemented.
 

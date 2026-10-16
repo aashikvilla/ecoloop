@@ -14,7 +14,7 @@ This replaces the 156-unit platform plan. Every box starts unchecked: documentat
 4. Attach evidence, reviewer and ISO update date; choose Complete and check Done. Calculated Verified also requires verified prerequisites.
 5. Update session knowledge and stop at the next meaningful review boundary. If a prerequisite reopens, dependent progress reopens.
 
-No application changes or application tests are part of this documentation replan. The verification steps below are future implementation requirements, not runs performed today.
+16 October execution update: the owner explicitly authorized implementation and parallel GPT-6 Luna/high agents with separate branches and pushed checkpoints. [Parallel execution](PARALLEL_EXECUTION.md) records the bounded demo path; [acceptance evidence](../evidence/demo-2026-10-16/README.md) records actual local checks. The original full-product units below remain unchecked where cloud prerequisites or acceptance evidence are missing. No frontend/backend unit tests were added or run.
 
 ## Critical path and token budget
 

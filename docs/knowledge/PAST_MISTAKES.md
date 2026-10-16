@@ -1,5 +1,13 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-16 — Shared boundaries require integration proof
+
+CSS reset rules outside cascade layers defeated token utilities; provider hydration across a streamed subtree changed its initial markup; dynamic route params failed production prerender outside Suspense. Keep resets/component defaults in appropriate layers, put state providers within the same hydration boundary as consumers, and check the production build plus actual browser interactions after feature merges. A worker build alone does not prove the integrated styled application. Use installed tools from the package directory, not root npx fallback packages.
+
+## 2026-10-16 — Retry identity must describe the actual command
+
+A retry key without payload/actor binding can hide a different action or expose another actor's result. Scope keys to authenticated actor and household, compare full payload fingerprints, and retain explicit outcome timestamps/version checks. Demo share acceptance must never reduce stock; only an idempotent confirmed handover can record the outgoing quantity.
+
 ## 2026-10-15 — Scope reduction must reach active instructions
 Newer consumer sources retained managed Sessions/Memory Bank and typed cards while older guidance prescribed operator workflows. Some archived benchmarks fabricated passes. Reconcile source precedence, archive stale packages together and update discovery descriptions. Simpler UI does not cancel explicit technical decisions; screenshots do not prove live integrations or impact.
 

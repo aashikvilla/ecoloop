@@ -4,10 +4,10 @@ User authorized implementation, parallel GPT-6 Luna/high agents, separate branch
 
 ## First wave and ownership
 
-- [ ] `codex/demo-foundation`: shared tokens/UI/layout; Home; Activity; Settings. Own globals.css, layout.tsx, page.tsx, components/ui, components/layout, app/activity, app/settings, public artwork. Wrap all routes in DemoProvider and shared AppShell.
-- [ ] `codex/demo-journeys`: Kitchen, capture, review, item action, sharing, Ask (including buying context), Shop. Own app/kitchen, app/ask, app/shop, components/features. Never edit globals/layout/shared UI/provider/contracts.
-- [ ] `codex/demo-backend`: backend schemas, verified identity, scoped repository/commands, API, Firestore schema/rules/index groundwork. Own backend and firestore.rules/firestore.indexes.json/storage.rules plus docs/implementation/backend-foundation.md.
-- [ ] `codex/demo-integration`: shared TS contracts/demo store, orchestration, live plan, cross-feature integration and acceptance evidence. Integrator owns this document and docs/knowledge.
+- [x] `codex/demo-foundation`: shared tokens/UI/layout; Home; Activity; Settings. Own globals.css, layout.tsx, page.tsx, components/ui, components/layout, app/activity, app/settings, public artwork. Wrap all routes in DemoProvider and shared AppShell.
+- [x] `codex/demo-journeys`: Kitchen, capture, review, item action, sharing, Ask (including buying context), Shop. Own app/kitchen, app/ask, app/shop, components/features. Never edit globals/layout/shared UI/provider/contracts.
+- [x] `codex/demo-backend`: backend schemas, verified identity, scoped repository/commands, API, Firestore schema/rules/index groundwork. Own backend and firestore.rules/firestore.indexes.json/storage.rules plus docs/implementation/backend-foundation.md.
+- [x] `codex/demo-integration`: shared TS contracts/demo store, orchestration, live plan, cross-feature integration and acceptance evidence. Integrator owns this document and docs/knowledge.
 
 Each branch starts at the same checkpoint. Agents commit and push their own branch, never rebase/merge main or each other. Integrator merges branches one at a time. Agent reports include commit SHA, touched files, observed checks and remaining gaps. Do not stage unknown files or real env/credential material.
 
@@ -23,10 +23,26 @@ Use the actual PNG/HTML Stitch pairs plus current spec/audit corrections. Preser
 
 ## Checkpoints
 
-- [ ] Preserve pre-implementation documentation in a pushed checkpoint.
-- [ ] Establish stable types and isolated demo store before feature branches.
-- [ ] Merge foundation and journeys; resolve interface issues centrally.
-- [ ] Review backend identity, scope, atomicity and unavailable-provider behavior.
-- [ ] Run authorized build/lint/type checks and browser journeys at 360px and desktop; no unit tests.
-- [ ] Commit/push integrated code and update live harness with evidence; cloud gates remain open.
-- [ ] Persist continuation instructions so a future scheduled pass can resume safely after usage reset.
+- [x] Preserve pre-implementation documentation in a pushed checkpoint.
+- [x] Establish stable types and isolated demo store before feature branches.
+- [x] Merge foundation and journeys; resolve interface issues centrally.
+- [x] Review backend identity, scope, atomicity and unavailable-provider behavior.
+- [x] Run authorized build/lint/type checks and browser journeys at 360px and desktop; no unit tests.
+- [x] Commit/push integrated code and update live harness with evidence; cloud gates remain open.
+- [x] Persist continuation instructions so a future scheduled pass can resume safely after usage reset.
+
+These boxes describe local demo checkpoints only. Full M0–M5 gates remain governed by the live Sheet and their original acceptance criteria. [Observed evidence](../evidence/demo-2026-10-16/README.md) records production build, lint and sampled browser journeys. Backend live-service proof is still open.
+
+## Pushed checkpoints and next lanes
+
+| Lane | Remote checkpoint | State |
+|---|---|---|
+| Foundation | `3e8943b` | Integrated; visual follow-up as needed |
+| Household journeys | `84bd3a8` | Integrated; local flows checked |
+| Backend schema/security | `1ffd550` | Integrated; live Firebase proof pending |
+| Managed agent and cloud | Not started | Blocked by deferred billing; no paid work |
+| Acceptance and release | `codex/demo-integration` | Local evidence recorded; deployed acceptance pending |
+
+Five lanes are prepared; the platform permits four simultaneous agents including the integrator, so launch at most three workers at once. Never let two agents own the same shared file. Use GPT-6 Luna/high workers as requested. Single integrator resolves shared contracts and merges sequentially. Main remains unchanged until actual phase prerequisites, evidence and exit review permit a merge. Push checkpoints before handoffs and never stage the unrelated user PDF.
+
+Hourly continuation is configured in the current chat. Resume only unfinished authorized work after checking limits/current branches; do not duplicate running work or repeatedly retry a billing blocker. A scheduled run needs the desktop app and computer available. It cannot create credits or enable billing.

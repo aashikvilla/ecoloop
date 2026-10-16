@@ -1,7 +1,9 @@
 # Architecture knowledge
-15 October 2026 — current authority: [household specification](../planning/CURRENT_MVP_SPEC.md), sections 4–7. Repo remains generic Next.js/FastAPI scaffold; no household implementation, cloud deployment or managed-service access proved here.
+16 October 2026 — current authority: [household specification](../planning/CURRENT_MVP_SPEC.md), sections 4–7. Household browser demo and secure FastAPI/Firestore groundwork are implemented. Cloud deployment and managed-service behavior remain unproved.
 
 Planned: Next.js/App Hosting; FastAPI/Cloud Run canonical authority; real Gemini and one ADK orchestrator; managed Sessions and consented Memory Bank; preferred managed Runtime. Fallback needs concrete blocker and equivalent proof. Firestore owns confirmed facts/actions/outcomes; memory stores approved preferences. Five typed cards. Private owner-recorded sharing log; real community/commerce operations deferred.
+
+Current implementation: Next.js 16.4.1, React, Tailwind v4; synthetic local store uses immutable external snapshots, runtime validation and browser persistence. It is deliberately separate from authenticated household data. FastAPI verifies Firebase identity plus explicit active household membership; scoped Firestore transactions include version checks, actor-bound idempotency and payload fingerprints. Client Firestore/Storage rules deny access by default. Managed assistant returns an explicit unavailable response. Frontend is not connected to this API yet. See backend-foundation.md and the latest implementation session for exact limitations.
 
 The [old broad architecture](../archive/2026-10-15-pre-consumer-replan/planning/00_START_HERE.md) is archived. Do not revive operator lanes, dark cockpit, unsupported safety/carbon constants or fabricated benchmarks.
 
