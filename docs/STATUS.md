@@ -5,7 +5,7 @@ Updated 17 October 2026. This repository file is a snapshot, not the live MVPTas
 ## Local application
 
 - Home, Kitchen, Ask, Shop and Activity read only from authenticated household API routes. No browser DemoStore or mock-record fallback remains. Loading, signed-out, empty, error and unavailable states are explicit.
-- Capture/review, item details, outcome writes, private-share writes, assistant approval and managed preferences are not connected to canonical flows. Their routes show unavailable states instead of writing local sample data. Account supports manual fact confirmation, shopping commands and private-history reads; writes remain disabled by `NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS=false`.
+- Capture/review, item details, assistant approval and managed preferences are not connected to canonical flows; those routes show explicit unavailable states. Account now includes manual fact confirmation, shopping commands, owner-reported outcome and private-sharing controls, and paginated private-history reads. All mutation controls share the false-by-default `NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS` release flag; keep it false pending live identity/database acceptance and owner approval.
 - Firebase browser sign-in code supports Email/Password and Google, and selected household scope is shared across destinations in the current tab. Firebase Authentication is initialized with Email/Password and Google providers, and `localhost`/`127.0.0.1` are authorized. A Firebase Auth user matching the seeded membership has not been created; signed-in API reads remain unverified.
 - The API enforces Firebase identity plus active household membership and exposes Firestore-backed reads/commands. Local settings load the ignored `backend/.env`; the assistant requires `AGENT_ENABLED=true`. Current health reports the Gemini Developer API as selected/configured but disabled, without probing it or making a model call.
 
@@ -25,7 +25,7 @@ Updated 17 October 2026. This repository file is a snapshot, not the live MVPTas
 
 1. Using an owner-approved test credential, create or verify the synthetic judge Auth user with UID `ecoloop-judge-demo` and membership in `judge-demo-household`; then verify signed-in Kitchen/Shopping reads and wrong-household denial. Do not assume an ordinary Google account UID matches the seeded membership.
 2. Deploy the declared share/activity indexes and verify private history reads. This is still a cloud write and requires separate authorization.
-3. Implement and review canonical capture/intake, item detail, outcome/share UI, proposal persistence/approval, and managed preference correction/deletion. Keep the write flag off until live identity, transaction and idempotency acceptance passes.
+3. Implement and review canonical capture/intake, item detail, proposal persistence/approval, and managed preference correction/deletion. Keep the write flag off until live identity, transaction and idempotency acceptance passes.
 4. `AGENT_VERTEX_PROJECT_ID` is the Cloud project ID for Vertex AI requests, not an agent resource ID. The current project ID is `ecoloop-staging-20261015`; leave it unset for Gemini Developer API. Assistant calls remain disabled until provider, privacy, consent and cost review is complete.
 5. Before deployment, review the billing account and every linked project, project IAM, secrets, region, budget alerts and cost controls. Enable required APIs and prepare Cloud Run/App Hosting only after that review and authorization.
 

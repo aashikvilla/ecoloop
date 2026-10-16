@@ -21,7 +21,9 @@ import {
   type CanonicalData,
 } from "@/lib/canonical-api";
 import { CanonicalCommandControls } from "./command-controls";
+import { OutcomeControls } from "./outcome-controls";
 import { PrivateHistory } from "./private-history";
+import { ShareControls } from "./share-controls";
 
 type AuthState =
   | "loading"
@@ -465,8 +467,8 @@ export function AccountConnection() {
             View household records
           </Heading>
           <p className="mt-1 text-sm leading-relaxed text-muted">
-            You can view your connected household here. Demo records are kept in
-            this browser and are never sent with these requests.
+            Kitchen and shopping records below are fetched from the household
+            API. Viewing them does not change records or membership.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -618,6 +620,19 @@ export function AccountConnection() {
           <CanonicalCommandControls
             getIdToken={getIdToken}
             householdId={selectedHousehold}
+            enabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"}
+            onCommitted={commandCommitted}
+          />
+          <OutcomeControls
+            getIdToken={getIdToken}
+            householdId={selectedHousehold}
+            enabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"}
+            onCommitted={commandCommitted}
+          />
+          <ShareControls
+            getIdToken={getIdToken}
+            householdId={selectedHousehold}
+            ownerUid={user.uid}
             enabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"}
             onCommitted={commandCommitted}
           />

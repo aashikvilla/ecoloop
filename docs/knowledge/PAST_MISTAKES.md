@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-17 — Existing browser tabs can retain an old production page
+
+Observation: after rebuilding and restarting the local Next production server, the already-open browser tab still displayed its prior scripted page, while a new tab on the same port loaded the API-only build. Prevention: refresh or open a fresh tab after replacing a production build; do not use an existing tab's DOM as proof that a server restart changed the page.
+
 ## 2026-10-17 — Cross-worktree dependency junctions can mutate the source checkout
 
 Observation: pointing an isolated worktree's `node_modules` junction at the primary checkout let `npm ci` traverse into and attempt to remove source dependencies; Turbopack also rejected the external junction. Prevention: install from the lockfile inside the target worktree. Never run dependency-cleaning commands through a junction to another checkout.

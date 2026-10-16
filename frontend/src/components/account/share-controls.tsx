@@ -355,7 +355,7 @@ export function ShareControls({ getIdToken, householdId, ownerUid, enabled, onCo
       </Card>
 
       <Card className="space-y-4 border border-line p-4 sm:p-5">
-        <div><Heading as="h3">Your sharing records</Heading><p className="mt-1 text-sm leading-relaxed text-muted">Showing up to 25 recent records returned for your owner UID and selected household. All states below are owner reported; “accepted” is not recipient verified.</p></div>
+        <div><Heading as="h3">Recent records for sharing actions</Heading><p className="mt-1 text-sm leading-relaxed text-muted">Up to 25 recent owner-private records are shown here for lifecycle actions. Use the paginated history below for older activity. All states are owner reported; “accepted” is not recipient verified.</p></div>
         {visibleData.shares.length === 0 && <p role="status" className="text-sm text-muted">No private sharing records were returned.</p>}
         <ul className="divide-y divide-line">{visibleData.shares.map((share) => <li key={share.id} className="min-w-0 space-y-2 py-4 first:pt-0 last:pb-0">
           <div className="flex min-w-0 flex-wrap items-center justify-between gap-2"><p className="break-words font-semibold text-primary [overflow-wrap:anywhere]">{share.recipient_label}</p><Badge className="min-w-0 max-w-full whitespace-normal break-words [overflow-wrap:anywhere]" tone="amber">{shareLabels[share.state]}</Badge></div>
