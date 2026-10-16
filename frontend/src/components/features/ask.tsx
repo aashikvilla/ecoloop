@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLiveHousehold } from "@/lib/live-household";
 import { canonicalRequest, CanonicalApiError } from "@/lib/canonical-transport";
@@ -17,6 +17,11 @@ function readError(error: unknown) { return error instanceof CanonicalApiError ?
 
 export function AskAssistant() {
   const { user, householdId, auth } = useLiveHousehold();
+  return <ScopedAskAssistant key={JSON.stringify([auth, user?.uid ?? null, householdId])} />;
+}
+
+function ScopedAskAssistant() {
+  const { user, householdId, auth } = useLiveHousehold();
   const params = useSearchParams();
   const itemId = params.get("item");
   const [messages, setMessages] = useState<Message[]>([{ id: "welcome", role: "assistant", text: "Ask about your household food records. Responses are available only when the managed assistant is configured." }]);
@@ -27,6 +32,8 @@ export function AskAssistant() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [assistantResponse, setAssistantResponse] = useState<AssistantEnvelope | null>(null);
   const [rejectedCards, setRejectedCards] = useState(0);
+  const requestController = useRef<AbortController | null>(null);
+  useEffect(() => () => requestController.current?.abort(), []);
   async function send(text: string) {
     const value = text.trim();
     if (!value || busy) return;
@@ -34,9 +41,11 @@ export function AskAssistant() {
     setPrompt(""); setError(""); setNotice(""); setAssistantResponse(null); setRejectedCards(0);
     if (auth !== "signed-in" || !user || !householdId) { setError("Sign in and choose a household before asking about its records."); return; }
     setBusy(true);
+    const controller = new AbortController();
+    requestController.current = controller;
     try {
       const token = await user.getIdToken();
-      const raw = await canonicalRequest("assistant-turns", token, householdId, { method: "POST", body: { schema_version: 1, text: value, session_id: sessionId, context_item_ids: itemId && /^[A-Za-z0-9._:-]{1,128}$/.test(itemId) ? [itemId] : [] } });
+      const raw = await canonicalRequest("assistant-turns", token, householdId, { method: "POST", signal: controller.signal, body: { schema_version: 1, text: value, session_id: sessionId, context_item_ids: itemId && /^[A-Za-z0-9._:-]{1,128}$/.test(itemId) ? [itemId] : [] } });
       const parsed = parseAssistantEnvelope(raw);
       if (!parsed.ok) throw new Error(parsed.reason);
       const result: AssistantEnvelope = parsed.envelope;
@@ -46,8 +55,9 @@ export function AskAssistant() {
       if (result.cards.length === 0) setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", text: result.message }]);
       setNotice(result.cards.length ? "Review returned proposals below. Approval is unavailable and no action has been recorded." : "The assistant returned no proposal cards.");
     } catch (caught) {
+      if (controller.signal.aborted) return;
       setError(caught instanceof CanonicalApiError && (caught.code === "unavailable" || caught.code === "not_configured") ? "The managed household assistant is unavailable because its API or provider is not configured; try again later." : readError(caught));
-    } finally { setBusy(false); }
+    } finally { if (requestController.current === controller) requestController.current = null; setBusy(false); }
   }
   function submit(event: FormEvent) { event.preventDefault(); void send(prompt); }
   return <div className="mx-auto max-w-4xl space-y-5 px-4 pb-12 pt-6 sm:px-6 lg:pt-10">
