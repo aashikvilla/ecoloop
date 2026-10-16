@@ -47,7 +47,7 @@ export function AccountConnection() {
   const [selectedHousehold, setSelectedHousehold] = useState("");
   const [householdName, setHouseholdName] = useState("");
   const [onboardingStep, setOnboardingStep] = useState<"name" | "review" | "complete">("name");
-  const [createRequestId, setCreateRequestId] = useState("");
+  const [createIdempotencyKey, setCreateIdempotencyKey] = useState("");
   const [createdHousehold, setCreatedHousehold] = useState<CreatedHousehold | null>(null);
   const [createPending, setCreatePending] = useState(false);
   const [createError, setCreateError] = useState<CanonicalApiError | null>(null);
@@ -96,7 +96,7 @@ export function AccountConnection() {
               setSelectedHousehold("");
               setHouseholdName("");
               setOnboardingStep("name");
-              setCreateRequestId("");
+              setCreateIdempotencyKey("");
               setCreatedHousehold(null);
               setCreatePending(false);
               setCreateError(null);
@@ -119,7 +119,7 @@ export function AccountConnection() {
             setSelectedHousehold("");
             setHouseholdName("");
             setOnboardingStep("name");
-            setCreateRequestId("");
+            setCreateIdempotencyKey("");
             setCreatedHousehold(null);
             setCreatePending(false);
             setCreateError(null);
@@ -295,15 +295,15 @@ export function AccountConnection() {
   function reviewHousehold(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = householdName.trim();
-    if (!name || name.length > 80 || /[\u0000-\u001f\u007f]/.test(name)) return;
+    if (!name || name.length > 60 || /[\u0000-\u001f\u007f]/.test(name)) return;
     setHouseholdName(name);
-    setCreateRequestId(crypto.randomUUID());
+    setCreateIdempotencyKey(crypto.randomUUID());
     setCreateError(null);
     setOnboardingStep("review");
   }
 
   async function createHousehold() {
-    if (!user || authState !== "signed-in" || onboardingStep !== "review" || !createRequestId || createPending) return;
+    if (!user || authState !== "signed-in" || onboardingStep !== "review" || !createIdempotencyKey || createPending) return;
     createRequestRef.current?.abort();
     const controller = new AbortController();
     createRequestRef.current = controller;
@@ -313,7 +313,7 @@ export function AccountConnection() {
     try {
       const token = await user.getIdToken();
       if (controller.signal.aborted) return;
-      const result = await createCanonicalHousehold(token, householdName, createRequestId, controller.signal);
+      const result = await createCanonicalHousehold(token, householdName, createIdempotencyKey, controller.signal);
       if (controller.signal.aborted || identityRef.current !== identity) return;
       clearRecords();
       setHouseholdId(result.household_id);
@@ -516,7 +516,7 @@ export function AccountConnection() {
                   </ul>
                   <div className="mt-4 border-t border-line pt-3">
                     <label htmlFor="new-household-name" className="block text-xs font-semibold text-primary">Household name</label>
-                    <Input id="new-household-name" className="mt-2 bg-surface-muted text-sm" required maxLength={80} autoComplete="off" value={householdName} onChange={(event) => setHouseholdName(event.target.value)} placeholder="For example, My kitchen" aria-describedby="new-household-help" />
+                    <Input id="new-household-name" className="mt-2 bg-surface-muted text-sm" required maxLength={60} autoComplete="off" value={householdName} onChange={(event) => setHouseholdName(event.target.value)} placeholder="For example, My kitchen" aria-describedby="new-household-help" />
                     <p id="new-household-help" className="mt-2 text-xs leading-relaxed text-muted">Choose a name you’ll recognize. No food or personal details are needed.</p>
                   </div>
                 </div>

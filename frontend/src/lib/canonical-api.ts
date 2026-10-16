@@ -69,18 +69,22 @@ export async function readCanonicalRecords(kind: "kitchen" | "shopping", idToken
   return validateSuccess(await canonicalRequest(kind, idToken, householdId, { signal }), kind);
 }
 
-export async function createCanonicalHousehold(idToken: string, name: string, requestId: string, signal?: AbortSignal): Promise<CreatedHousehold> {
+export async function createCanonicalHousehold(idToken: string, name: string, idempotencyKey: string, signal?: AbortSignal): Promise<CreatedHousehold> {
   const cleanName = name.trim();
-  if (!cleanName || cleanName.length > 80 || /[\u0000-\u001f\u007f]/.test(cleanName) || !/^[A-Za-z0-9-]{16,128}$/.test(requestId)) {
+  if (!cleanName || cleanName.length > 60 || /[\u0000-\u001f\u007f]/.test(cleanName) || !/^[A-Za-z0-9-]{16,128}$/.test(idempotencyKey)) {
     throw new CanonicalApiError("validation", "Enter a household name and review it before creating.");
   }
   const payload = await canonicalRequest("households", idToken, null, {
     method: "POST",
-    body: { name: cleanName, request_id: requestId },
+    body: { schema_version: 1, idempotency_key: idempotencyKey, name: cleanName },
     signal,
   });
-  if (!object(payload) || typeof payload.household_id !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(payload.household_id) || !boundedString(payload.name, 80) || payload.name !== cleanName || !boundedString(payload.role, 32) || !/^[a-z][a-z_-]*$/i.test(payload.role)) {
-    throw new CanonicalApiError("invalid_response", "The household service returned an unexpected creation result.", object(payload) && boundedString(payload.request_id, 128) ? payload.request_id : undefined);
+  if (!object(payload) || payload.schema_version !== 1 || !boundedString(payload.request_id, 128) || !object(payload.result)) {
+    throw new CanonicalApiError("invalid_response", "The household service returned an unexpected creation response.", object(payload) && boundedString(payload.request_id, 128) ? payload.request_id : undefined);
   }
-  return { household_id: payload.household_id, name: payload.name, role: payload.role };
+  const result = payload.result;
+  if (typeof result.household_id !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(result.household_id) || !boundedString(result.name, 60) || result.name !== cleanName || !boundedString(result.role, 32) || !/^[a-z][a-z_-]*$/i.test(result.role)) {
+    throw new CanonicalApiError("invalid_response", "The household service returned an unexpected creation result.", payload.request_id);
+  }
+  return { household_id: result.household_id, name: result.name, role: result.role };
 }
