@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { LiveDestinationNotice, useLiveRecords } from "@/components/account/live-destination";
 import type { KitchenObservation } from "@/lib/canonical-api";
 import type { DateType } from "@/lib/contracts";
+import { useLiveHousehold } from "@/lib/live-household";
+import { CanonicalApiError } from "@/lib/canonical-transport";
+import { submitIntake, type IntakeCommand, type IntakeEntry, type IntakeResult } from "@/lib/canonical-intake";
 import { Notice, PageIntro, Panel, QuietLink, UnitLabel } from "./ui";
 
 function dateLabel(date: string | null, type: DateType) {
@@ -32,7 +35,189 @@ function UnavailableKitchenFlow({ title, details }: { title: string; details: st
   return <div className="mx-auto max-w-3xl space-y-4 px-4 pb-12 pt-6 sm:px-6 lg:pt-10"><PageIntro eyebrow="Kitchen · unavailable" title={title} description={details} /><Notice tone="warn">Photo capture, item details, and draft review are unavailable. Account contains manual fact, outcome, shopping, and owner-reported private-sharing controls; changes remain disabled pending live identity and database acceptance.</Notice><Panel><h2 className="text-lg font-semibold">Continue with supported controls</h2><p className="mt-2 text-sm leading-relaxed text-muted">Account controls require a signed-in owner, an explicit household, and enabled command configuration. They confirm each supported change and check current versions.</p><div className="mt-4 flex flex-wrap gap-2"><QuietLink href="/account">Open Account controls</QuietLink><QuietLink href="/kitchen">Back to Kitchen</QuietLink></div></Panel></div>;
 }
 
-export function CaptureFood() { return <UnavailableKitchenFlow title="Add food" details="Photo extraction and the draft capture flow are not connected to canonical household storage." />; }
+type IntakeMode = "MANUAL" | "TEXT";
+
+function makeEntries(mode: IntakeMode, values: { name: string; amount: string; unit: string; date: string; dateType: string; storage: string; text: string }): IntakeEntry[] {
+  if (mode === "TEXT") {
+    const lines = values.text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    if (lines.length === 0) throw new Error("Enter at least one food name, one per line.");
+    if (lines.length > 25) throw new Error("Enter no more than 25 food names at a time.");
+    if (lines.some((line) => line.length > 120 || /[\u0000-\u001f\u007f]/.test(line))) throw new Error("Each food name must be 120 characters or fewer.");
+    return lines.map((name) => ({ name, amount: null, unit: null, date_value: null, date_type: "UNKNOWN", date_source: null, storage: null }));
+  }
+
+  const name = values.name.trim();
+  if (!name || name.length > 120 || /[\u0000-\u001f\u007f]/.test(name)) throw new Error("Enter a food name up to 120 characters.");
+  const amountText = values.amount.trim();
+  const amount = amountText ? Number(amountText) : null;
+  if (amount !== null && (!Number.isFinite(amount) || amount < 0 || amount > 1_000_000)) throw new Error("Enter an amount from 0 to 1,000,000, or leave it unknown.");
+  const unit = amount === null ? null : values.unit;
+  if (amount !== null && !unit) throw new Error("Choose a unit for the amount.");
+  const dateValue = values.date || null;
+  const dateType = dateValue ? values.dateType : "UNKNOWN";
+  if (dateValue && dateType === "UNKNOWN") throw new Error("Choose what the date means.");
+  return [{ name, amount, unit, date_value: dateValue, date_type: dateType as IntakeEntry["date_type"], date_source: dateValue ? "USER" : null, storage: values.storage || null }];
+}
+
+function intakeMessage(error: unknown): string {
+  if (error instanceof CanonicalApiError) return error.message;
+  return "The intake could not be confirmed. Check the entries and try again.";
+}
+
+export function CaptureFood() {
+  const { auth, user, householdId } = useLiveHousehold();
+  const [mode, setMode] = useState<IntakeMode>("MANUAL");
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [unit, setUnit] = useState("");
+  const [date, setDate] = useState("");
+  const [dateType, setDateType] = useState("UNKNOWN");
+  const [storage, setStorage] = useState("");
+  const [text, setText] = useState("");
+  const [phase, setPhase] = useState<"idle" | "busy" | "error" | "cancelled" | "success">("idle");
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<IntakeResult | null>(null);
+  const [pending, setPending] = useState<{ command: IntakeCommand; fingerprint: string } | null>(null);
+  const controller = useRef<AbortController | null>(null);
+  const scopeKey = auth === "signed-in" && user && householdId ? `${user.uid}:${householdId}` : "";
+  const activeScope = useRef(scopeKey);
+  activeScope.current = scopeKey;
+  const previousScope = useRef(scopeKey);
+  const enabled = process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true";
+
+  useEffect(() => {
+    if (previousScope.current !== scopeKey) {
+      controller.current?.abort();
+      controller.current = null;
+      setPhase("idle");
+      setError("");
+      setResult(null);
+      setPending(null);
+      previousScope.current = scopeKey;
+    }
+    return () => controller.current?.abort();
+  }, [scopeKey]);
+
+  async function send(command: IntakeCommand, fingerprint: string) {
+    if (auth !== "signed-in" || !user || !householdId) {
+      setError("Sign in and choose an active household before preparing candidates.");
+      setPhase("error");
+      return;
+    }
+    if (!enabled) {
+      setError("Household changes are disabled for this app. Candidate intake has not been sent.");
+      setPhase("error");
+      return;
+    }
+    const requestController = new AbortController();
+    const requestScope = scopeKey;
+    controller.current = requestController;
+    setPending({ command, fingerprint });
+    setPhase("busy");
+    setError("");
+    setResult(null);
+    try {
+      const token = await user.getIdToken();
+      if (requestController.signal.aborted) return;
+      const response = await submitIntake(token, householdId, command, requestController.signal);
+      if (!requestController.signal.aborted && activeScope.current === requestScope) {
+        setResult(response);
+        setPending(null);
+        setPhase("success");
+      }
+    } catch (failure) {
+      if (activeScope.current !== requestScope) return;
+      if (requestController.signal.aborted) {
+        setPhase("cancelled");
+        setError("You stopped waiting. The service may still have received this request; retry these exact entries to safely check the same intake.");
+      } else {
+        setPhase("error");
+        setError(intakeMessage(failure));
+      }
+    } finally {
+      if (controller.current === requestController) controller.current = null;
+    }
+  }
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setError("");
+    setResult(null);
+    try {
+      const entries = makeEntries(mode, { name, amount, unit, date, dateType, storage, text });
+      const fingerprint = JSON.stringify({ source: mode, entries });
+      const key = pending?.fingerprint === fingerprint ? pending.command.idempotency_key : crypto.randomUUID();
+      void send({ schema_version: 1, idempotency_key: key, source: mode, entries }, fingerprint);
+    } catch (failure) {
+      setPhase("error");
+      setError(failure instanceof Error ? failure.message : "Review the intake fields.");
+    }
+  }
+
+  let samePendingEntries = false;
+  if (pending) {
+    try {
+      const currentEntries = makeEntries(mode, { name, amount, unit, date, dateType, storage, text });
+      samePendingEntries = JSON.stringify({ source: mode, entries: currentEntries }) === pending.fingerprint;
+    } catch {
+      samePendingEntries = false;
+    }
+  }
+
+  return <div className="mx-auto max-w-3xl px-4 pb-12 pt-6 sm:px-6 lg:pt-10">
+    <PageIntro eyebrow="Kitchen · capture" title="Add food candidates" description="Record what you know by hand, or enter a short list of names. These stay as drafts until you review and confirm them." />
+    <LiveDestinationNotice />
+    <Notice tone="warn">These are unconfirmed candidate drafts. They do not change Kitchen stock. Nothing is confirmed until a later review step.</Notice>
+    {!enabled && <Notice tone="info">Candidate intake is disabled by the current app configuration. You can prepare entries, but they will not be sent.</Notice>}
+
+    <Panel className="mt-4">
+      <div className="mb-5 flex gap-2" role="group" aria-label="Choose intake type">
+        <button type="button" onClick={() => setMode("MANUAL")} aria-pressed={mode === "MANUAL"} className={`min-h-11 rounded-full px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${mode === "MANUAL" ? "bg-primary text-white" : "bg-surface-muted text-primary"}`}>Manual entry</button>
+        <button type="button" onClick={() => setMode("TEXT")} aria-pressed={mode === "TEXT"} className={`min-h-11 rounded-full px-4 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${mode === "TEXT" ? "bg-primary text-white" : "bg-surface-muted text-primary"}`}>List of names</button>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {mode === "MANUAL" ? <>
+          <label className="block text-sm font-medium" htmlFor="intake-name">Food name<Input id="intake-name" required maxLength={120} value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. spinach" className="mt-1" /></label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm font-medium" htmlFor="intake-amount">Amount <span className="font-normal text-muted">(optional)</span><Input id="intake-amount" type="number" inputMode="decimal" min="0" max="1000000" step="any" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Leave unknown" className="mt-1" /></label>
+            <label className="block text-sm font-medium" htmlFor="intake-unit">Unit{amount && <span className="text-danger"> · required</span>}<select id="intake-unit" required={Boolean(amount)} disabled={!amount} value={unit} onChange={(event) => setUnit(event.target.value)} className="mt-1 min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 disabled:opacity-60"><option value="">{amount ? "Choose a unit" : "Unknown"}</option>{["g", "kg", "ml", "l", "pieces", "portions"].map((option) => <option key={option} value={option}>{option}</option>)}</select></label>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block text-sm font-medium" htmlFor="intake-date">Date <span className="font-normal text-muted">(optional)</span><Input id="intake-date" type="date" value={date} onChange={(event) => setDate(event.target.value)} className="mt-1" /></label>
+            <label className="block text-sm font-medium" htmlFor="intake-date-type">Date means{date && <span className="text-danger"> · required</span>}<select id="intake-date-type" required={Boolean(date)} disabled={!date} value={dateType} onChange={(event) => setDateType(event.target.value)} className="mt-1 min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15 disabled:opacity-60"><option value="UNKNOWN">Unknown</option><option value="USE_BY">Use by</option><option value="EXPIRY">Expiry</option><option value="BEST_BEFORE">Best before</option><option value="USER_TARGET">My target date</option></select></label>
+          </div>
+          <label className="block text-sm font-medium" htmlFor="intake-storage">Storage <span className="font-normal text-muted">(optional)</span><select id="intake-storage" value={storage} onChange={(event) => setStorage(event.target.value)} className="mt-1 min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15"><option value="">Unknown</option><option value="fridge">Fridge</option><option value="freezer">Freezer</option><option value="pantry">Pantry</option></select></label>
+        </> : <>
+          <label className="block text-sm font-medium" htmlFor="intake-text">Food names <span className="font-normal text-muted">(one per line, up to 25)</span><textarea id="intake-text" required rows={7} maxLength={3500} value={text} onChange={(event) => setText(event.target.value)} placeholder={"Spinach\nRice\nTomatoes"} className="mt-1 w-full rounded-control border border-line bg-white px-4 py-3 text-ink placeholder:text-muted/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" /><span className="mt-1 block text-xs text-muted">Each name is up to 120 characters. Amount, date, and storage stay unknown.</span></label>
+        </>}
+        {error && <div role="alert" className="rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">{error}</div>}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <button type="submit" disabled={phase === "busy" || auth !== "signed-in" || !householdId || !enabled} className="min-h-11 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-55">{phase === "busy" ? "Sending…" : samePendingEntries && (phase === "error" || phase === "cancelled") ? "Retry same entries" : "Prepare candidate drafts"}</button>
+          {phase === "busy" ? <button type="button" onClick={() => controller.current?.abort()} className="min-h-11 rounded-full bg-surface-muted px-4 text-sm font-medium text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Cancel waiting</button> : <QuietLink href="/kitchen">Cancel and return to Kitchen</QuietLink>}
+        </div>
+        {pending && samePendingEntries && (phase === "error" || phase === "cancelled") && <p className="break-all text-xs text-muted">Retry key retained for these exact entries: {pending.command.idempotency_key}</p>}
+        {auth === "loading" && <p role="status" className="text-sm text-muted">Checking sign-in…</p>}
+        {auth === "signed-out" && <p className="text-sm text-muted">Sign in and choose a household to prepare candidate drafts.</p>}
+        {auth === "signed-in" && !householdId && <p className="text-sm text-muted">Choose an active household above to continue.</p>}
+      </form>
+    </Panel>
+
+    {phase === "busy" && <div className="mt-4" role="status"><Panel>Sending your candidate intake… No Kitchen stock is changed by this request.</Panel></div>}
+    {phase === "success" && result && <section aria-labelledby="candidate-results-title" className="mt-5 space-y-3">
+      <Notice tone="success">Candidate intake received. These drafts are still unconfirmed; Kitchen stock has not changed.</Notice>
+      <h2 id="candidate-results-title" className="text-xl font-semibold">Candidate drafts <span className="text-base font-normal text-muted">· {result.candidates.length}</span></h2>
+      {result.candidates.length === 0 ? <Panel><h3 className="font-semibold">No candidates returned</h3><p className="mt-1 text-sm text-muted">The service returned an empty candidate list. Nothing was added to Kitchen.</p></Panel> : <div className="grid gap-3">{result.candidates.map((candidate) => <article key={candidate.candidate_id} className="rounded-3xl border border-border bg-surface p-4 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary">Unconfirmed candidate draft</p>
+        <h3 className="mt-1 text-lg font-semibold">{candidate.name}</h3>
+        <p className="mt-1 text-sm text-muted"><UnitLabel amount={candidate.amount} unit={candidate.unit} /> · {dateLabel(candidate.date_value, candidate.date_type as DateType)}</p>
+        <p className="mt-1 text-sm text-muted">Storage: {candidate.storage ?? "Unknown"}</p>
+        {candidate.uncertainty.length > 0 && <p className="mt-2 text-xs text-muted">Unknown details: {candidate.uncertainty.map((item) => item === "AMOUNT_UNKNOWN" ? "amount" : item === "DATE_UNKNOWN" ? "date" : "storage").join(", ")}.</p>}
+      </article>)}</div>}
+      <p className="text-xs text-muted">Intake reference: {result.intake_id}. Review and confirmation are a separate step.</p>
+      <QuietLink href="/kitchen">Return to Kitchen</QuietLink>
+    </section>}
+  </div>;
+}
 export function ReviewFood() { return <UnavailableKitchenFlow title="Review food details" details="No confirmed candidate draft is available on this route. Local demo drafts are not shown as household data." />; }
 export function ItemDetail({ itemId }: { itemId: string }) { return <UnavailableKitchenFlow title="Food record details" details={`The canonical detail view for item ${itemId} is not connected. The Kitchen list contains only records returned by the household API.`} />; }
 export function ShareItem({ itemId }: { itemId: string }) { return <UnavailableKitchenFlow title="Private sharing controls" details={`Private sharing commands for item ${itemId} are not connected. Account can show owner-private sharing history, but it cannot prepare or record a new share here.`} />; }
