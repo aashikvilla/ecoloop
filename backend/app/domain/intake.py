@@ -21,6 +21,15 @@ def _payload_hash(command: CreateIntakeCommand | ConfirmIntakeCommand) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def _confirmation_payload_hash(intake_id: str, command: ConfirmIntakeCommand) -> str:
+    canonical = json.dumps(
+        {"intake_id": intake_id, "command": command.model_dump(mode="json")},
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def _candidate_value(candidate_id: str, entry: Any) -> dict[str, Any]:
     uncertainty: list[str] = []
     if entry.amount is None:
@@ -129,7 +138,7 @@ def confirm_intake(principal: Principal, intake_id: str, command: ConfirmIntakeC
     intake_ref = household.collection("intakes").document(intake_id)
     observations = household.collection("food_observations")
     idem_ref = _idempotency_ref(household, "intake-confirm", command.idempotency_key, principal.uid)
-    payload_hash = _payload_hash(command)
+    payload_hash = _confirmation_payload_hash(intake_id, command)
     observed_at = datetime.now(timezone.utc)
 
     @firestore.transactional
