@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Literal
 from pydantic import field_validator
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +14,13 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
     ]
     MAX_REQUEST_BYTES: int = 256_000
+    GOOGLE_API_KEY: SecretStr | None = None
+    AGENT_PROVIDER: Literal["auto", "gemini_api", "vertex"] = "auto"
+    AGENT_MODEL: str = "gemini-2.5-flash-lite"
+    AGENT_VERTEX_PROJECT_ID: str | None = None
+    AGENT_VERTEX_LOCATION: str = "us-central1"
+    AGENT_REQUEST_TIMEOUT_SECONDS: int = 20
+    AGENT_MAX_OUTPUT_TOKENS: int = 4_096
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
@@ -36,6 +44,20 @@ class Settings(BaseSettings):
         if not 1_024 <= size <= 2_000_000:
             raise ValueError("MAX_REQUEST_BYTES must be between 1 KiB and 2 MiB")
         return size
+
+    @field_validator("AGENT_REQUEST_TIMEOUT_SECONDS")
+    @classmethod
+    def validate_agent_timeout(cls, seconds: int) -> int:
+        if not 1 <= seconds <= 60:
+            raise ValueError("AGENT_REQUEST_TIMEOUT_SECONDS must be between 1 and 60")
+        return seconds
+
+    @field_validator("AGENT_MAX_OUTPUT_TOKENS")
+    @classmethod
+    def validate_agent_output_tokens(cls, tokens: int) -> int:
+        if not 256 <= tokens <= 8_192:
+            raise ValueError("AGENT_MAX_OUTPUT_TOKENS must be between 256 and 8192")
+        return tokens
 
     model_config = SettingsConfigDict(
         case_sensitive=True,
