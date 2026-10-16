@@ -5,9 +5,9 @@ from enum import StrEnum
 from typing import Annotated, Literal
 from unicodedata import category
 
-from pydantic import BeforeValidator, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BeforeValidator, ConfigDict, Field, StrictInt, StringConstraints, model_validator
 
-from app.schemas.household import Amount, DateType, FoodSource, IdempotencyKey, ItemName, StrictModel, UnitName
+from app.schemas.household import Amount, DateType, FoodSource, IdempotencyKey, ItemName, OpaqueId, StrictModel, UnitName
 
 
 class IntakeSource(StrEnum):
@@ -71,6 +71,26 @@ class IntakeEntry(StrictModel):
         return self
 
 
+class ConfirmIntakeCandidate(IntakeEntry):
+    candidate_id: OpaqueId
+
+
+class ConfirmIntakeCommand(StrictModel):
+    model_config = ConfigDict(strict=True, extra="forbid", str_strip_whitespace=True)
+
+    schema_version: Literal[1]
+    idempotency_key: IdempotencyKey
+    base_version: Annotated[StrictInt, Field(ge=1)]
+    candidates: Annotated[list[ConfirmIntakeCandidate], Field(min_length=1, max_length=10)]
+
+    @model_validator(mode="after")
+    def unique_candidate_ids(self) -> ConfirmIntakeCommand:
+        candidate_ids = [candidate.candidate_id for candidate in self.candidates]
+        if len(candidate_ids) != len(set(candidate_ids)):
+            raise ValueError("candidate_id values must be unique within a command")
+        return self
+
+
 class CreateIntakeCommand(StrictModel):
     model_config = ConfigDict(strict=True, extra="forbid", str_strip_whitespace=True)
 
@@ -81,7 +101,7 @@ class CreateIntakeCommand(StrictModel):
 
 
 class IntakeCandidate(StrictModel):
-    candidate_id: str
+    candidate_id: OpaqueId
     name: ItemName
     amount: Amount | None
     unit: UnitName | None
@@ -94,5 +114,21 @@ class IntakeCandidate(StrictModel):
 
 class IntakeRecord(StrictModel):
     intake_id: str
-    status: Literal["CANDIDATE"]
-    candidates: Annotated[list[IntakeCandidate], Field(min_length=1, max_length=10)]
+    status: Literal["CANDIDATE", "CONFIRMED"]
+    version: Annotated[StrictInt, Field(ge=1)]
+    candidates: Annotated[list[IntakeCandidate], Field(max_length=10)]
+
+    @model_validator(mode="after")
+    def validate_state(self) -> IntakeRecord:
+        if (self.status == "CONFIRMED") != (len(self.candidates) == 0):
+            raise ValueError("confirmed intakes must have no pending candidates")
+        return self
+
+
+class ConfirmedIntakeItem(StrictModel):
+    item_id: OpaqueId
+    version: Annotated[StrictInt, Field(ge=1)]
+
+
+class IntakeConfirmationRecord(IntakeRecord):
+    confirmed: Annotated[list[ConfirmedIntakeItem], Field(min_length=1, max_length=10)]
