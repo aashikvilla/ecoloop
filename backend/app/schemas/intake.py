@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Annotated, Literal
 from unicodedata import category
 
-from pydantic import ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BeforeValidator, ConfigDict, Field, StringConstraints, model_validator
 
 from app.schemas.household import Amount, DateType, FoodSource, IdempotencyKey, ItemName, StrictModel, UnitName
 
@@ -15,15 +15,44 @@ class IntakeSource(StrEnum):
     TEXT = "TEXT"
 
 
+def _parse_iso_date(value: object) -> object:
+    if isinstance(value, str):
+        try:
+            parsed = date.fromisoformat(value)
+        except ValueError:
+            return value
+        if parsed.isoformat() == value:
+            return parsed
+    return value
+
+
+def _parse_enum(enum_type: type[StrEnum]):
+    def parse(value: object) -> object:
+        if isinstance(value, str):
+            try:
+                return enum_type(value)
+            except ValueError:
+                return value
+        return value
+
+    return parse
+
+
+IntakeDate = Annotated[date, BeforeValidator(_parse_iso_date)]
+IntakeSourceValue = Annotated[IntakeSource, BeforeValidator(_parse_enum(IntakeSource))]
+DateTypeValue = Annotated[DateType, BeforeValidator(_parse_enum(DateType))]
+FoodSourceValue = Annotated[FoodSource, BeforeValidator(_parse_enum(FoodSource))]
+
+
 class IntakeEntry(StrictModel):
     model_config = ConfigDict(strict=True, extra="forbid", str_strip_whitespace=True)
 
     name: ItemName
     amount: Amount | None
     unit: UnitName | None
-    date_value: date | None
-    date_type: DateType
-    date_source: FoodSource | None
+    date_value: IntakeDate | None
+    date_type: DateTypeValue
+    date_source: FoodSourceValue | None
     storage: Annotated[str, StringConstraints(max_length=120)] | None
 
     @model_validator(mode="after")
@@ -47,7 +76,7 @@ class CreateIntakeCommand(StrictModel):
 
     schema_version: Literal[1]
     idempotency_key: IdempotencyKey
-    source: IntakeSource
+    source: IntakeSourceValue
     entries: Annotated[list[IntakeEntry], Field(min_length=1, max_length=10)]
 
 
@@ -56,9 +85,9 @@ class IntakeCandidate(StrictModel):
     name: ItemName
     amount: Amount | None
     unit: UnitName | None
-    date_value: date | None
-    date_type: DateType
-    date_source: FoodSource | None
+    date_value: IntakeDate | None
+    date_type: DateTypeValue
+    date_source: FoodSourceValue | None
     storage: Annotated[str, StringConstraints(max_length=120)] | None
     uncertainty: list[Literal["AMOUNT_UNKNOWN", "DATE_UNKNOWN", "STORAGE_UNKNOWN"]]
 
@@ -67,4 +96,3 @@ class IntakeRecord(StrictModel):
     intake_id: str
     status: Literal["CANDIDATE"]
     candidates: Annotated[list[IntakeCandidate], Field(min_length=1, max_length=10)]
-
