@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDemo } from "@/lib/demo-store";
 import type { DateType, FoodCategory, FoodDraft, FoodItem, Storage, Unit } from "@/lib/contracts";
@@ -51,7 +51,8 @@ export function CaptureFood() {
   const [category, setCategory] = useState<FoodCategory>("vegetables");
   const [storage, setStorage] = useState<Storage>("fridge");
   const [message, setMessage] = useState("");
-  function onPhoto(file?: File) { if (photo) URL.revokeObjectURL(photo); setPhoto(file ? URL.createObjectURL(file) : null); }
+  useEffect(() => () => { if (photo) URL.revokeObjectURL(photo); }, [photo]);
+  function onPhoto(file?: File) { setPhoto(file ? URL.createObjectURL(file) : null); }
   function submit(event: FormEvent) { event.preventDefault(); if (!name.trim()) { setMessage("Enter a food name before reviewing."); return; } if (amount && (!unit || Number(amount) <= 0 || !Number.isFinite(Number(amount)))) { setMessage("Choose a unit for the amount, or leave the amount unknown."); return; } const params = new URLSearchParams({ name: name.trim(), category, storage, amount: amount || "", unit: unit || "" }); router.push(`/kitchen/review?${params.toString()}`); }
   return <main className="mx-auto max-w-3xl px-4 pb-12 pt-6 sm:px-6 lg:pt-10"><PageIntro eyebrow="Kitchen · Capture" title="Add food" description="Enter what you can confirm. Nothing enters your kitchen until you review and save it." action={<QuietLink href="/kitchen">← Kitchen</QuietLink>} />
     <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Capture method">{["manual", "photo", "receipt", "list photo"].map((value) => <button key={value} onClick={() => setMode(value)} aria-pressed={mode === value} className={`min-h-11 rounded-full px-4 text-sm font-medium capitalize ${mode === value ? "bg-primary text-white" : "bg-surface-muted text-primary"}`}>{value}</button>)}</div>
