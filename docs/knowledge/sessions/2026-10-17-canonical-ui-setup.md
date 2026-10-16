@@ -14,7 +14,7 @@ Owner asked to remove mock data from the app, connect destinations to backend/Fi
 ## Verification
 
 - Frontend `npm ci` restored the primary ignored dependency tree after a worktree junction caused `EPERM`. Production build succeeded and generated 14/14 pages. `npx tsc --noEmit` and ESLint passed. No unit tests were run or added.
-- Backend `python -m compileall -q app`, `uv lock --check`, and `git diff --check` passed. Local health reported the Gemini Developer API selected but disabled, runtime unchecked, managed Sessions false and managed Memory Bank false. Unauthenticated `/api/v1/kitchen` returned 401.
+- Backend `python -m compileall -q app`, `uv lock --check`, and `git diff --check` passed. A read-only local Admin SDK request reached Firestore and confirmed the seeded `judge-demo-household` document exists and has `synthetic: true`. Local health reported the Gemini Developer API selected but disabled, runtime unchecked, managed Sessions false and managed Memory Bank false. Unauthenticated `/api/v1/kitchen` returned 401; authenticated API reads remain unverified.
 - HTTP smoke check returned 200 for Home, Kitchen, Ask, Shop, Activity, Settings, Account, capture/review and item routes. Browser inspection of Ask showed the updated household-data UI and signed-out state; no live Auth/Firestore request was possible.
 - `npm audit` reports 9 high-severity advisories (4 with production dependencies). The compatible fix did not apply; `--force` proposes breaking Firebase/Next dependency downgrades and was not used.
 

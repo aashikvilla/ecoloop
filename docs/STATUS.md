@@ -18,7 +18,7 @@ Updated 17 October 2026. This repository file is a snapshot, not the live MVPTas
 ## Verification performed
 
 - Frontend production build generated 14/14 pages successfully; TypeScript and ESLint passed. No frontend/backend unit tests were added or run.
-- Backend Python compile and locked dependency checks passed. Local `/api/v1/health` reported assistant disabled, runtime unchecked, managed Sessions false and managed Memory Bank false. An unauthenticated `/api/v1/kitchen` request returned 401.
+- Backend Python compile and locked dependency checks passed. A read-only local Admin SDK smoke read reached Firestore and confirmed the seeded household document exists and is marked synthetic. Local `/api/v1/health` reported assistant disabled, runtime unchecked, managed Sessions false and managed Memory Bank false. An unauthenticated `/api/v1/kitchen` request returned 401; authenticated API reads remain unverified.
 - No authenticated Firestore API read, model call, cloud provisioning, index deployment, or Cloud Run deployment was performed. Full end-to-end acceptance remains open.
 
 ## Required next steps
