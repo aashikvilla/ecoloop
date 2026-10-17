@@ -7,10 +7,10 @@ export class CanonicalApiError extends Error {
   }
 }
 
-export type CanonicalResource = "households" | "kitchen" | "shopping" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "assistant-turns" | "preferences";
+export type CanonicalResource = "households" | "kitchen" | "shopping" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "assistant-turns" | "preferences" | "proposal-turns" | "proposal-actions" | "proposal-history";
 export type CanonicalRequestOptions = { method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE"; recordId?: string; body?: unknown; signal?: AbortSignal; query?: { limit?: number; cursor?: string } };
 const methods: Record<CanonicalResource, readonly string[]> = {
-  households: ["GET", "POST"], kitchen: ["GET"], shopping: ["GET", "POST"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "assistant-turns": ["POST"], preferences: ["GET", "PUT", "DELETE"],
+  households: ["GET", "POST"], kitchen: ["GET"], shopping: ["GET", "POST"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "assistant-turns": ["POST"], preferences: ["GET", "PUT", "DELETE"], "proposal-turns": ["POST"], "proposal-actions": ["POST"], "proposal-history": ["GET"],
 };
 const RESPONSE_BYTES = 512_000;
 
@@ -68,13 +68,21 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   const householdCreation = resource === "households" && method === "POST";
   const householdDiscovery = resource === "households" && method === "GET";
   const userPrivate = resource === "preferences";
+  const assistantTurn = resource === "assistant-turns" || resource === "proposal-turns";
   if (householdCreation || householdDiscovery || userPrivate ? householdId !== null : !householdId || !/^[A-Za-z0-9_-]{1,128}$/.test(householdId)) throw new CanonicalApiError("validation", "This household request has an invalid scope.");
-  const writing = method !== "GET" && resource !== "assistant-turns";
+  const writing = method !== "GET" && !assistantTurn;
   if (householdCreation && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE !== "true") throw new CanonicalApiError("not_configured", "First-household creation is not enabled for this app yet.");
   if (writing && !householdCreation && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS !== "true") throw new CanonicalApiError("not_configured", "Household changes are not enabled for this app yet.");
   let path = householdCreation || householdDiscovery ? "/api/v1/households" : `/api/v1/${resource}`;
   if (resource === "assistant-turns") {
     path = "/api/v1/assistant/turns";
+  } else if (resource === "proposal-turns") {
+    path = "/api/v1/assistant/proposals/turns";
+  } else if (resource === "proposal-history") {
+    path = "/api/v1/assistant/proposals/history";
+  } else if (resource === "proposal-actions") {
+    if (typeof options.recordId !== "string" || !/^[A-Za-z0-9._:-]{1,128}$/.test(options.recordId)) throw new CanonicalApiError("validation", "This proposal reference is invalid.");
+    path = `/api/v1/assistant/proposals/${encodeURIComponent(options.recordId)}/actions`;
   } else if (userPrivate && options.recordId !== undefined) {
     if (!/^[A-Za-z0-9_-]{16,64}$/.test(options.recordId)) throw new CanonicalApiError("validation", "This preference reference is invalid.");
     path = `/api/v1/preferences/${encodeURIComponent(options.recordId)}`;
@@ -101,7 +109,7 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   if (serialized !== undefined && new TextEncoder().encode(serialized).length > 256_000) throw new CanonicalApiError("validation", "This change exceeds the supported request size.");
   const controller = new AbortController();
   // Agent requests may use the server's maximum 60-second model budget.
-  const timeout = setTimeout(() => controller.abort(), resource === "assistant-turns" ? 70_000 : 12_000);
+  const timeout = setTimeout(() => controller.abort(), assistantTurn ? 70_000 : 12_000);
   const abort = () => controller.abort(options.signal?.reason);
   if (options.signal?.aborted) controller.abort(options.signal.reason);
   options.signal?.addEventListener("abort", abort, { once: true });
