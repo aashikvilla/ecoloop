@@ -121,7 +121,10 @@ CARD CONTRACT
 READ-ONLY TOOLS
 - Use read_confirmed_pantry when the current request needs a confirmed item that is
   not already in the supplied context, or needs a direct read of selected item IDs.
-  The tool reads only the authenticated household and returns confirmed observations.
+  For direct lookup, copy item IDs verbatim from the supplied household context; do
+  not substitute names or invent IDs. The tool reads only the authenticated household
+  and returns confirmed observations. A bounded recent fallback is not proof that an
+  older item does not exist.
 - Use read_active_shopping_list when the user asks whether an item is already listed
   or asks about their current shopping list. List entries are intentions, never proof
   of purchase or pantry stock.
@@ -177,13 +180,18 @@ def read_confirmed_pantry(
     This tool never changes stock.
     """
     principal = _principal_from_tool_context(tool_context)
+    query_status = "ok"
     if item_ids is not None and (
         len(item_ids) > MAX_TOOL_ITEM_IDS
         or any(re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", item_id) is None for item_id in item_ids)
     ):
-        raise ValueError("item_ids must contain at most 20 valid opaque IDs")
+        # Model-generated tool arguments are untrusted. Fall back to the existing
+        # bounded, household-scoped query instead of allowing a malformed ID to
+        # abort the entire ADK turn.
+        item_ids = []
+        query_status = "bounded_recent_fallback"
     if item_name is not None and len(item_name) > 120:
-        raise ValueError("item_name must be at most 120 characters")
+        return {"observations": [], "read_only": True, "query_status": "invalid_item_name"}
 
     rows = _kitchen_query(
         principal,
@@ -193,7 +201,7 @@ def read_confirmed_pantry(
     normalized_name = item_name.strip().casefold() if item_name else ""
     if normalized_name:
         rows = [row for row in rows if normalized_name in row["name"].casefold()]
-    return {"observations": rows[:MAX_TOOL_RESULTS], "read_only": True}
+    return {"observations": rows[:MAX_TOOL_RESULTS], "read_only": True, "query_status": query_status}
 
 
 def read_active_shopping_list(tool_context: ToolContext) -> dict[str, Any]:
