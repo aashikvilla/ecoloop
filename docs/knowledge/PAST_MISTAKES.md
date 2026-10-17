@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-17 — ADK in-memory session reads return copies
+
+Observation: updating `Session.state` on a session returned by `InMemorySessionService.get_session` does not reliably persist authorization scope because the service returns a copy. Prevention: seed trusted scope when creating the session, recreate legacy sessions that lack it, and recheck current membership inside each household-scoped tool before reading data.
+
 ## 2026-10-17 — Correction commands must preserve zero and unknown provenance
 
 Observation: outcome recording can legitimately reduce a known balance to zero, while the fact-confirm input schema initially accepted only positive amounts. The same schema also allowed a date source when the date was unknown. Prevention: make correction schemas reflect every valid persisted state, and enforce unknown/date-source consistency at the API boundary as well as in UI builders.

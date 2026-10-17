@@ -19,6 +19,6 @@ Runtime configuration comes from process environment variables, which take prece
 - `GET /api/v1/kitchen` and `/api/v1/shopping` — require `Authorization: Bearer <Firebase ID token>` and `X-Household-ID`.
 - `POST /api/v1/facts/confirm`, `/api/v1/outcomes`, and `/api/v1/shopping` — strict versioned commands with idempotency keys.
 - `GET|POST /api/v1/share-logs`, `PATCH /api/v1/share-logs/{share_id}`, and `GET /api/v1/activity` — owner-private share lifecycle and bounded owner-recorded activity; only an eligible confirmed handover can create a `HANDED_OVER` outcome.
-- `POST /api/v1/assistant/turns` — verifies identity and membership, then returns an explicit unavailable response until managed Gemini/ADK/Session/Memory Bank integration is configured.
+- `POST /api/v1/assistant/turns` — verifies identity and membership before invoking the single ADK assistant. Its pantry and active-shopping tools are read-only, receive scope from the server-verified session principal, and recheck active membership. The assistant still uses unmanaged in-memory sessions; Managed Sessions and Memory Bank are not implemented or verified.
 
 Errors use a uniform safe envelope with a server generated request ID. Request payloads, identity tokens, membership contents, and provider data are not logged by application code. See [`docs/implementation/backend-foundation.md`](../docs/implementation/backend-foundation.md) for the storage and deletion groundwork and local evidence.
