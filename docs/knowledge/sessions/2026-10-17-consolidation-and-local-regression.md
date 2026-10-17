@@ -11,7 +11,7 @@ Root integration: `codex/demo-integration`. Integrated photo-intake commit `2947
 - Frontend TypeScript (`npx tsc --noEmit`): passed.
 - Frontend production build: passed, 15 route outputs including account, settings, intake review, item outcome/share, Ask, Activity and Shop.
 - `git diff --check`: passed before final documentation/code adjustment; rerun before commit.
-- No unit tests, provider calls, Firebase writes, billing changes, or deployments were performed in this checkpoint.
+- No unit tests or new Gemini provider calls were performed. One authorized local API/Firestore acceptance run created a disposable synthetic test account/household and verified database-backed commands; no billing changes or deployments occurred.
 
 The first parallel frontend check raced with several old dev servers and found corrupted ignored Next `.next/dev/types/validator.ts`; the app listeners were stopped, only the exact malformed generated lines were removed, and a clean production build/typecheck then passed.
 
@@ -33,3 +33,10 @@ The first parallel frontend check raced with several old dev servers and found c
 - Billing account/project linkage, linked-project/cost review, budget/controls, required cloud APIs/IAM, Cloud Run/App Hosting deployment, deployed acceptance, and live MVPTasks reconciliation.
 
 Status is local code and verification only. Do not claim the cloud product or phase exits complete. `docs/STATUS.md` remains a dated snapshot; the live task sheet remains authoritative.
+
+## Local service and API acceptance
+
+- The integrated checkout runs one frontend at `http://127.0.0.1:3000` and one authenticated FastAPI API at `http://127.0.0.1:8001`; prior EcoLoop listeners on ports 3001/3002/8002 were stopped. Browser routes for `/`, `/account`, `/kitchen`, `/kitchen/add`, `/kitchen/review`, `/ask`, `/shop`, `/activity`, `/settings`, item detail, outcome, and share all returned HTTP 200. The 3000-to-8001 CORS preflight returned 200 with the expected allow-origin.
+- Backend health reports Gemini Developer API configured/enabled, `runtime_check=not_performed`, unmanaged in-process sessions, and managed Sessions/Memory false. This checkpoint made no new Gemini request; the durable assistant route has one earlier bounded successful provider/history-readback observation. Photo extraction still lacks live provider acceptance.
+- The existing synthetic API acceptance runner completed against local FastAPI/Firestore: household create/discovery, fact create and exact replay, stale 409, Kitchen read, fact correction/replay and stale 409, Shop create/replay/read/archive/replay/empty read, outcome/replay with exactly one stock decrement, Activity read, and foreign-household 403. It left one labelled synthetic account/household and records in Firestore for continued demo work. The script does not retain a password for that disposable account; use the already-provisioned judge account for browser sign-in.
+- This verifies API/Firestore behavior and route serving, not browser interaction. Sign-in, household onboarding, screenshots, image upload, Ask card actions, and visual accessibility still need a human click-through at the single local URL.
