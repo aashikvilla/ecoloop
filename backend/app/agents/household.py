@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import uuid
 from collections import OrderedDict
 from datetime import date, datetime, timezone
@@ -14,6 +15,7 @@ from typing import Any, Annotated
 from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.adk.tools import ToolContext
 from google.genai import types
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
@@ -22,14 +24,21 @@ from app.core.errors import DomainError
 from app.core.firestore import get_firestore
 from app.core.identity import Principal
 from app.domain.preferences import list_preferences
+from app.domain.repository import list_shopping_entries
 from app.schemas.household import AssistantEnvelope, AssistantTurnRequest, DateType, ProposalCard
 
 
 APP_NAME = "ecoloop_household_assistant"
 MAX_KITCHEN_CONTEXT_ITEMS = 20
 MAX_KITCHEN_CONTEXT_CHARS = 12_000
+MAX_TOOL_ITEM_IDS = 20
+MAX_TOOL_RESULTS = 20
+MAX_TOOL_SHOPPING_ENTRIES = 50
 SESSION_TTL_SECONDS = 30 * 60
 MAX_IN_MEMORY_SESSIONS = 256
+TOOL_SCOPE_UID_KEY = "ecoloop_tool_uid"
+TOOL_SCOPE_HOUSEHOLD_KEY = "ecoloop_tool_household_id"
+TOOL_SCOPE_ROLE_KEY = "ecoloop_tool_role"
 _PROVIDER_LOCK = asyncio.Lock()
 _SESSION_LOCK = asyncio.Lock()
 _runner: Runner | None = None
@@ -94,7 +103,118 @@ CARD CONTRACT
   sharing if the item is plated, spoiled, expired, or of unknown condition.
 - A PreferenceConsent is an unpersisted proposal for explicit consent. Never claim
   that the preference is remembered or stored.
+
+READ-ONLY TOOLS
+- Use read_confirmed_pantry when the current request needs a confirmed item that is
+  not already in the supplied context, or needs a direct read of selected item IDs.
+  The tool reads only the authenticated household and returns confirmed observations.
+- Use read_active_shopping_list when the user asks whether an item is already listed
+  or asks about their current shopping list. List entries are intentions, never proof
+  of purchase or pantry stock.
+- These tools are read-only. You cannot call any tool to approve a proposal or change
+  pantry, list, plan, preference, outcome, or sharing records.
 """.strip()
+
+
+def _principal_from_tool_context(tool_context: ToolContext) -> Principal:
+    """Resolve the server-injected session scope and recheck its live membership."""
+    uid = tool_context.state.get(TOOL_SCOPE_UID_KEY)
+    household_id = tool_context.state.get(TOOL_SCOPE_HOUSEHOLD_KEY)
+    role = tool_context.state.get(TOOL_SCOPE_ROLE_KEY)
+    if not all(isinstance(value, str) and value for value in (uid, household_id, role)):
+        raise DomainError("FORBIDDEN", "The assistant household scope is unavailable.", 403)
+
+    principal = Principal(uid=uid, household_id=household_id, role=role)
+    try:
+        membership = (
+            get_firestore()
+            .collection("households")
+            .document(principal.household_id)
+            .collection("members")
+            .document(principal.uid)
+            .get()
+        )
+    except Exception as exc:
+        raise DomainError("DATA_UNAVAILABLE", "Household access could not be verified for this assistant read.", 503, True) from exc
+    data = membership.to_dict() if membership.exists else None
+    if (
+        not data
+        or data.get("uid") != principal.uid
+        or data.get("status") != "ACTIVE"
+        or data.get("role") != principal.role
+    ):
+        raise DomainError("FORBIDDEN", "The requested household membership is not available.", 403)
+    return principal
+
+
+def read_confirmed_pantry(
+    tool_context: ToolContext,
+    item_ids: list[str] | None = None,
+    item_name: str | None = None,
+) -> dict[str, Any]:
+    """Read confirmed observations in the authenticated household, optionally by ID or name.
+
+    Provide up to 20 item IDs for direct lookup, including items outside the recent
+    kitchen context. Otherwise, search at most the 200 most recently observed items.
+    This tool never changes stock.
+    """
+    principal = _principal_from_tool_context(tool_context)
+    if item_ids is not None and (
+        len(item_ids) > MAX_TOOL_ITEM_IDS
+        or any(re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", item_id) is None for item_id in item_ids)
+    ):
+        raise ValueError("item_ids must contain at most 20 valid opaque IDs")
+    if item_name is not None and len(item_name) > 120:
+        raise ValueError("item_name must be at most 120 characters")
+
+    rows = _kitchen_query(
+        principal,
+        item_ids or [],
+        max_items=MAX_TOOL_RESULTS if item_ids else 200,
+    )
+    normalized_name = item_name.strip().casefold() if item_name else ""
+    if normalized_name:
+        rows = [row for row in rows if normalized_name in row["name"].casefold()]
+    return {"observations": rows[:MAX_TOOL_RESULTS], "read_only": True}
+
+
+def read_active_shopping_list(tool_context: ToolContext) -> dict[str, Any]:
+    """Read a bounded summary of active shopping entries in the authenticated household.
+
+    Shopping entries express intent only; they do not confirm purchase or pantry stock.
+    """
+    principal = _principal_from_tool_context(tool_context)
+    entries = list_shopping_entries(principal)[:MAX_TOOL_SHOPPING_ENTRIES]
+    visible = []
+    for entry in entries:
+        item_name = entry.get("item_name")
+        if not isinstance(item_name, str) or not item_name.strip():
+            continue
+        amount = entry.get("desired_amount")
+        if (
+            isinstance(amount, bool)
+            or not isinstance(amount, (int, float))
+            or not math.isfinite(amount)
+            or amount <= 0
+        ):
+            amount = None
+        unit = entry.get("unit") if isinstance(entry.get("unit"), str) else None
+        if (amount is None) != (unit is None):
+            amount = None
+            unit = None
+        version = entry.get("version")
+        if isinstance(version, bool) or not isinstance(version, int) or version < 1:
+            version = None
+        visible.append({
+            "entry_id": str(entry.get("entry_id", ""))[:128],
+            "item_name": item_name[:120],
+            "desired_amount": amount,
+            "unit": unit[:32] if unit else None,
+            "version": version,
+            "updated_at": _iso(entry.get("updated_at")),
+            "status": "ACTIVE",
+        })
+    return {"entries": visible, "read_only": True, "purchase_confirmed": False}
 
 
 def _provider_configuration() -> tuple[str, str, str | None] | None:
@@ -191,6 +311,7 @@ async def _get_runner() -> tuple[Runner, InMemorySessionService]:
                 max_output_tokens=settings.AGENT_MAX_OUTPUT_TOKENS,
                 response_mime_type="application/json",
             ),
+            tools=[read_confirmed_pantry, read_active_shopping_list],
         )
         sessions = InMemorySessionService()
         _runner = Runner(agent=agent, app_name=APP_NAME, session_service=sessions)
@@ -203,6 +324,7 @@ async def _prepare_session(
     *,
     user_id: str,
     session_id: str,
+    principal: Principal,
 ) -> None:
     """Keep the temporary in-process transcript store bounded and short-lived."""
     now = monotonic()
@@ -214,9 +336,24 @@ async def _prepare_session(
                 _active_sessions.pop(old_key, None)
 
         current = await sessions.get_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
+        session_state = {
+            TOOL_SCOPE_UID_KEY: principal.uid,
+            TOOL_SCOPE_HOUSEHOLD_KEY: principal.household_id,
+            TOOL_SCOPE_ROLE_KEY: principal.role,
+        }
+        if current is not None and any(current.state.get(key) != value for key, value in session_state.items()):
+            # InMemorySessionService returns copies of existing sessions. Recreate
+            # legacy sessions with trusted scope rather than mutating a local copy.
+            await sessions.delete_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
+            current = None
         if current is None:
             try:
-                await sessions.create_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
+                await sessions.create_session(
+                    app_name=APP_NAME,
+                    user_id=user_id,
+                    session_id=session_id,
+                    state=session_state,
+                )
             except Exception:
                 current = await sessions.get_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
                 if current is None:
@@ -224,7 +361,12 @@ async def _prepare_session(
         elif len(current.events) >= 40:
             # Start a fresh short conversation instead of retaining an unbounded transcript.
             await sessions.delete_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
-            await sessions.create_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
+            await sessions.create_session(
+                app_name=APP_NAME,
+                user_id=user_id,
+                session_id=session_id,
+                state=session_state,
+            )
 
         _active_sessions.pop(key, None)
         _active_sessions[key] = now
@@ -241,7 +383,12 @@ def _iso(value: Any) -> str | None:
     return None
 
 
-def _kitchen_query(principal: Principal, item_ids: list[str]) -> list[dict[str, Any]]:
+def _kitchen_query(
+    principal: Principal,
+    item_ids: list[str],
+    *,
+    max_items: int = MAX_KITCHEN_CONTEXT_ITEMS,
+) -> list[dict[str, Any]]:
     """Read and minimize only the caller's verified household observations."""
     observations = (
         get_firestore()
@@ -257,7 +404,7 @@ def _kitchen_query(principal: Principal, item_ids: list[str]) -> list[dict[str, 
             for item_id in dict.fromkeys(item_ids[:MAX_KITCHEN_CONTEXT_ITEMS])
         )
     else:
-        snapshots = observations.order_by("observed_at", direction="DESCENDING").limit(200).stream()
+        snapshots = observations.order_by("observed_at", direction="DESCENDING").limit(max_items).stream()
 
     rows: list[dict[str, Any]] = []
     for snapshot in snapshots:
@@ -301,7 +448,7 @@ def _kitchen_query(principal: Principal, item_ids: list[str]) -> list[dict[str, 
                 "condition": "UNKNOWN",
             }
         )
-        if len(rows) >= MAX_KITCHEN_CONTEXT_ITEMS:
+        if len(rows) >= max_items:
             break
     return rows
 
@@ -386,7 +533,7 @@ async def generate_household_turn(
     user_id = f"household:{user_scope}"
     try:
         runner, sessions = await _get_runner()
-        await _prepare_session(sessions, user_id=user_id, session_id=session_id)
+        await _prepare_session(sessions, user_id=user_id, session_id=session_id, principal=principal)
         async with asyncio.timeout(settings.AGENT_REQUEST_TIMEOUT_SECONDS):
             events = [
                 event
