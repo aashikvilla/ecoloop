@@ -1,5 +1,11 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-17 — Gemini 3 default thinking can consume the response budget
+
+Observation: Vertex health showed the provider configured/enabled, but live ADK calls timed out at 20 and 50 seconds. Gemini 3 defaults to `HIGH` thinking, and the generation token ceiling covers both thinking and visible output. A direct provider check or health response did not prove the full ADK tool-and-history path worked.
+
+Pattern: choose a thinking level per workload; use `MINIMAL`/`LOW` for bounded household lookup and simple suggestions, keep output/request limits explicit, and verify one authenticated product turn plus durable readback before claiming availability. See the [AI activation follow-up](sessions/2026-10-17-cloud-run-ai-activation-followup.md) and [Gemini 3 thinking-level documentation](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/start/get-started-with-gemini-3?hl=en).
+
 ## 2026-10-17 — Prompt evaluations do not prove authorization
 
 Observation: an Agents CLI prompt dataset can probe whether responses follow scope and consent instructions, but it does not establish authenticated membership checks, cross-household isolation, revocation propagation, strict schema validation, or canonical no-write behavior. Prevention: label such datasets synthetic and quality-only; retain separate deterministic boundary/integration acceptance, and do not treat LLM-judge scores as security evidence.

@@ -2,6 +2,15 @@
 
 Updated 17 October 2026 after the Cloud Run backend first release. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
 
+## Cloud Run AI activation — 17 October 2026
+
+- Main checkpoints `8a76551`, `85334c7`, `7d08d19`, and `3f12969` enable the Cloud Run Vertex AI provider, harden malformed read-only pantry tool arguments, cap generated output and request volume, and set Gemini 3.1 Flash-Lite thinking to `MINIMAL` for both household suggestions and image candidate extraction.
+- GitHub Actions deployments `39036298426`, `39036779993`, `39037238775`, and `39037686836` completed successfully. Cloud Run API `ecoloop-api-00018-dov` receives 100% traffic. `/api/v1/health` reports `provider=vertex_ai`, `configured=true`, and `enabled=true`.
+- This reports configuration only. The health `runtime_check` remains `not_performed`; live authenticated Ask calls reached Cloud Run but failed (503 on malformed tool IDs before the fix, then 504s at the configured time limits). The tool argument path was fixed, and Gemini thinking was reduced afterward, but the revised product path has not had a successful response/readback acceptance yet. Do not claim deployed AI is working until one synthetic household Ask turn returns a validated card and durable history readback.
+- Current model configuration is independently tunable: ADK household orchestrator `AGENT_MODEL=gemini-3.1-flash-lite`; photo candidate extraction `PHOTO_MODEL=gemini-3.1-flash-lite`. Both are at `MINIMAL` thinking, output is capped at 2,048 tokens, requests time out at 50 seconds, and the per-user daily request limit is 3. There is one product ADK agent with three scoped read-only tools; no product multi-agent delegation is implemented. Gemma is not provisioned.
+- Managed Sessions remain `in_memory_unmanaged`; Memory Bank is `not_configured`; managed Agent Runtime remains absent. The 50-second model request still failed before the final `MINIMAL`-thinking deployment, so response latency and actual token cost are unverified. The ₹2,000 project-wide budget is an alert, not a hard cap.
+- Backend compileall and deployment-workflow YAML parsing passed. No unit tests ran. See [AI activation follow-up](knowledge/sessions/2026-10-17-cloud-run-ai-activation-followup.md).
+
 ## Deployed household creation acceptance — 17 October 2026
 
 - The deployed account page showed a generic household-service error after sign-in. Root cause: the API verifies Firebase ID-token revocation with `check_revoked=True`, which performs an Auth user lookup; `ecoloop-api-runtime` had Firestore access but lacked `firebaseauth.users.get`.
