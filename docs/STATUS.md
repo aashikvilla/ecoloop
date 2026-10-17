@@ -2,6 +2,14 @@
 
 Updated 17 October 2026 after the local screen-journey follow-up. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
 
+## Returning-member onboarding and read-only browser acceptance — 17 October 2026
+
+- Account sign-in and Firebase membership discovery succeeded in the existing local browser. The signed-in account returned two memberships; selecting the existing household loaded four Kitchen records and one Shopping entry from the household API. Home, Ask, Activity, Settings, and the capture route were inspected without submitting a model prompt or writing database data.
+- Corrected onboarding so returning members see their household choices first. New users with no memberships still get first-household setup; returning members can open it explicitly with “Create another household.” Browser inspection confirmed both the returning-member screen and the optional setup card. No household was created in this pass.
+- Local backend health returned HTTP 200 and reports Gemini configured/enabled, but `runtime_check=not_performed`; health is not a provider response. Managed Sessions/Memory are not configured. No AI call or browser mutation occurred.
+- Frontend lint, TypeScript, and `git diff --check` passed. No unit tests or production build ran. Stitch visual review was a single compact browser screenshot against the supplied Add Food reference; it was not pixel-level or full-route acceptance.
+- PR #1 remains draft and `main` is not eligible for merge. Live MVPTasks status was not changed. The latest session journal records remaining gates and exact evidence boundaries.
+
 ## Latest local screen-journey follow-up — 17 October 2026
 
 - Three isolated GPT-6 Luna/high slices were reviewed and merged into `codex/demo-integration`: installable PWA/readiness copy and a 768px mobile-shell breakpoint (`df972ea`), confirmed-intake continuation into Ask (`fdb0709`), and saved-plan-to-observed-outcome references (`712c495`). The plan outcome reference is checked inside the existing household transaction; approving/saving a plan still does not mean it was prepared or eaten.

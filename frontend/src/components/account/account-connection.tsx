@@ -52,6 +52,7 @@ export function AccountConnection() {
   const [memberships, setMemberships] = useState<CreatedHousehold[]>([]);
   const [membershipLoading, setMembershipLoading] = useState(false);
   const [membershipError, setMembershipError] = useState("");
+  const [createHouseholdOpen, setCreateHouseholdOpen] = useState(false);
   const [householdName, setHouseholdName] = useState("");
   const [onboardingStep, setOnboardingStep] = useState<"name" | "review" | "complete">("name");
   const [createIdempotencyKey, setCreateIdempotencyKey] = useState("");
@@ -92,6 +93,7 @@ export function AccountConnection() {
               setMemberships([]);
               setMembershipError("");
               setMembershipLoading(Boolean(nextUser));
+              setCreateHouseholdOpen(false);
               requestRef.current?.abort();
               createRequestRef.current?.abort();
               createRequestRef.current = null;
@@ -170,6 +172,7 @@ export function AccountConnection() {
     }).then((rows) => {
       if (controller.signal.aborted) return;
       setMemberships(rows);
+      setCreateHouseholdOpen(rows.length === 0);
       if (rows.length === 1) {
         setSelectedHousehold(rows[0].household_id);
         setHouseholdId(rows[0].household_id);
@@ -545,7 +548,7 @@ export function AccountConnection() {
         )}
       </Card>
 
-      {authState === "signed-in" && (!selectedHousehold || onboardingStep === "complete") && (
+      {authState === "signed-in" && (onboardingStep === "complete" || (createHouseholdOpen && !membershipLoading)) && (
         <Card className="space-y-4 border border-line p-5 sm:p-6" aria-labelledby="onboarding-title">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted">Household setup</span>
@@ -628,7 +631,9 @@ export function AccountConnection() {
         </div>
         {membershipLoading && <p role="status" className="text-sm text-muted">Loading your households…</p>}
         {membershipError && <p role="alert" className="text-sm text-danger">{membershipError}</p>}
-        {memberships.length > 0 && <div className="space-y-2" role="group" aria-label="Your households">{memberships.map((membership) => <Button key={membership.household_id} type="button" fullWidth variant={selectedHousehold === membership.household_id ? "primary" : "secondary"} onClick={() => { updateHousehold(membership.household_id); setSelectedHousehold(membership.household_id); liveHousehold.setHouseholdId(membership.household_id); }}>{membership.name} · {membership.role.toLowerCase()}</Button>)}</div>}
+        {memberships.length > 0 && <div className="space-y-2" role="group" aria-label="Your households">{memberships.map((membership) => <Button key={membership.household_id} type="button" fullWidth variant={selectedHousehold === membership.household_id ? "primary" : "secondary"} onClick={() => { updateHousehold(membership.household_id); setSelectedHousehold(membership.household_id); liveHousehold.setHouseholdId(membership.household_id); setCreateHouseholdOpen(false); }}>{membership.name} · {membership.role.toLowerCase()}</Button>)}
+          {!createHouseholdOpen && <Button type="button" variant="ghost" onClick={() => { setHouseholdName(""); setOnboardingStep("name"); setCreateError(null); setCreateIdempotencyKey(""); setCreatedHousehold(null); setCreateHouseholdOpen(true); }}>Create another household</Button>}
+        </div>}
         {!membershipLoading && !membershipError && user && memberships.length === 0 && <p className="rounded-xl bg-primary-soft p-3 text-sm text-primary">No household membership yet. Create your household above to begin.</p>}
         <form onSubmit={submitHousehold} className="space-y-3">
           <label
