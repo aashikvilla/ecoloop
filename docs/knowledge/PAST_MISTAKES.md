@@ -22,6 +22,10 @@ Pattern: remove superseded material from the active checkout when Git history is
 Observation: loading a developer `.env` into backend settings can activate a configured paid model path even when the current task only needs local API work. Provider selection also treated an empty `SecretStr` as present, hiding the fallback key.
 Pattern: keep provider calls behind a separate explicit opt-in; report selected provider and activation/runtime status without exposing credentials; treat blank secrets as absent. Health checks must not probe external providers.
 
+## 2026-10-17 — Idempotent acceptance compares command results, not request envelopes
+
+Observation: a correct retry returned the same persisted result under a new request ID, but the acceptance harness compared the full response envelope and failed. Prevention: compare the stable domain result for idempotency; treat per-request metadata such as trace/request IDs as intentionally different.
+
 ## 2026-10-16 — Validate the producer through the consumer
 
 The shared card validator correctly rejected an action list longer than ten, but the scripted Ask producer emitted all twelve allowed action names for every card. Types, lint, builds and a valid backend wire fixture passed while every actual browser example disappeared. Use per-card allowed choices and verify the actual integrated producer in the production browser; a valid hand-authored fixture alone does not cover the product path.

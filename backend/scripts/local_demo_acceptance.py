@@ -62,6 +62,14 @@ def main() -> None:
         request("POST", "facts/confirm", stale, 409)
         kitchen = request("GET", "kitchen")["result"]["observations"]
         assert len(kitchen) == len(foods), "Duplicate canonical items"
+        correction = {"schema_version": 1, "idempotency_key": uuid4().hex, "observations": [{"item_id": "demo-spinach", "base_version": 1, "name": "Baby spinach", "amount": 250, "unit": "g", "storage": "fridge"}]}
+        corrected = request("POST", "facts/confirm", correction)["result"]
+        assert request("POST", "facts/confirm", correction)["result"] == corrected, "Correction retry changed the recorded result"
+        stale_correction = dict(correction, idempotency_key=uuid4().hex)
+        request("POST", "facts/confirm", stale_correction, 409)
+        kitchen = request("GET", "kitchen")["result"]["observations"]
+        spinach = next(item for item in kitchen if item["item_id"] == "demo-spinach")
+        assert spinach["version"] == 2 and spinach["amount"] == 250 and spinach["name"] == "Baby spinach", "Corrected fact did not read back"
         shopping = {"schema_version": 1, "idempotency_key": uuid4().hex, "entry": {"entry_id": "demo-lemons", "base_version": 0, "item_name": "Lemons", "desired_amount": 2, "unit": "pieces"}}
         request("POST", "shopping", shopping)
         request("POST", "shopping", shopping)
