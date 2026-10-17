@@ -631,6 +631,21 @@ export function AccountConnection() {
         </div>
         {membershipLoading && <p role="status" className="text-sm text-muted">Loading your households…</p>}
         {membershipError && <p role="alert" className="text-sm text-danger">{membershipError}</p>}
+        {(authState === "signed-out" || authState === "error" || authState === "unavailable") && (
+          <div className="rounded-xl bg-primary-soft p-4" role="status">
+            <p className="font-semibold text-primary">Sign in to create a household</p>
+            <p className="mt-1 text-sm leading-relaxed text-muted">
+              Household IDs are generated after you confirm creation. Sign in
+              first to see your memberships or create a new household.
+            </p>
+            <a
+              className="mt-3 inline-flex min-h-11 items-center font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              href="#identity-title"
+            >
+              Go to sign-in options
+            </a>
+          </div>
+        )}
         {memberships.length > 0 && <div className="space-y-2" role="group" aria-label="Your households">{memberships.map((membership) => <Button key={membership.household_id} type="button" fullWidth variant={selectedHousehold === membership.household_id ? "primary" : "secondary"} onClick={() => { updateHousehold(membership.household_id); setSelectedHousehold(membership.household_id); liveHousehold.setHouseholdId(membership.household_id); setCreateHouseholdOpen(false); }}>{membership.name} · {membership.role.toLowerCase()}</Button>)}
           {!createHouseholdOpen && <Button type="button" variant="ghost" onClick={() => { setHouseholdName(""); setOnboardingStep("name"); setCreateError(null); setCreateIdempotencyKey(""); setCreatedHousehold(null); setCreateHouseholdOpen(true); }}>Create another household</Button>}
         </div>}

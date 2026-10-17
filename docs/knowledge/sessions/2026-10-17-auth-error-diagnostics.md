@@ -10,6 +10,8 @@ The frontend caught Firebase errors but mapped only selected codes; all other co
 
 `frontend/src/components/account/account-connection.tsx` now gives specific guidance for common Firebase credential, provider, domain, popup, network, throttling, and app/API-key errors. Unknown Firebase errors remain generic but include only a strictly validated `namespace/code`; raw error messages, stacks, tokens, and credentials are never displayed.
 
+The household chooser also shows a signed-out sign-in-to-create prompt with a link to the account controls. Creation remains authenticated and is not sent until the owner completes sign-in and confirms the generated request.
+
 Validation: targeted ESLint for `account-connection.tsx`, `npx tsc --noEmit`, and `git diff --check` passed. No unit tests, env-file reads, browser writes, cloud changes, or deployment were performed. The active Cloud Run revision still uses the earlier image, so these diagnostics will only appear after a later authorized frontend release.
 
 ## Follow-up
