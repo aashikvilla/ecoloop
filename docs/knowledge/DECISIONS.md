@@ -39,3 +39,7 @@ Load local backend settings from the ignored `backend/.env` for development, wit
 ## Archive removed shopping entries (2026-10-17)
 
 Shop removal is a versioned soft archive, scoped to the active household and authenticated actor, with an idempotent retry record. The active-list read filters archived rows after its existing bounded query, so removal preserves history without adding a Firestore index or changing Kitchen stock. A removal is reviewed explicitly before the command is sent.
+
+## Forward photo bytes to Gemini without EcoLoop media persistence (2026-10-17)
+
+The bounded household photo intake sends validated JPEG, PNG, or WebP bytes directly from the authenticated API request to the configured Gemini Developer API. EcoLoop stores only strictly validated candidate fields in the existing creator-private intake record; it does not write image bytes to disk or Cloud Storage, and no provider retention duration is claimed. Photo processing stays unavailable unless `AGENT_ENABLED=true` and a Developer API key are configured. The browser command flag remains default-off. See the photo-intake session for local verification and cloud acceptance gaps.

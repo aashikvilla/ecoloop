@@ -51,13 +51,18 @@ def _candidate_value(candidate_id: str, entry: Any) -> dict[str, Any]:
     }
 
 
-def create_intake(principal: Principal, command: CreateIntakeCommand) -> dict[str, Any]:
+def create_intake(
+    principal: Principal,
+    command: CreateIntakeCommand,
+    *,
+    request_fingerprint: str | None = None,
+) -> dict[str, Any]:
     db = get_firestore()
     household = db.collection("households").document(principal.household_id)
     intake_id = uuid4().hex
     intake_ref = household.collection("intakes").document(intake_id)
     idem_ref = _idempotency_ref(household, "intake", command.idempotency_key, principal.uid)
-    payload_hash = _payload_hash(command)
+    payload_hash = request_fingerprint or _payload_hash(command)
     created_at = datetime.now(timezone.utc)
     candidates = [_candidate_value(uuid4().hex, entry) for entry in command.entries]
     record = IntakeRecord(intake_id=intake_id, status="CANDIDATE", version=1, candidates=candidates)

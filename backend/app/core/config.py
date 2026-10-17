@@ -19,6 +19,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
     ]
     MAX_REQUEST_BYTES: int = 256_000
+    MAX_PHOTO_BYTES: int = 2_000_000
     GEMINI_API_KEY: SecretStr | None = None
     GOOGLE_API_KEY: SecretStr | None = None
     AGENT_ENABLED: bool = False
@@ -50,6 +51,13 @@ class Settings(BaseSettings):
     def validate_request_limit(cls, size: int) -> int:
         if not 1_024 <= size <= 2_000_000:
             raise ValueError("MAX_REQUEST_BYTES must be between 1 KiB and 2 MiB")
+        return size
+
+    @field_validator("MAX_PHOTO_BYTES")
+    @classmethod
+    def validate_photo_limit(cls, size: int) -> int:
+        if not 16_384 <= size <= 2_000_000:
+            raise ValueError("MAX_PHOTO_BYTES must be between 16 KiB and 2 MiB")
         return size
 
     @field_validator("AGENT_REQUEST_TIMEOUT_SECONDS")

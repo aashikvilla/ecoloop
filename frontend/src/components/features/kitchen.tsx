@@ -13,6 +13,7 @@ import { CommandValidationError, createIdempotencyKey, parseFoodConfirmationResu
 import { submitIntake, type IntakeCommand, type IntakeEntry, type IntakeResult } from "@/lib/canonical-intake";
 import { Notice, PageIntro, Panel, QuietLink, UnitLabel } from "./ui";
 import { IntakeReview } from "./intake-review";
+import { PhotoIntake } from "./photo-intake";
 
 function dateLabel(date: string | null, type: DateType) {
   if (!date || type === "UNKNOWN") return "Date unknown";
@@ -156,10 +157,12 @@ function CaptureFoodForm({ auth, user, householdId }: Pick<ReturnType<typeof use
   }
 
   return <div className="mx-auto max-w-3xl px-4 pb-12 pt-6 sm:px-6 lg:pt-10">
-    <PageIntro eyebrow="Kitchen · capture" title="Add food candidates" description="Record what you know by hand, or enter a short list of names. These stay as drafts until you review and confirm them." />
+    <PageIntro eyebrow="Kitchen · capture" title="Add food candidates" description="Use a photo, record what you know by hand, or enter a short list of names. These stay as drafts until you review and confirm them." />
     <LiveDestinationNotice />
     <Notice tone="warn">These are unconfirmed candidate drafts. They do not change Kitchen stock. Nothing is confirmed until a later review step.</Notice>
     {!enabled && <Notice tone="info">Candidate intake is disabled by the current app configuration. You can prepare entries, but they will not be sent.</Notice>}
+
+    <PhotoIntake />
 
     <Panel className="mt-4">
       <div className="mb-5 flex gap-2" role="group" aria-label="Choose intake type">
