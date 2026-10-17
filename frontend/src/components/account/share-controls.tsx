@@ -37,6 +37,7 @@ type ShareControlsProps = {
   ownerUid: string;
   enabled: boolean;
   onCommitted: () => void;
+  initialItemId?: string;
 };
 
 const PAGE_SIZE = 25;
@@ -79,7 +80,7 @@ function handoverStockEffect(command: ShareTransitionCommand, item: KitchenObser
   if (command.amount === null) return "The previously known kitchen quantity will be marked unknown.";
   return "The kitchen quantity will decrease by this amount if the recorded unit and versions still match.";
 }
-export function ShareControls({ getIdToken, householdId, ownerUid, enabled, onCommitted }: ShareControlsProps) {
+export function ShareControls({ getIdToken, householdId, ownerUid, enabled, onCommitted, initialItemId }: ShareControlsProps) {
   const scope = useMemo(() => ({ householdId, ownerUid, enabled, getIdToken }), [householdId, ownerUid, enabled, getIdToken]);
   const scopeReady = enabled && householdPattern.test(householdId) && typeof ownerUid === "string" && ownerUid.trim().length > 0 && ownerUid.length <= 128;
   const [data, setData] = useState<DataState>(() => emptyData());
@@ -161,6 +162,11 @@ export function ShareControls({ getIdToken, householdId, ownerUid, enabled, onCo
       if (kitchenResult.kind !== "kitchen") throw new ShareCommandError("The current kitchen response was not valid for sharing.");
       const shares = parseShareHistoryPage(sharePayload, householdId, ownerUid);
       setData({ scope, kitchen: kitchenResult.records, shares: shares.records });
+      if (initialItemId) {
+        const item = kitchenResult.records.find((record) => record.item_id === initialItemId);
+        setSelectedItemId(item?.item_id ?? "");
+        if (!item) setReadError("This item was not present in the latest Kitchen read. Choose a current item before preparing a share.");
+      }
       setTransitionDraft(null);
       if (discardPending) setPending(null);
       setHandoverAmount("");

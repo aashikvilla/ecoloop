@@ -24,6 +24,7 @@ export type OutcomeControlsProps = {
   householdId: string;
   enabled: boolean;
   onCommitted: () => void;
+  initialItemId?: string;
 };
 
 type PendingOutcome = { command: RecordOutcomeCommand; itemName: string; stockAmount: number | null; stockUnit: string | null; localTime: string; timeZone: string; status: "ready" | "ambiguous" | "conflict" | "rejected" };
@@ -43,7 +44,7 @@ function isAmbiguous(error: unknown): boolean {
   return true;
 }
 
-export function OutcomeControls({ getIdToken, householdId, enabled, onCommitted }: OutcomeControlsProps) {
+export function OutcomeControls({ getIdToken, householdId, enabled, onCommitted, initialItemId }: OutcomeControlsProps) {
   const [records, setRecords] = useState<KitchenObservation[] | null>(null);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [draft, setDraft] = useState<OutcomeDraft>(newDraft);
@@ -104,6 +105,12 @@ export function OutcomeControls({ getIdToken, householdId, enabled, onCommitted 
       const response = await readCanonicalRecords("kitchen", token, householdId, controller.signal);
       if (!isCurrent(controller, expectedScope) || response.kind !== "kitchen") return;
       setRecords(response.records);
+      if (initialItemId) {
+        const initialItem = response.records.find((record) => record.item_id === initialItemId);
+        setSelectedItemId(initialItem?.item_id ?? "");
+        setDraft((previous) => ({ ...previous, outcomeId: "", itemId: initialItem?.item_id ?? "", baseVersion: initialItem?.version ?? 0 }));
+        if (!initialItem) setNotice("This item was not present in the latest Kitchen read. Choose a current item before reviewing an outcome.");
+      }
       if (discardPending && pending) {
         const current = response.records.find((record) => record.item_id === pending.command.item_id);
         setSelectedItemId(current?.item_id ?? "");

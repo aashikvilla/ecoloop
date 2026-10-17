@@ -7,10 +7,10 @@ export class CanonicalApiError extends Error {
   }
 }
 
-export type CanonicalResource = "households" | "kitchen" | "shopping" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "assistant-turns" | "preferences";
+export type CanonicalResource = "households" | "kitchen" | "shopping" | "shopping-archive" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "assistant-turns" | "preferences";
 export type CanonicalRequestOptions = { method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE"; recordId?: string; body?: unknown; signal?: AbortSignal; query?: { limit?: number; cursor?: string } };
 const methods: Record<CanonicalResource, readonly string[]> = {
-  households: ["GET", "POST"], kitchen: ["GET"], shopping: ["GET", "POST"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "assistant-turns": ["POST"], preferences: ["GET", "PUT", "DELETE"],
+  households: ["GET", "POST"], kitchen: ["GET"], shopping: ["GET", "POST"], "shopping-archive": ["PATCH"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "assistant-turns": ["POST"], preferences: ["GET", "PUT", "DELETE"],
 };
 const RESPONSE_BYTES = 512_000;
 
@@ -81,6 +81,9 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   } else if (resource === "share-transition") {
     if (typeof options.recordId !== "string" || !/^[A-Za-z0-9._:-]{1,128}$/.test(options.recordId) || [".", ".."].includes(options.recordId)) throw new CanonicalApiError("validation", "Choose a valid sharing record.");
     path = `/api/v1/share-logs/${encodeURIComponent(options.recordId)}`;
+  } else if (resource === "shopping-archive") {
+    if (typeof options.recordId !== "string" || !/^[A-Za-z0-9._:-]{1,128}$/.test(options.recordId) || [".", ".."].includes(options.recordId)) throw new CanonicalApiError("validation", "Choose a valid shopping entry.");
+    path = `/api/v1/shopping/${encodeURIComponent(options.recordId)}`;
   } else if (options.recordId !== undefined) throw new CanonicalApiError("validation", "A record reference is not supported for this operation.");
   const url = new URL(path, apiOrigin());
   if (options.query) {
