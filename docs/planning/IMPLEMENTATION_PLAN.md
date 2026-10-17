@@ -148,6 +148,7 @@ Indicative effort: 3–4 engineering days. Entry: M2 reviewed exit gate. Exit: M
 - [ ] **M3.02.02 — Implement dinner adjustment and explicit proposal approval**
   - Owner: Full stack. Prerequisites: M3.01.01, M3.02.01.
   - Acceptance: 4→2 scaling deterministic; prepared-stage behavior sensible; stale/expired/malicious approvals denied; no inferred consumption.
+  - Local coding note (17 October 2026): authenticated transactional approve/edit/dismiss now creates or revises canonical meal plans. Saved assistant quantities are labeled estimates; only eligible numeric quantities with recognized units scale deterministically before preparation. Portion changes require an exact household plan reference/version; model-proposed quantity deltas are preview-only. Kitchen stock is unchanged. Browser command acceptance, adversarial/stale/expiry acceptance, managed-session prerequisite, and reviewer exit evidence remain open; leave this task unchecked.
 
 - [ ] **M3.02.03 — Review M3 exit evidence**
   - Owner: Reviewer. Prerequisites: M3.01.03, M3.02.02.

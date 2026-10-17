@@ -324,6 +324,8 @@ class PortionAdjustmentCard(ProposalBase):
     original_servings: Annotated[StrictInt, Field(ge=1, le=100)]
     proposed_servings: Annotated[StrictInt, Field(ge=1, le=100)]
     changes: Annotated[list[QuantityChange], Field(max_length=50)]
+    # The agent output may omit this field; the API fills it from the verified plan.
+    plan_title: ItemName | None = None
 
 
 class BuyCheckCard(ProposalBase):

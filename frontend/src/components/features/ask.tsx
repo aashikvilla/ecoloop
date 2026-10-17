@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLiveHousehold } from "@/lib/live-household";
 import { CanonicalApiError } from "@/lib/canonical-transport";
 import type { AssistantEnvelope } from "@/lib/assistant-cards";
-import { readAssistantHistory, readSavedPreferences, requestDurableTurn, saveProposedPreference, submitProposalAction, type ProposalResolution, type SavedPreference } from "@/lib/assistant-actions";
+import { readAssistantHistory, readSavedPreferences, requestDurableTurn, saveProposedPreference, submitMealProposalAction, submitProposalAction, type PreparationStage, type ProposalResolution, type SavedPreference } from "@/lib/assistant-actions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
@@ -137,6 +137,25 @@ function ScopedAskAssistant() {
       setActionBusy(null);
     }
   }
+  async function actMeal(proposalId: string, version: number, action: "APPROVE" | "EDIT" | "DISMISS", preparationStage: PreparationStage, proposedServings?: number, planBaseVersion?: number) {
+    if (!user || !householdId || actionBusy) return;
+    const key = `${proposalId}:${action}:${preparationStage}:${proposedServings ?? "-"}:${planBaseVersion ?? "-"}`;
+    actionKeys.current[key] ??= crypto.randomUUID();
+    const controller = new AbortController();
+    requestController.current = controller;
+    setActionBusy(`${proposalId}:${action}`); setError(""); setNotice("");
+    try {
+      const token = await user.getIdToken();
+      const resolution = await submitMealProposalAction(token, householdId, proposalId, version, action, preparationStage, actionKeys.current[key], controller.signal, { proposedServings, planBaseVersion });
+      setResolutions((current) => ({ ...current, [proposalId]: resolution }));
+      setNotice(action === "DISMISS" ? "Meal proposal dismissed." : `Meal plan saved for ${resolution.servings} ${resolution.servings === 1 ? "person" : "people"}. Kitchen stock was not changed.`);
+    } catch (caught) {
+      if (!controller.signal.aborted) setError(readError(caught));
+    } finally {
+      if (requestController.current === controller) requestController.current = null;
+      setActionBusy(null);
+    }
+  }
   async function consentToPreference(proposalId: string, proposedText: string) {
     if (!user || actionBusy) return;
     actionKeys.current[`${proposalId}:CONSENT`] ??= crypto.randomUUID();
@@ -174,6 +193,6 @@ function ScopedAskAssistant() {
     </Card>
     {auth === "signed-in" && preferenceLoadState === "loading" && <p role="status" className="text-sm text-muted">Checking private saved preferences…</p>}
     {auth === "signed-in" && preferenceLoadState === "error" && <div role="alert" className="flex flex-wrap items-center gap-3 text-sm text-danger"><span>Saved preferences could not be checked, so preference cards are unavailable until they can be checked.</span><Button variant="secondary" onClick={() => setPreferenceReload((current) => current + 1)}>Retry checking preferences</Button></div>}
-    {assistantResponse && <AssistantCards envelope={assistantResponse} rejectedCards={rejectedCards} resolutions={resolutions} privatePreferences={privatePreferences} preferenceLoadState={preferenceLoadState} preferenceErrors={preferenceErrors} onAction={act} onConsent={consentToPreference} actionBusy={actionBusy} actionsEnabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"} />}
+    {assistantResponse && <AssistantCards envelope={assistantResponse} rejectedCards={rejectedCards} resolutions={resolutions} privatePreferences={privatePreferences} preferenceLoadState={preferenceLoadState} preferenceErrors={preferenceErrors} onAction={act} onMealAction={actMeal} onConsent={consentToPreference} actionBusy={actionBusy} actionsEnabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"} />}
   </div>;
 }
