@@ -13,6 +13,10 @@ Observation: updating `Session.state` on a session returned by `InMemorySessionS
 Observation: household history endpoints are paginated. A count or quantity from the first page can look like a complete household total if its coverage is not stated. Share offers also describe a different state from completed handovers.
 Pattern: summarize only fetched records, label the loaded-page scope and expose continuation when another page exists. Keep offers separate from outcome events, and add quantities only when their recorded measurement basis and units support the same total.
 
+## 2026-10-17 — Pin the target architecture, not an arbitrary multi-arch image digest
+
+The frontend Cloud Build requested `linux/amd64`, but its pinned Node digest was the `linux/arm/v7` child manifest. Local builds passed while the remote container failed at `COPY` with an architecture mismatch. When a build pins a multi-platform image, use the verified target-platform child digest or the index digest with explicit platform resolution; check Cloud Build's resolved OS/architecture before attributing failure to app code.
+
 ## 2026-10-17 — Effect replay must restore identity-scoped refs
 
 Observation: a React StrictMode cleanup cleared the UID ref used by the next effect setup to accept or reject private-read results. The request completed, but both success and error paths discarded it and the Settings page stayed loading.
