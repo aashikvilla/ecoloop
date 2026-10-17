@@ -58,6 +58,9 @@ def _valid_record(data: dict[str, Any], uid: str, preference_id: str) -> dict[st
         or sync.get("version") != version
         or sync.get("status") not in MEMORY_SYNC_STATES
         or ("cleanup_required" in sync and not isinstance(sync.get("cleanup_required"), bool))
+        or (sync.get("resource_name") is not None and not isinstance(sync.get("resource_name"), str))
+        or (sync.get("target_resource_name") is not None and not isinstance(sync.get("target_resource_name"), str))
+        or not _valid_provider_operation(sync.get("provider_operation"))
     ):
         raise DomainError("DATA_UNAVAILABLE", "Preference sync data is invalid.", 503, True)
     else:
@@ -198,6 +201,9 @@ def _pending_memory_sync(version: int, now: datetime, prior: dict[str, Any] | No
         "lease_token": lease_token,
         "lease_expires_at": lease_expires_at,
         "cleanup_required": cleanup_required,
+        "resource_name": prior_sync.get("resource_name") if isinstance(prior_sync, dict) else None,
+        "target_resource_name": prior_sync.get("target_resource_name") if isinstance(prior_sync, dict) else None,
+        "provider_operation": prior_sync.get("provider_operation") if isinstance(prior_sync, dict) else None,
         "updated_at": now,
         "error_code": None,
     }
@@ -219,7 +225,7 @@ def claim_preference_memory_sync(uid: str, preference_id: str) -> dict[str, Any]
         sync = data.get("memory_sync")
         if not isinstance(sync, dict):
             sync = _pending_memory_sync(record["version"], now, data)
-        if sync.get("status") == "synced":
+        if sync.get("status") == "synced" and sync.get("provider_operation") is None:
             return {"status": "synced", "record": record}
         expiry = sync.get("lease_expires_at")
         if isinstance(sync.get("lease_token"), str) and isinstance(expiry, datetime) and expiry > now:
@@ -234,12 +240,18 @@ def claim_preference_memory_sync(uid: str, preference_id: str) -> dict[str, Any]
                     "lease_token": token,
                     "lease_expires_at": now + timedelta(seconds=MEMORY_SYNC_LEASE_SECONDS),
                     "cleanup_required": sync.get("cleanup_required") is True,
+                    "resource_name": sync.get("resource_name"),
+                    "target_resource_name": sync.get("target_resource_name"),
+                    "provider_operation": sync.get("provider_operation"),
                     "updated_at": now,
                     "error_code": None,
                 }
             },
         )
         record["memory_bank_sync"] = {"status": "syncing", "version": record["version"]}
+        record["memory_bank_resource_name"] = sync.get("resource_name")
+        record["memory_bank_target_resource_name"] = sync.get("target_resource_name")
+        record["memory_bank_provider_operation"] = sync.get("provider_operation")
         return {"status": "claimed", "token": token, "record": record}
 
     try:
@@ -273,6 +285,9 @@ def read_current_preference_for_memory_sync(
             or sync["lease_expires_at"] <= datetime.now(timezone.utc)
         ):
             return None
+        record["memory_bank_resource_name"] = sync.get("resource_name")
+        record["memory_bank_target_resource_name"] = sync.get("target_resource_name")
+        record["memory_bank_provider_operation"] = sync.get("provider_operation")
         return record
 
     try:
@@ -283,12 +298,200 @@ def read_current_preference_for_memory_sync(
         raise DomainError("DATA_UNAVAILABLE", "Preference sync state could not be checked.", 503, True) from exc
 
 
+def record_preference_memory_sync_target(
+    uid: str, preference_id: str, version: int, lease_token: str, resource_name: str
+) -> bool:
+    """Persist the intended provider path before a mutation can leave an orphan."""
+    if not isinstance(resource_name, str) or not resource_name:
+        raise ValueError("invalid memory resource name")
+    db = get_firestore()
+    ref = _collection(uid).document(preference_id)
+    now = datetime.now(timezone.utc)
+
+    @firestore.transactional
+    def record_target(transaction: Any) -> bool:
+        snapshot = ref.get(transaction=transaction)
+        if not snapshot.exists:
+            return False
+        data = snapshot.to_dict() or {}
+        record = _valid_record(data, uid, preference_id)
+        sync = data.get("memory_sync") or {}
+        if (
+            record["version"] != version
+            or sync.get("version") != version
+            or sync.get("lease_token") != lease_token
+            or not isinstance(sync.get("lease_expires_at"), datetime)
+            or sync["lease_expires_at"] <= now
+            or sync.get("provider_operation") is not None
+        ):
+            return False
+        transaction.update(ref, {"memory_sync.target_resource_name": resource_name, "memory_sync.updated_at": now})
+        return True
+
+    try:
+        return record_target(db.transaction())
+    except DomainError:
+        raise
+    except Exception as exc:
+        raise DomainError("DATA_UNAVAILABLE", "Preference sync target could not be saved.", 503, True) from exc
+
+
+def _valid_provider_operation(value: Any) -> bool:
+    if value is None:
+        return True
+    if not isinstance(value, dict):
+        return False
+    return (
+        value.get("phase") in {"starting", "running"}
+        and value.get("kind") in {"create", "delete"}
+        and isinstance(value.get("resource_name"), str)
+        and bool(value.get("resource_name"))
+        and (value.get("operation_name") is None or isinstance(value.get("operation_name"), str))
+        and (value.get("phase") == "starting" or bool(value.get("operation_name")))
+    )
+
+
+def begin_preference_memory_operation(
+    uid: str, preference_id: str, version: int, lease_token: str, kind: str, resource_name: str
+) -> bool:
+    """Persist an ambiguous-start fence before submitting a provider mutation."""
+    if kind not in {"create", "delete"} or not resource_name:
+        raise ValueError("invalid provider operation")
+    db = get_firestore()
+    ref = _collection(uid).document(preference_id)
+    now = datetime.now(timezone.utc)
+
+    @firestore.transactional
+    def begin(transaction: Any) -> bool:
+        snapshot = ref.get(transaction=transaction)
+        if not snapshot.exists:
+            return False
+        data = snapshot.to_dict() or {}
+        record = _valid_record(data, uid, preference_id)
+        sync = data.get("memory_sync") or {}
+        if (
+            record["version"] != version
+            or sync.get("version") != version
+            or sync.get("lease_token") != lease_token
+            or not isinstance(sync.get("lease_expires_at"), datetime)
+            or sync["lease_expires_at"] <= now
+            or sync.get("provider_operation") is not None
+        ):
+            return False
+        transaction.update(ref, {
+            "memory_sync.provider_operation": {
+                "phase": "starting", "kind": kind, "resource_name": resource_name, "operation_name": None
+            },
+            "memory_sync.updated_at": now,
+        })
+        return True
+
+    try:
+        return begin(db.transaction())
+    except DomainError:
+        raise
+    except Exception as exc:
+        raise DomainError("DATA_UNAVAILABLE", "Provider operation state could not be saved.", 503, True) from exc
+
+
+def record_preference_memory_operation(
+    uid: str, preference_id: str, version: int, lease_token: str, kind: str, resource_name: str,
+    operation_name: str,
+) -> bool:
+    """Attach the provider LRO handle, including after a concurrent newer edit."""
+    if not operation_name:
+        return False
+    db = get_firestore()
+    ref = _collection(uid).document(preference_id)
+    now = datetime.now(timezone.utc)
+
+    @firestore.transactional
+    def record(transaction: Any) -> bool:
+        snapshot = ref.get(transaction=transaction)
+        if not snapshot.exists:
+            return False
+        data = snapshot.to_dict() or {}
+        _valid_record(data, uid, preference_id)
+        sync = data.get("memory_sync") or {}
+        pending = sync.get("provider_operation")
+        if (
+            sync.get("version") != data.get("version")
+            or data.get("version", 0) < version
+            or sync.get("lease_token") != lease_token
+            or not isinstance(sync.get("lease_expires_at"), datetime)
+            or sync["lease_expires_at"] <= now
+            or not isinstance(pending, dict)
+            or pending.get("phase") != "starting"
+            or pending.get("kind") != kind
+            or pending.get("resource_name") != resource_name
+        ):
+            return False
+        transaction.update(ref, {
+            "memory_sync.provider_operation": {
+                "phase": "running", "kind": kind, "resource_name": resource_name,
+                "operation_name": operation_name,
+            },
+            "memory_sync.updated_at": now,
+        })
+        return True
+
+    try:
+        return record(db.transaction())
+    except DomainError:
+        raise
+    except Exception as exc:
+        raise DomainError("DATA_UNAVAILABLE", "Provider operation handle could not be saved.", 503, True) from exc
+
+
+def complete_preference_memory_operation(
+    uid: str, preference_id: str, version: int, lease_token: str, kind: str, resource_name: str,
+    operation_name: str | None,
+) -> bool:
+    """Clear only the exact operation after its provider LRO is proven complete."""
+    db = get_firestore()
+    ref = _collection(uid).document(preference_id)
+    now = datetime.now(timezone.utc)
+
+    @firestore.transactional
+    def complete(transaction: Any) -> bool:
+        snapshot = ref.get(transaction=transaction)
+        if not snapshot.exists:
+            return False
+        data = snapshot.to_dict() or {}
+        _valid_record(data, uid, preference_id)
+        sync = data.get("memory_sync") or {}
+        pending = sync.get("provider_operation")
+        if (
+            sync.get("version") != data.get("version")
+            or data.get("version", 0) < version
+            or sync.get("lease_token") != lease_token
+            or not isinstance(sync.get("lease_expires_at"), datetime)
+            or sync["lease_expires_at"] <= now
+            or not isinstance(pending, dict)
+            or pending.get("kind") != kind
+            or pending.get("resource_name") != resource_name
+            or pending.get("operation_name") != operation_name
+            or (operation_name is None and pending.get("phase") != "starting")
+        ):
+            return False
+        transaction.update(ref, {"memory_sync.provider_operation": None, "memory_sync.updated_at": now})
+        return True
+
+    try:
+        return complete(db.transaction())
+    except DomainError:
+        raise
+    except Exception as exc:
+        raise DomainError("DATA_UNAVAILABLE", "Provider operation completion could not be saved.", 503, True) from exc
+
+
 def finish_preference_memory_sync(
     uid: str,
     preference_id: str,
     version: int,
     lease_token: str,
     status: str,
+    resource_name: str | None = None,
 ) -> bool:
     """Complete or fail an outbox item only while its lease/version is current."""
     if status not in {"synced", "reconciliation_required"}:
@@ -311,8 +514,12 @@ def finish_preference_memory_sync(
             or sync.get("lease_token") != lease_token
             or not isinstance(sync.get("lease_expires_at"), datetime)
             or sync["lease_expires_at"] <= now
+            or (status == "synced" and sync.get("provider_operation") is not None)
         ):
             return False
+        completed_resource_name = sync.get("resource_name")
+        if status == "synced":
+            completed_resource_name = resource_name if data.get("status") == "ACTIVE" else None
         transaction.update(
             ref,
             {
@@ -322,6 +529,9 @@ def finish_preference_memory_sync(
                     "lease_token": None,
                     "lease_expires_at": None,
                     "cleanup_required": status == "reconciliation_required",
+                    "resource_name": completed_resource_name,
+                    "target_resource_name": None if status == "synced" else sync.get("target_resource_name"),
+                    "provider_operation": sync.get("provider_operation"),
                     "updated_at": now,
                     "error_code": None if status == "synced" else "provider_error",
                 }
@@ -367,6 +577,9 @@ def mark_preference_memory_sync_not_configured(uid: str, preference_id: str) -> 
                     "lease_token": None,
                     "lease_expires_at": None,
                     "cleanup_required": cleanup_required,
+                    "resource_name": sync.get("resource_name"),
+                    "target_resource_name": sync.get("target_resource_name"),
+                    "provider_operation": sync.get("provider_operation"),
                     "updated_at": now,
                     "error_code": None,
                 }

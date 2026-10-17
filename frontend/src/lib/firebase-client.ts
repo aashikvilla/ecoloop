@@ -34,7 +34,9 @@ export async function getFirebaseClient(): Promise<FirebaseClient | null> {
     return {
       app,
       auth: authSdk.initializeAuth(app, {
-        persistence: authSdk.inMemoryPersistence,
+        // Keep sign-in through a same-tab reload; household membership and
+        // selection are still loaded from the API and remain in React state.
+        persistence: authSdk.browserSessionPersistence,
         popupRedirectResolver: authSdk.browserPopupRedirectResolver,
       }),
       provider: new authSdk.GoogleAuthProvider(),

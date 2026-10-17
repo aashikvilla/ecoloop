@@ -307,19 +307,20 @@ def _provider_configuration() -> tuple[str, str, str | None] | None:
     gemini_key = settings.GEMINI_API_KEY.get_secret_value().strip() if settings.GEMINI_API_KEY else ""
     google_key = settings.GOOGLE_API_KEY.get_secret_value().strip() if settings.GOOGLE_API_KEY else ""
     key = gemini_key or google_key
-    project = settings.AGENT_VERTEX_PROJECT_ID or settings.FIREBASE_PROJECT_ID or settings.GOOGLE_CLOUD_PROJECT
+    project = (settings.AGENT_VERTEX_PROJECT_ID or "").strip()
+    location = (settings.AGENT_VERTEX_LOCATION or "").strip()
     if requested == "gemini_api":
         if key:
             return "gemini_api", key, None
         return None
     if requested == "vertex":
-        if project:
-            return "vertex", project, settings.AGENT_VERTEX_LOCATION
+        if project and location:
+            return "vertex", project, location
         return None
     if requested == "auto" and key:
         return "gemini_api", key, None
-    if requested == "auto" and project:
-        return "vertex", project, settings.AGENT_VERTEX_LOCATION
+    if requested == "auto" and project and location:
+        return "vertex", project, location
     return None
 
 
@@ -327,8 +328,8 @@ def _managed_session_configuration() -> tuple[str, str, str] | None:
     """Return complete explicit Agent Engine settings for Vertex managed Sessions."""
     if settings.AGENT_SESSION_STORE != "vertex_ai":
         return None
-    project = settings.AGENT_VERTEX_PROJECT_ID or settings.FIREBASE_PROJECT_ID or settings.GOOGLE_CLOUD_PROJECT
-    location = settings.AGENT_VERTEX_LOCATION.strip()
+    project = (settings.AGENT_VERTEX_PROJECT_ID or "").strip()
+    location = (settings.AGENT_VERTEX_LOCATION or "").strip()
     engine_id = settings.AGENT_VERTEX_ENGINE_ID.strip() if settings.AGENT_VERTEX_ENGINE_ID else ""
     if not project or not location or not engine_id:
         return None
@@ -378,9 +379,9 @@ def _provider() -> tuple[str, str, str | None]:
         if settings.AGENT_PROVIDER == "gemini_api":
             message = "Gemini Developer API credentials are not configured."
         elif settings.AGENT_PROVIDER == "vertex":
-            message = "Vertex AI project configuration is missing."
+            message = "Vertex AI project and location must be explicitly configured."
         else:
-            message = "No Gemini Developer API key or Vertex AI project is configured."
+            message = "No Gemini Developer API key or explicit Vertex AI project and location are configured."
         raise DomainError("AGENT_UNAVAILABLE", message, 503, True)
     return configuration
 
@@ -406,9 +407,16 @@ async def _get_runner() -> tuple[Runner, BaseSessionService]:
             os.environ["GOOGLE_API_KEY"] = credential
             os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "false"
         else:
+            if location is None:
+                raise DomainError(
+                    "AGENT_UNAVAILABLE",
+                    "Vertex AI project and location must be explicitly configured.",
+                    503,
+                    True,
+                )
             os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "true"
             os.environ["GOOGLE_CLOUD_PROJECT"] = credential
-            os.environ["GOOGLE_CLOUD_LOCATION"] = location or "us-central1"
+            os.environ["GOOGLE_CLOUD_LOCATION"] = location
 
         agent = LlmAgent(
             name="ecoloop_household_agent",

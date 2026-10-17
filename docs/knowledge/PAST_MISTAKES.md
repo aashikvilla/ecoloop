@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-17 — Prompt evaluations do not prove authorization
+
+Observation: an Agents CLI prompt dataset can probe whether responses follow scope and consent instructions, but it does not establish authenticated membership checks, cross-household isolation, revocation propagation, strict schema validation, or canonical no-write behavior. Prevention: label such datasets synthetic and quality-only; retain separate deterministic boundary/integration acceptance, and do not treat LLM-judge scores as security evidence.
+
 ## 2026-10-17 — ADK in-memory session reads return copies
 
 Observation: updating `Session.state` on a session returned by `InMemorySessionService.get_session` does not reliably persist authorization scope because the service returns a copy. Prevention: seed trusted scope when creating the session, recreate legacy sessions that lack it, and recheck current membership inside each household-scoped tool before reading data.
