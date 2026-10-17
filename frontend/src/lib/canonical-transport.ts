@@ -7,10 +7,10 @@ export class CanonicalApiError extends Error {
   }
 }
 
-export type CanonicalResource = "households" | "kitchen" | "shopping" | "shopping-archive" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "assistant-turns" | "preferences" | "proposal-turns" | "proposal-actions" | "proposal-meal-actions" | "proposal-history";
+export type CanonicalResource = "households" | "kitchen" | "shopping" | "shopping-archive" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "meal-plans" | "assistant-turns" | "preferences" | "proposal-turns" | "proposal-actions" | "proposal-meal-actions" | "proposal-history";
 export type CanonicalRequestOptions = { method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE"; recordId?: string; body?: unknown; signal?: AbortSignal; query?: { limit?: number; cursor?: string } };
 const methods: Record<CanonicalResource, readonly string[]> = {
-  households: ["GET", "POST"], kitchen: ["GET"], shopping: ["GET", "POST"], "shopping-archive": ["PATCH"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "assistant-turns": ["POST"], preferences: ["GET", "PUT", "DELETE"], "proposal-turns": ["POST"], "proposal-actions": ["POST"], "proposal-meal-actions": ["POST"], "proposal-history": ["GET"],
+  households: ["GET", "POST"], kitchen: ["GET"], shopping: ["GET", "POST"], "shopping-archive": ["PATCH"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "meal-plans": ["GET"], "assistant-turns": ["POST"], preferences: ["GET", "PUT", "DELETE"], "proposal-turns": ["POST"], "proposal-actions": ["POST"], "proposal-meal-actions": ["POST"], "proposal-history": ["GET"],
 };
 const RESPONSE_BYTES = 512_000;
 
@@ -98,7 +98,7 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   } else if (options.recordId !== undefined) throw new CanonicalApiError("validation", "A record reference is not supported for this operation.");
   const url = new URL(path, apiOrigin());
   if (options.query) {
-    if (method !== "GET" || !["share-logs", "activity"].includes(resource)) throw new CanonicalApiError("validation", "Pagination is not supported for this operation.");
+    if (method !== "GET" || !["share-logs", "activity", "meal-plans"].includes(resource)) throw new CanonicalApiError("validation", "Pagination is not supported for this operation.");
     const { limit, cursor } = options.query;
     if (limit !== undefined) {
       if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) throw new CanonicalApiError("validation", "Choose a page size between 1 and 100.");

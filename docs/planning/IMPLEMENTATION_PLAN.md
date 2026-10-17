@@ -73,6 +73,7 @@ Indicative effort: 2–3 engineering days. Entry: M0 reviewed exit gate. Exit: M
 - [ ] **M1.01.03 — Constrain media and direct data access**
   - Owner: Backend. Prerequisites: M1.01.02.
   - Acceptance: Private signed upload/read, bounded file validation, canonical client-write denial and retention handling demonstrated.
+  - Local implementation note (17 October 2026): An isolated bounded cleanup command now claims expired server-owned metadata, deletes matching storage objects idempotently, and marks them deleted; it returns a nonzero status when records are skipped or remain pending, and emits an opaque continuation cursor for multi-page sweeps. The matching composite Firestore index is in `firestore.indexes.json` but is not deployed. No bucket, IAM, scheduler, or live object-retention run was verified. Keep this task open until the deployed lifecycle and acceptance evidence are reviewed.
 
 ### M1.02 Stitch shell
 
@@ -182,6 +183,7 @@ Indicative effort: 2–3 engineering days. Entry: M3 reviewed exit gate. Exit: M
 - [ ] **M4.02.02 — Connect Home and Ask to outcome follow-up**
   - Owner: Frontend. Prerequisites: M4.01.03, M4.02.01.
   - Acceptance: Plan acceptance differs from actual use; user can return and record/correct outcome without losing context.
+  - Local implementation note (17 October 2026): Authenticated paginated reads of saved plans and a Home summary now preserve plan title, serving count, approval-time stage, ingredient uncertainty/quantity basis, and links to validated linked Kitchen items. Home explicitly distinguishes a saved plan from preparation/consumption and stock changes. Outcome is still recorded on an item, not associated back to a plan, and no end-to-end acceptance was run; keep this task open.
 
 - [ ] **M4.02.03 — Review M4 exit evidence**
   - Owner: Reviewer. Prerequisites: M4.01.03, M4.02.02.

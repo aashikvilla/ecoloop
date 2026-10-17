@@ -15,6 +15,14 @@
         { "fieldPath": "recorded_by", "order": "ASCENDING" },
         { "fieldPath": "recorded_at", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "private_media",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "state", "order": "ASCENDING" },
+        { "fieldPath": "expires_at", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [
