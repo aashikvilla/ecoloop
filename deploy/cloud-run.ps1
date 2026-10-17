@@ -65,6 +65,9 @@ if ($Mode -eq "Deploy") {
         throw "Deploy requires one exact HTTPS -FrontendOrigin (scheme and host only), such as https://app.example.com."
     }
 
+    $existingService = & gcloud run services describe $Service --project=$Project --region=$Region --platform=managed --format="value(metadata.name)" --quiet 2>$null
+    $isFirstDeployment = $LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace(($existingService | Out-String).Trim())
+
     $environment = [ordered]@{
         FIREBASE_PROJECT_ID = $Project
         GOOGLE_CLOUD_PROJECT = $Project
@@ -96,11 +99,13 @@ if ($Mode -eq "Deploy") {
         "--timeout=60s",
         "--min=0",
         "--max=1",
-        "--no-traffic",
         "--tag=candidate",
         "--quiet",
         "--env-vars-file=$environmentFile"
     )
+    if (-not $isFirstDeployment) {
+        $arguments += "--no-traffic"
+    }
     if ($AllowUnauthenticated) {
         $arguments += "--allow-unauthenticated"
     } else {
@@ -121,7 +126,11 @@ if ($Mode -eq "Deploy") {
             Remove-Item -LiteralPath $environmentFile -Force
         }
     }
-    Write-Output "Candidate revision deployed without default traffic. Use its candidate tag URL for smoke checks before promotion."
+    if ($isFirstDeployment) {
+        Write-Output "First revision deployed and serving default traffic; Cloud Run does not support --no-traffic when creating a service. Assistant remains disabled unless explicitly enabled. Verify the candidate tag before continuing."
+    } else {
+        Write-Output "Candidate revision deployed without default traffic. Use its candidate tag URL for smoke checks before promotion."
+    }
     exit 0
 }
 

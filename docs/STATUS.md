@@ -1,6 +1,18 @@
 # EcoLoop implementation status
 
-Updated 17 October 2026 after the local screen-journey follow-up. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+Updated 17 October 2026 after the Cloud Run backend first release. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+
+## Cloud Run deployment follow-up — 17 October 2026
+
+- Cloud Run, Cloud Build, Artifact Registry, and Secret Manager APIs are enabled in `ecoloop-staging-20261015` (`asia-south1`). The existing billing account is open and the project is linked; EcoLoop was the only linked project returned. A ₹2,000 monthly all-services alert and the Gemini-specific ₹2,000 control were observed. The all-services budget is an alert, not a hard cap.
+- Created the `ecoloop` Docker repository and dedicated `ecoloop-builder`, `ecoloop-api-runtime`, and `ecoloop-web-runtime` service identities. The builder can write to the image repository; API runtime has `roles/datastore.user` only; web runtime has no project role. Secret Manager access is not yet bound to the runtime.
+- Backend image `asia-south1-docker.pkg.dev/ecoloop-staging-20261015/ecoloop/backend@sha256:f823786afbd5946e63d777fd20e8eb5187e45a04ee8d97b10457b38bacf4b0d7` is serving from revision `ecoloop-api-00001-qaf` at `https://ecoloop-api-4wlelpcnca-el.a.run.app`. Health returned HTTP 200 and an unauthenticated household-list request returned 401. This proves service readiness and the auth gate, not a signed-in Firestore request.
+- The API is publicly invokable for browser Firebase-token requests; all household data routes require verified Firebase identity and membership. The initial CORS origin is a placeholder and must be replaced with the deployed frontend origin before API use from the web app.
+- The frontend build has not completed. Its first Cloud Build failed because the pinned Node digest selected ARM; the Dockerfile digest is corrected to the official `linux/amd64` manifest and needs a clean rebuild. No web service is deployed yet.
+- The assistant remains disabled. The local Gemini key belongs to Google project `gen-lang-client-0971462038`, whose billing is disabled; its value was not transferred to Secret Manager. Do not claim remote AI is configured or responding. Frontend build values will use the matching Firebase Web app's CLI SDK config. Household commands/creation are an explicit build-time opt-in for the requested demo.
+- No unit tests, browser sign-in, authenticated Cloud Run Firestore request, model request, Cloud Run web deployment, PR merge, or `main` merge is claimed.
+
+The historical cloud-state notes below describe earlier observations and are superseded where they conflict with this release update.
 
 ## Returning-member onboarding and read-only browser acceptance — 17 October 2026
 

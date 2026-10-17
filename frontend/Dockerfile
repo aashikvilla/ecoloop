@@ -1,10 +1,10 @@
-FROM node:22.23.2-bookworm-slim@sha256:4badb5e9a3c5898bef4d9904645b5182e38a987d76a8ba8936a057413e8220c3 AS dependencies
+FROM node:22.23.2-bookworm-slim@sha256:4d676821dff059fd00d277ee4261ef34ea712317fed0737c03941481b5760c96 AS dependencies
 
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
-FROM node:22.23.2-bookworm-slim@sha256:4badb5e9a3c5898bef4d9904645b5182e38a987d76a8ba8936a057413e8220c3 AS build
+FROM node:22.23.2-bookworm-slim@sha256:4d676821dff059fd00d277ee4261ef34ea712317fed0737c03941481b5760c96 AS build
 
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
@@ -28,7 +28,7 @@ ENV NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY} \
 
 RUN npm run build
 
-FROM node:22.23.2-bookworm-slim@sha256:4badb5e9a3c5898bef4d9904645b5182e38a987d76a8ba8936a057413e8220c3 AS runtime
+FROM node:22.23.2-bookworm-slim@sha256:4d676821dff059fd00d277ee4261ef34ea712317fed0737c03941481b5760c96 AS runtime
 
 ENV NODE_ENV=production \
     PORT=8080 \
