@@ -32,7 +32,7 @@ function ItemContextSummary({ live, item }: { live: ReturnType<typeof useLiveRec
   </>;
 }
 
-export function OutcomeItem({ itemId, planId, planTitle }: { itemId?: string; planId?: string; planTitle?: string }) {
+export function OutcomeItem({ itemId, planId }: { itemId?: string; planId?: string }) {
   const { household, live, item, getIdToken, onCommitted, enabled } = useItemContext(itemId);
   const scopeKey = `${household.user?.uid ?? household.auth}:${household.householdId}:${itemId ?? "select-item"}:${planId ?? "no-plan"}`;
   const ready = household.auth === "signed-in" && household.user !== null && Boolean(household.householdId) && live.phase === "ready" && (!itemId || item !== undefined);
@@ -41,7 +41,7 @@ export function OutcomeItem({ itemId, planId, planTitle }: { itemId?: string; pl
     <LiveDestinationNotice />
     {itemId ? <QuietLink href={`/kitchen/items/${encodeURIComponent(itemId)}`}>Back to item details</QuietLink> : <QuietLink href="/">Back to Home</QuietLink>}
     {itemId && <ItemContextSummary live={live} item={item} />}
-    {ready && <div key={scopeKey}><OutcomeControls getIdToken={getIdToken} householdId={household.householdId} enabled={enabled} onCommitted={onCommitted} initialItemId={itemId} planId={planId} planTitle={planTitle} /></div>}
+    {ready && <div key={scopeKey}><OutcomeControls getIdToken={getIdToken} householdId={household.householdId} enabled={enabled} onCommitted={onCommitted} initialItemId={itemId} planId={planId} /></div>}
   </div>;
 }
 

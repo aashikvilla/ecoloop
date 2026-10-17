@@ -206,6 +206,20 @@ Evidence and the owner billing gate are recorded in [the 17 October local auth/A
 
 - [ ] Independent frontend dependency review found nine high, zero critical npm advisories. `npm audit fix --dry-run` made no changes and suggested major downgrades (Firebase 12→9 and `eslint-config-next` 16→14); no lockfile was changed. Deployment remains gated pending a compatible fix or reviewed remediation. Details are in the [local auth/AI/deploy session](../knowledge/sessions/2026-10-17-local-auth-ai-deploy.md).
 
+## Screen-journey coding follow-up — 17 October 2026
+
+The owner asked to close local experience gaps and compare the running journeys against supplied Stitch screens. Three GPT-6 Luna/high agents worked in isolated worktrees with non-overlapping ownership, then root reviewed and merged each sequentially into `codex/demo-integration`: `codex/pwa-reminders` (`df972ea`), `codex/photo-to-assistant` (`fdb0709`), and `codex/plan-outcome-link` (`712c495`). Merge commits are `0e8413f`, `eebe39c`, and `0858fbb`. No branches from the separately owned docs/backend platform task were merged.
+
+- [x] Settings exposes PWA installation readiness and clearly says push/email delivery is unavailable. Manifest/icons are included; mobile bottom navigation remains active below 768px. No service worker or browser persistence was added.
+- [x] After explicit candidate confirmation, intake offers Ask meal and BuyCheck intents. Ask carries only fixed intent values, pre-fills an editable prompt, and requires explicit submit with signed-in selected-household scope; no candidate/photo details are placed in the URL.
+- [x] Home links saved plans to recording an actually observed outcome on a linked item or selecting a current Kitchen item. Backend validates an optional plan ID in the same active household transaction and stores the reference on owner-private outcomes/Activity. Plan titles are not placed in the URL; save/approval is not reported as consumption and no stock changes occur from a plan.
+- [x] Root adds concise Home quick links (food capture, shopping, meal plans), reduces repeated household selector UI to a status/Account link, and adds a recoverable auth initialization timeout.
+- [ ] Static Stitch/code review found the four-tab visual language broadly consistent, but no screenshot-based responsive/accessibility acceptance ran. Home quick links now cover the main reference shortcuts; duplicate resolution remains absent because matching and add/replace/new-batch/skip semantics need a reviewed canonical contract. Do not implement silent replacement.
+- [ ] Browser smoke only inspected signed-out Home and signed-in-without-household Activity gates. No browser writes, live provider calls, Firebase mutations, deployment, or unit tests ran. Frontend lint, TypeScript and backend compileall passed; a build was skipped because Next build can load ignored real env files.
+- [ ] PWA install prompt requires supported HTTPS acceptance. FCM subscription and a scheduler are absent; no reminder is delivered. Managed Runtime/Sessions/Memory, private photo storage and retention, real cloud integrations, accurate sustainability-score methodology, merchant integrations, authenticated command acceptance, and deployment remain open. No phase gate moved and `main` is not eligible for merge.
+
+See [screen-journey follow-up](../knowledge/sessions/2026-10-17-screen-journey-followup.md) and [status snapshot](../STATUS.md). Live MVPTasks remains authoritative and was not updated by this local pass.
+
 ## Consolidated local coding checkpoint — 17 October 2026
 
 The single integration checkout is `codex/demo-integration`. Earlier onboarding, preference controls, contextual Kitchen/Shop actions, durable typed assistant proposals, private share/activity and ADK read-tool work are present in its history/tree. A separate photo branch was reviewed and integrated as `29477eb`; the Assistant FoodAction card now links to the existing explicit item-outcome or private-share review flow. These links navigate to the owner-confirmation form and do not mutate data.

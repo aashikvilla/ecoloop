@@ -1,13 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useLiveHousehold } from "@/lib/live-household";
 import { CanonicalApiError, readCanonicalRecords, type KitchenObservation, type ShoppingEntry } from "@/lib/canonical-api";
 import { canonicalRequest } from "@/lib/canonical-transport";
 import { parseActivityPage, parseShareHistoryPage, type PrivateActivityEvent, type PrivateShareLog } from "@/lib/canonical-history";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 
 export type LiveKind = "kitchen" | "shopping" | "activity" | "share-logs";
 export type LiveRecords = KitchenObservation[] | ShoppingEntry[] | PrivateActivityEvent[] | PrivateShareLog[];
@@ -56,21 +54,21 @@ export function useLiveRecords(kind: LiveKind) {
   return { ...visibleState, auth, householdId, refresh: () => void load() };
 }
 
-export function LiveDestinationNotice({ children }: { children?: ReactNode }) {
-  const { auth, user, householdId, setHouseholdId } = useLiveHousehold();
-  const [draftId, setDraftId] = useState(householdId);
-  function chooseHousehold(event: FormEvent) {
-    event.preventDefault();
-    const value = draftId.trim();
-    if (/^[A-Za-z0-9_-]{1,128}$/.test(value)) setHouseholdId(value);
-  }
-  return <Card className="mb-4 space-y-3 border border-line p-4">
-    <div><p className="font-semibold text-primary">Connected household data</p><p className="mt-1 text-sm leading-relaxed text-muted">These destinations show only records returned by the household API. No local sample records are substituted.</p></div>
-    {auth === "loading" && <p role="status" className="text-sm text-muted">Checking household sign-in…</p>}
-    {auth === "unavailable" && <p role="status" className="text-sm text-secondary">Household sign-in is unavailable because public Firebase configuration is missing.</p>}
-    {auth === "error" && <p role="alert" className="text-sm text-danger">Household sign-in could not be initialized. Reload or open <Link className="underline" href="/account">Account</Link> to retry.</p>}
-    {auth === "signed-out" && <p className="text-sm text-muted">Sign in and choose a household to load its records. <Link className="font-semibold text-primary underline" href="/account">Open Account</Link></p>}
-    {auth === "signed-in" && <form onSubmit={chooseHousehold} className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end"><label className="text-sm font-medium" htmlFor="live-household-id">Household ID{householdId ? ` · selected ${householdId}` : ""}<Input id="live-household-id" className="mt-1" value={draftId} maxLength={128} pattern="[A-Za-z0-9_-]{1,128}" placeholder="Enter the exact household ID" onChange={(event) => setDraftId(event.target.value)} /></label><div className="flex items-center gap-3"><button type="submit" className="min-h-11 rounded-full bg-primary px-4 text-sm font-semibold text-white">Use household</button><p className="text-xs text-muted">{user?.email || "Signed-in account"}</p></div></form>}
-    {children}
-  </Card>;
+export function LiveDestinationNotice() {
+  const { auth, householdId } = useLiveHousehold();
+  const status = auth === "loading"
+    ? "Checking your sign-in…"
+    : auth === "unavailable"
+      ? "Firebase sign-in is not configured in this browser."
+      : auth === "error"
+        ? "Household sign-in could not be initialized."
+        : auth === "signed-out"
+          ? "Sign in to load private household records."
+          : householdId
+            ? "Showing records from your selected household."
+            : "Choose a household to load its records.";
+  return <div className="mb-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl bg-surface-muted px-4 py-2.5 text-xs sm:text-sm">
+    <p role={auth === "error" ? "alert" : "status"} className={auth === "error" || auth === "unavailable" ? "text-secondary" : "text-muted"}>{status}</p>
+    {auth !== "loading" && <Link className="inline-flex min-h-11 items-center font-semibold text-primary underline underline-offset-2" href="/account">{auth === "signed-in" && householdId ? "Change household" : "Open account"}</Link>}
+  </div>;
 }

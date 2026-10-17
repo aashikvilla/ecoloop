@@ -1,6 +1,17 @@
 # EcoLoop implementation status
 
-Updated 17 October 2026 after the authenticated local browser follow-up. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+Updated 17 October 2026 after the local screen-journey follow-up. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+
+## Latest local screen-journey follow-up — 17 October 2026
+
+- Three isolated GPT-6 Luna/high slices were reviewed and merged into `codex/demo-integration`: installable PWA/readiness copy and a 768px mobile-shell breakpoint (`df972ea`), confirmed-intake continuation into Ask (`fdb0709`), and saved-plan-to-observed-outcome references (`712c495`). The plan outcome reference is checked inside the existing household transaction; approving/saving a plan still does not mean it was prepared or eaten.
+- Root polish adds Home quick links for food capture, Shop, and saved plans; removes user-authored plan titles from outcome URLs; replaces the repeated household-ID panel on data pages with a compact Account link/status; and reports a bounded Firebase auth initialization timeout as recoverable error state.
+- Verification on the integrated source: frontend ESLint, `npx tsc --noEmit`, backend `compileall`, and `git diff --check` pass. TypeScript initially caught an invalid combined PWA icon purpose; the manifest now declares separate `any` and `maskable` entries. No unit tests or production build ran. Next builds may load ignored real env files, which are outside this pass's permitted inspection scope.
+- Read-only browser inspection of `http://127.0.0.1:3000/` and `/activity` showed the auth gate for signed-out and signed-in-without-selected-household states. This did not verify signed-in household screens, Firebase writes, AI, install prompts, or a full visual comparison. Stitch comparison was a static design/code review only.
+- Remaining coding/acceptance gates include duplicate-candidate reconciliation, authenticated browser command acceptance, private photo storage/retention, managed ADK Runtime/Sessions/Memory verification, actual reminder delivery, a defensible sustainability methodology, and deployment. The UI continues to make these unavailable or unverified explicit. No score is fabricated; external food-recipient/commerce integrations remain out of scope.
+- Three feature commits are merged locally, but this checkpoint has not yet been committed or pushed. PR #1 remains draft; phase gates and `main` merge remain open.
+
+See [the screen-journey follow-up journal](knowledge/sessions/2026-10-17-screen-journey-followup.md) for review notes and exact boundaries.
 
 ## Latest local follow-up — 17 October 2026
 

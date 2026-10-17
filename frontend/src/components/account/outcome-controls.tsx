@@ -26,7 +26,6 @@ export type OutcomeControlsProps = {
   onCommitted: () => void;
   initialItemId?: string;
   planId?: string;
-  planTitle?: string;
 };
 
 type PendingOutcome = { command: RecordOutcomeCommand; itemName: string; stockAmount: number | null; stockUnit: string | null; localTime: string; timeZone: string; status: "ready" | "ambiguous" | "conflict" | "rejected" };
@@ -46,7 +45,7 @@ function isAmbiguous(error: unknown): boolean {
   return true;
 }
 
-export function OutcomeControls({ getIdToken, householdId, enabled, onCommitted, initialItemId, planId, planTitle }: OutcomeControlsProps) {
+export function OutcomeControls({ getIdToken, householdId, enabled, onCommitted, initialItemId, planId }: OutcomeControlsProps) {
   const [records, setRecords] = useState<KitchenObservation[] | null>(null);
   const [selectedItemId, setSelectedItemId] = useState("");
   const [draft, setDraft] = useState<OutcomeDraft>(newDraft);
@@ -208,7 +207,7 @@ export function OutcomeControls({ getIdToken, householdId, enabled, onCommitted,
       <Badge tone={enabled ? "green" : "amber"} className="mb-3">{enabled ? "REVIEW ACTUAL OUTCOME" : "OUTCOME RECORDING UNAVAILABLE"}</Badge>
       <Heading id="outcome-controls-title" as="h2">Record what happened</Heading>
       <p className="mt-2 text-sm leading-relaxed text-muted">Choose Used, Stored, Discarded or Composted. Handover is recorded through the separate eligible share flow.</p>
-      {planId && <p className="mt-2 rounded-control bg-surface-muted p-3 text-sm text-foreground">Following up on saved plan <strong>{planTitle || planId}</strong>. A saved or approved plan does not mean it was prepared or eaten; record only what you observed.</p>}
+      {planId && <p className="mt-2 rounded-control bg-surface-muted p-3 text-sm text-foreground">Following up on a saved meal plan. Saving or approving it does not mean it was prepared or eaten; record only what you observed.</p>}
     </header>
 
     {!enabled && <Card role="status" className="border border-line bg-surface-muted p-4 text-sm leading-relaxed text-muted">Outcome recording is unavailable in this environment. These controls will not send read or write requests.</Card>}
@@ -266,7 +265,7 @@ function OutcomeReview({ pending, sending, canRetry, onConfirm, onRetry, onReloa
   return <Card className="space-y-4 border-2 border-primary/20 p-5 sm:p-6">
     <div><Badge tone={pending.status === "conflict" ? "amber" : "green"} className="mb-3">{pending.status === "conflict" ? "RELOAD REQUIRED" : "PENDING OUTCOME"}</Badge><Heading as="h3">{pending.status === "conflict" ? "Kitchen record changed" : "Review before recording"}</Heading><p className="mt-1 text-sm leading-relaxed text-muted">{pending.status === "conflict" ? "This outcome was rejected because the kitchen record changed. Reload the current item and review a new command." : "The exact outcome below will be sent to this household only after you confirm."}</p></div>
     <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
-      <PreviewRow label="Item" value={pending.itemName} /><PreviewRow label="Record ID" value={command.item_id} />{command.plan_id && <PreviewRow label="Saved plan reference" value={command.plan_id} />}<PreviewRow label="Base version" value={String(command.base_version)} /><PreviewRow label="Outcome" value={command.outcome_type} /><PreviewRow label="Outcome ID" value={command.outcome_id} /><PreviewRow label="Schema version" value={String(command.schema_version)} />
+      <PreviewRow label="Item" value={pending.itemName} /><PreviewRow label="Record ID" value={command.item_id} /><PreviewRow label="Base version" value={String(command.base_version)} /><PreviewRow label="Outcome" value={command.outcome_type} /><PreviewRow label="Outcome ID" value={command.outcome_id} /><PreviewRow label="Schema version" value={String(command.schema_version)} />
       <PreviewRow label="Observed amount" value={command.amount === null ? "Unknown" : `${command.amount} ${command.unit} · ${command.measurement_basis}`} />
       <PreviewRow label="Measurement basis" value={command.measurement_basis} /><PreviewRow label="Storage location" value={command.storage ?? "Not applicable"} />
       <PreviewRow label="Entered local time" value={`${pending.localTime} · ${pending.timeZone}`} /><PreviewRow label="Stored timestamp (UTC)" value={command.occurred_at} /><PreviewRow label="Effect" value={stockEffect} />
