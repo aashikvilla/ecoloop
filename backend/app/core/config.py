@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     AGENT_MEMORY_BANK_ENABLED: bool = False
     AGENT_REQUEST_TIMEOUT_SECONDS: int = 20
     AGENT_MAX_OUTPUT_TOKENS: int = 4_096
-    AI_DAILY_REQUEST_LIMIT: int = 12
+    AI_DAILY_REQUEST_LIMIT: int = 300
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
@@ -93,8 +93,8 @@ class Settings(BaseSettings):
     @field_validator("AI_DAILY_REQUEST_LIMIT")
     @classmethod
     def validate_ai_daily_limit(cls, limit: int) -> int:
-        if not 1 <= limit <= 100:
-            raise ValueError("AI_DAILY_REQUEST_LIMIT must be between 1 and 100")
+        if not 1 <= limit <= 300:
+            raise ValueError("AI_DAILY_REQUEST_LIMIT must be between 1 and 300")
         return limit
 
     model_config = SettingsConfigDict(

@@ -16,7 +16,7 @@ param(
     [string]$AgentVertexEngineLocation,
     [string]$AgentVertexEngineId,
     [string]$AgentModel = "gemini-3.1-flash-lite",
-    [int]$AiDailyRequestLimit = 12,
+    [int]$AiDailyRequestLimit = 300,
     [int]$AgentRequestTimeoutSeconds = 50,
     [int]$AgentMaxOutputTokens = 2048,
     [string]$Revision,
@@ -79,8 +79,8 @@ if ($Mode -eq "Deploy") {
     if (($EnableManagedSessions -or $EnableMemoryBank) -and -not $EnableAssistant) {
         throw "Managed Sessions/Memory Bank cannot be enabled while the assistant is disabled."
     }
-    if ($AiDailyRequestLimit -lt 1 -or $AiDailyRequestLimit -gt 100) {
-        throw "-AiDailyRequestLimit must be between 1 and 100."
+    if ($AiDailyRequestLimit -lt 1 -or $AiDailyRequestLimit -gt 300) {
+        throw "-AiDailyRequestLimit must be between 1 and 300."
     }
     $parsedOrigin = $null
     if (-not [System.Uri]::TryCreate($FrontendOrigin, [System.UriKind]::Absolute, [ref]$parsedOrigin) -or $parsedOrigin.Scheme -ne "https" -or [string]::IsNullOrWhiteSpace($parsedOrigin.Host) -or -not [string]::IsNullOrEmpty($parsedOrigin.UserInfo) -or $parsedOrigin.AbsolutePath -ne "/" -or -not [string]::IsNullOrEmpty($parsedOrigin.Query) -or -not [string]::IsNullOrEmpty($parsedOrigin.Fragment)) {
