@@ -2,7 +2,9 @@ param(
     [Parameter(Mandatory = $true)]
     [ValidateSet('backend', 'frontend')]
     [string]$Service,
-    [switch]$EnableAi
+    [switch]$EnableAi,
+    [ValidateRange(1024, 65535)]
+    [int]$FrontendPort = 3000
 )
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path $PSScriptRoot -Parent
@@ -11,7 +13,7 @@ $projectId = 'ecoloop-staging-20261015'
 if ($Service -eq 'backend') {
     $env:FIREBASE_PROJECT_ID = $projectId
     $env:GOOGLE_CLOUD_PROJECT = $projectId
-    $env:BACKEND_CORS_ORIGINS = '["http://127.0.0.1:3003","http://localhost:3003"]'
+    $env:BACKEND_CORS_ORIGINS = '["http://127.0.0.1:3000","http://localhost:3000","http://127.0.0.1:3003","http://localhost:3003"]'
     $env:AGENT_ENABLED = if ($EnableAi) { 'true' } else { 'false' }
     Push-Location (Join-Path $repoRoot 'backend')
     try { & .venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload }
@@ -29,6 +31,6 @@ if ($Service -eq 'backend') {
     $env:NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS = 'true'
     $env:NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE = 'true'
     Push-Location (Join-Path $repoRoot 'frontend')
-    try { npm.cmd run dev -- --hostname=127.0.0.1 --port=3003 }
+    try { npm.cmd run dev -- --hostname=127.0.0.1 "--port=$FrontendPort" }
     finally { Pop-Location }
 }

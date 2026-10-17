@@ -79,3 +79,7 @@ Candidate GET/confirm endpoints correctly returned the shared `ApiResult` envelo
 ## 2026-10-17 — Keep shared route status aligned with implemented flows
 
 Manual capture and persisted candidate review were implemented, but the shared shell still classified `/kitchen/add` and `/kitchen/review` as unavailable. The page content worked while the header/sidebar said it did not. When a flow is added, update shared route-level availability labels and guidance alongside the page; include those shared states in browser review.
+
+## 2026-10-17 — Keep local app port, CORS and launcher flags in sync
+
+Observation: the browser used `localhost:3000`, but a stale production Next process served a build with household creation disabled while the local API only allowed CORS from ports 3002/3003. The page surfaced a disabled button and generic household-service error. Prevention: start the intended dev build from one launcher that sets its port and feature flags, include that exact origin in API CORS, verify a preflight for the browser origin, and have the owner manually reload before claiming browser acceptance.
