@@ -434,6 +434,11 @@ function KitchenItemDetail({ itemId }: { itemId: string }) {
         <p className="text-sm leading-relaxed text-muted">Record an outcome you observed, or prepare a private owner-reported share offer for this item. Each action reads current versions and asks you to review before sending.</p>
         <div className="flex flex-col gap-2 sm:flex-row"><Link href={`/kitchen/items/${encodeURIComponent(item.item_id)}/outcome`} className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Record an outcome</Link><Link href={`/kitchen/items/${encodeURIComponent(item.item_id)}/share`} className="inline-flex min-h-11 items-center justify-center rounded-full border border-line px-5 text-sm font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Prepare private share offer</Link></div>
       </Panel>
+      <Panel className="space-y-3">
+        <h2 className="text-lg font-semibold">Choose what to do with {item.name}</h2>
+        <p className="text-sm leading-relaxed text-muted">Get meal ideas grounded in this Kitchen item, or create a separate donor offer with details you confirm yourself.</p>
+        <div className="flex flex-col gap-2 sm:flex-row"><Link href={`/ask?intent=meal&item=${encodeURIComponent(item.item_id)}`} className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Ask what I can make</Link><Link href={`/offers/new?item=${encodeURIComponent(item.item_id)}`} className="inline-flex min-h-11 items-center justify-center rounded-full border border-line px-5 text-sm font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Create a surplus offer</Link></div>
+      </Panel>
     </>}
   </div>;
 }

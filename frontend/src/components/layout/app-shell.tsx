@@ -32,10 +32,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const accountPage = pathname === "/account" || pathname.startsWith("/account/");
   const itemDetailPage = /^\/kitchen\/items\/[^/]+$/.test(pathname);
   const itemActionPage = /^\/kitchen\/items\/[^/]+\/(share|outcome)$/.test(pathname);
-  const canonicalPage = ["/", "/kitchen", "/ask", "/shop", "/activity"].includes(pathname) || itemDetailPage || itemActionPage;
+  const offersPage = pathname === "/offers" || pathname.startsWith("/offers/");
+  const canonicalPage = ["/", "/kitchen", "/ask", "/shop", "/activity"].includes(pathname) || itemDetailPage || itemActionPage || offersPage;
   const settingsPage = pathname === "/settings";
   const intakePage = pathname === "/kitchen/add" || pathname === "/kitchen/review";
-  const statusLabel = accountPage ? "HOUSEHOLD ACCOUNT" : canonicalPage ? "HOUSEHOLD DATA" : intakePage ? "KITCHEN INTAKE" : settingsPage ? "HOUSEHOLD SETTINGS" : "FEATURE UNAVAILABLE";
+  const statusLabel = accountPage ? "HOUSEHOLD ACCOUNT" : offersPage ? "DONOR OFFERS" : canonicalPage ? "HOUSEHOLD DATA" : intakePage ? "KITCHEN INTAKE" : settingsPage ? "HOUSEHOLD SETTINGS" : "FEATURE UNAVAILABLE";
   return <div className="min-h-screen bg-background text-foreground">
     <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
     <header className="sticky top-0 z-30 border-b border-line/70 bg-background/90 backdrop-blur-xl">
@@ -46,6 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <div className="flex items-center gap-2">
           <Badge tone="amber" className="text-[9px] md:text-xs">{statusLabel}</Badge>
+          <Link href="/offers" aria-label="Open my offerings" className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-xs font-bold md:hidden ${offersPage ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted"}`}><Icon name="leaf" size={17} />Offers</Link>
           <Link href="/settings" aria-label="Open settings" className={`flex size-11 items-center justify-center rounded-full transition-colors hover:bg-surface-muted ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted"}`}><Icon name="settings" size={20} /></Link>
         </div>
       </div>
@@ -72,6 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         })}
       </nav>
       <Link href="/activity" className={`mt-7 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/activity" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="clock" size={19} />Activity</Link>
+      <Link href="/offers" className={`mt-1 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${offersPage ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="leaf" size={19} />Offerings</Link>
       <Link href="/settings" className={`mt-1 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="settings" size={19} />Settings</Link>
       <div className="absolute inset-x-4 bottom-6 rounded-2xl bg-primary-container p-4 text-white">
         <p className="text-xs font-bold">{accountPage ? "Account connection" : itemActionPage ? "Kitchen action" : itemDetailPage ? "Kitchen item" : canonicalPage ? "Household records" : intakePage ? "Kitchen intake" : settingsPage ? "Household settings" : "Unavailable feature"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{itemActionPage ? "Actions use current household records and require an explicit review before any command is sent." : itemDetailPage ? "Item details show the latest confirmed household record; choose an outcome or private share action for this item." : accountPage || canonicalPage ? "Live records require sign-in, household membership and an available API." : intakePage ? "Candidate drafts stay separate until you explicitly confirm selected details." : settingsPage ? "Personal preference controls require sign-in and remain separate from household records." : "This item route has no canonical flow yet."}</p>

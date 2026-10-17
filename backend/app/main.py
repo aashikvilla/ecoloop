@@ -27,7 +27,7 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-Household-ID", "X-Actor-Kind", "X-Actor-Id", "Idempotency-Key"],
     max_age=600,
 )
-app.add_middleware(RequestBoundaryMiddleware, max_request_bytes=settings.MAX_REQUEST_BYTES, max_photo_bytes=settings.MAX_PHOTO_BYTES)
+app.add_middleware(RequestBoundaryMiddleware, max_request_bytes=settings.MAX_REQUEST_BYTES, max_photo_bytes=settings.MAX_PHOTO_BYTES, allowed_origins=settings.BACKEND_CORS_ORIGINS)
 
 
 app.add_exception_handler(DomainError, domain_error_handler)

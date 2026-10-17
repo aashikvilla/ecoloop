@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-18 — Make manual map requirements visible before publish
+
+Observation: the donor wizard allowed manual address entry, but publishing also required latitude and longitude. Those coordinate inputs had no required marker or nearby explanation, so a complete-looking address form stopped before any API request. Prevention: label every required map field, explain whether GPS or manual coordinates are accepted, and render validation beside the field. Browser acceptance should include the manual-location route, not only GPS.
+
 ## 2026-10-17 — Provision default Storage buckets through Firebase
 
 Observation: the Firebase web app referenced `ecoloop-staging-20261015.firebasestorage.app`, but the Firebase Storage API was disabled and no default bucket existed. Creating the dotted name through the general GCS API returned a domain ownership error; that did not establish that another project owned the bucket. Enabling `firebasestorage.googleapis.com` and calling Firebase `projects.defaultBucket.create` successfully provisioned the intended bucket in `ASIA-SOUTH1`. Uniform bucket access also required an explicit bucket-scoped object reader role for the project owner to read back a synthetic image. Prevention: use Firebase's provisioning API for its default bucket, verify API activation and the selected region, deploy deny-all rules and public access prevention, then prove an existing object is readable by the authorized operator and denied to unrelated clients. Keep acceptance open until that positive read and negative access proof both pass; never infer protection from a missing object or an operator permission error.

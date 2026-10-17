@@ -1,6 +1,39 @@
 # EcoLoop implementation status
 
-Updated 17 October 2026 after Phase 0 live acceptance closure. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+Updated 18 October 2026 after Phase 1 donor-side browser validation. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+
+## Social impact Phase 1 donor side — local fixes applied; G1 open
+
+- Locally fixed the issues found in the 18 October browser review: 2 MB media request handling and CORS, media version readback, publishing a newly created manual draft, visible AI/manual fallback, editable open offers, mobile Offers navigation, blank/accurate pickup details, and pickup-before-expiry validation. Kitchen item detail now links to contextual meal ideas and a household offer wizard prefilled from canonical item facts. Browser evidence includes manual publish → edit → cancel, image upload/observation, near-expiry publish/cancel, and Kitchen item → prefilled offer review. See [offer fixes journal](knowledge/sessions/2026-10-18-phase1-fixes.md) and [Kitchen prefill journal](knowledge/sessions/2026-10-18-kitchen-offer-prefill.md).
+- G1 remains open: these changes are local and not deployed to the 100%-traffic Cloud Run revisions; business donor flow and complete AC1-01–AC1-09 acceptance remain unproved. See [initial browser findings](knowledge/sessions/2026-10-18-phase1-browser-validation.md).
+
+- Implemented donor-side surplus food creation, editing, media attachment, structured multimodal observation, manual fallbacks, publishing, private tracking, and cancellation for both households and businesses.
+- **Backend implementation:**
+  - Added strict Pydantic schemas in `backend/app/schemas/social_impact.py` for `OfferCancel`, `OfferAnalyzeRequest`, `OfferAnalyzeResult`, `OfferMediaUploadResult`.
+  - Implemented domain services in `backend/app/domain/social_impact.py`:
+    - `cancel_offer`: verifies donor ownership, ensures idempotent cancellation, prevents silent cancellation of already collected food, releases available quantity to 0.
+    - `upload_offer_media` & `read_offer_media`: validates binary formats (JPEG, PNG, WebP) and size (<=2MB), saves to private Cloud Storage `private-offer-media/{donor_kind}/{owner_id}/{offer_id}/{media_id}`, updates Firestore `offer_media` and `surplus_offers.media_ids`. Enforces strict actor-based access control (AC1-09).
+    - `analyze_offer_media`: multimodal Gemini extraction with prompt injection defense, no safety certification, unread expiry declared as unknown, and graceful fallback on timeout/failure (AC1-04, AC1-05).
+  - Exposed FastAPI endpoints in `backend/app/api/v1/endpoints/social_impact.py`:
+    - `POST /api/v1/offers/{offer_id}/cancel`
+    - `POST /api/v1/offers/{offer_id}/media`
+    - `GET /api/v1/offers/{offer_id}/media/{media_id}`
+    - `POST /api/v1/offers/{offer_id}/analyze`
+- **Frontend implementation:**
+  - Transport client in `frontend/src/lib/canonical-offers.ts` with typed methods.
+  - `frontend/src/components/features/offers/offers-list.tsx`: Actor switcher (Household vs Business donor profiles), honest metrics (`Offered` and `Available` quantities, never claiming `Rescued` without Phase 2 NGO confirmed receipt), cancellation flow, business org creation modal.
+  - `frontend/src/components/features/offers/create-offer-wizard.tsx`: 4-step wizard with donor profile selector, photo upload, Gemini structured suggestions + sensory disclaimer, declarations, geolocation fallback (GPS + manual pin/address), privacy preview (public vs post-reservation), confirmation & publish with 422/409 handling.
+  - `frontend/src/components/features/offers/offer-detail.tsx`: Canonical offering details, quantity ledger, protected address/instructions, cancellation modal.
+  - Routes: `/offers`, `/offers/new`, `/offers/[id]` with responsive layout, 44px touch targets, mobile-first design, semantic Tailwind v4 tokens, app-shell navigation, and Home quick links.
+- **Verification Evidence:**
+  - Frontend ESLint: passed cleanly (0 errors, 0 warnings).
+  - Frontend TypeScript (`npx tsc --noEmit`): passed cleanly (0 errors).
+  - Next.js production build (`npm run build`): compiled all 20 application routes successfully (0 errors).
+  - Backend compileall (`.venv/Scripts/python.exe -m compileall app scripts`): passed cleanly (0 errors).
+  - Live acceptance runner: `backend/scripts/phase1_live_acceptance.py` created for AC1-01 through AC1-09 verification with synthetic fixtures.
+  - No unit tests or unit-test dependencies added or executed per `AGENTS.md`.
+- Implementation record: [social impact Phase 1 implementation record](implementation/social-impact-phase1.md).
+- Browser validation found a deployed API mismatch, a photo-upload version conflict that blocks publish, a no-photo publish guard that requires a draft before it creates one, and no edit action on offer detail. Gemini returned a manual fallback for the synthetic photo. These are open G1 blockers, not accepted behavior.
 
 ## Social impact Phase 0 foundation — 17 October 2026
 

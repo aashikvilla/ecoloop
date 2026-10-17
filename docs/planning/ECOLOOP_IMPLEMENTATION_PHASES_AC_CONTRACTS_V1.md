@@ -110,9 +110,10 @@ Choose donor profile -> `Create offering` -> photograph (optional/manual fallbac
 | AC1-08 | Given an open offer, when viewing My Offerings, then status and available quantity reflect Firestore; no fabricated pickup/delivery | deployed refresh test |
 | AC1-09 | Given unauthorized viewer, when accessing image, then private object inaccessible | access test |
 
-**Gate G1:** one household + one business donor publishes and sees an image-backed (or manual fallback) offer on Cloud Run; image extraction runs on Google Vertex with captured tests when available; older household flows unaffected. Real NGO claims not yet present; donor impact displays zero verified recoveries.
+**Gate G1: OPEN.** Acceptance requires one household and one business donor to publish and read an image-backed (or manual fallback) offer on Cloud Run, with older household flows unaffected. No NGO claims exist yet. Phase 1 must show zero verified recoveries until receipt evidence exists.
+*Phase 1 local implementation and fixes (18 October 2026):* Endpoints (`/offers/{id}/cancel`, `/offers/{id}/media`, `/offers/{id}/analyze`), domain services, strict Pydantic schemas, and frontend UI (`/offers`, `/offers/new`, `/offers/[id]`) are present locally. Static checks passed, and one synthetic household manual publish/edit/cancel plus photo observation was exercised from the browser against local services and live Firebase. The follow-up near-expiry publish attempt did not reach the API, and business flow, full AC1-01–AC1-09 acceptance and Cloud Run deployment remain open. See [implementation record](../implementation/social-impact-phase1.md) and [fix journal](../knowledge/sessions/2026-10-18-phase1-fixes.md).
 
-## Phase 2 — Vendor/NGO side (recipient organization pickup)
+## Phase 2 — Recipient organization side (NGO pickup)
 
 ### Journey
 Org creates profile -> admin-approved recipient status (seeded/manual for hackathon) -> coordinator grants roles -> sees nearby offer map/list -> optional natural-language need `food for 30 vegetarian people` -> Gemini extracts constraints, missing portion conversion explicitly highlighted -> backend gets eligible offers / ranks by factual constraints -> coordinator chooses offers -> Routes API computes route (or unavailable fallback) -> coordinator reserves amounts -> assigned collector sees pickup instructions -> donor confirms handover -> collector confirms collected quantity -> authorized NGO coordinator confirms received quantity -> deduplicated impact event becomes visible to donor and NGO.
@@ -133,6 +134,8 @@ Org creates profile -> admin-approved recipient status (seeded/manual for hackat
 | `POST /api/v1/claims/{id}/events` | `{type, quantity, expected_version}` | persisted event + canonical state | `donor_handover` donor; `collector_collected` assigned org collector; `org_received` authorized coordinator; idempotent |
 | `GET /api/v1/impact/me` | `donor actor, period` | confirmed received by unit + completed handovers | derive exclusively from receipt events, including reversals |
 | `GET /api/v1/organizations/{id}/impact` | `period` | same for recipient org | only org members with permission |
+
+**Sustainability score timing:** revisit after Phase 2 receipt verification is implemented and an evidence-backed impact method is agreed. Until then, report offered, handed-over and recipient-confirmed quantities separately by unit; do not present a composite score or unverified environmental savings.
 
 **State machines:**
 - Offer: `draft -> open -> partially_reserved/fully_reserved -> closed/expired/cancelled`; view status derived from availability and claims. Publishing is explicit. A reserved claim isn't automatically cancelled if posting expires: claim expiry policy separate.
@@ -163,11 +166,11 @@ Org creates profile -> admin-approved recipient status (seeded/manual for hackat
 
 | Batch | Phase | Tasks | Parallelizable | Exit artifact |
 |---|---|---|---|---|
-| B0 | 0 | Freeze enums, OpenAPI/Pydantic/TypeScript schemas, actor/permission matrix | backend+frontend contracts | contract fixtures, schema snapshots |
-| B1 | 0 | Firestore collections/transactions, org-role ACL tests, idempotency, geohash indexes | storage/auth | emulator test suite |
-| B2 | 0 | GCS and Maps/Vertex adapters, local provider stubs, troubleshoot existing ADK timeout | integrations in parallel | integration smoke proofs / failure contracts |
-| B3 | 1 | Donor UI/form/profile, draft/publish/list APIs, manual location | frontend+backend | household & business published offers |
-| B4 | 1 | Private media upload, bounded Gemini observations, editing/error UX | UI+AI in parallel | tested photo->edit->publish |
+| B0 | 0 | Freeze enums, OpenAPI/Pydantic/TypeScript schemas, actor/permission matrix | Completed (Phase 0) | contract fixtures, schema snapshots |
+| B1 | 0 | Firestore collections/transactions, org-role ACL tests, idempotency, geohash indexes | Completed (Phase 0) | emulator test suite |
+| B2 | 0 | GCS and Maps/Vertex adapters, local provider stubs, troubleshoot existing ADK timeout | Completed (Phase 0) | integration smoke proofs / failure contracts |
+| B3 | 1 | Donor UI/form/profile, draft/publish/list APIs, manual location | Implemented locally; acceptance open | household and business published offers on Cloud Run |
+| B4 | 1 | Private media upload, bounded Gemini observations, editing/error UX | Implemented locally; acceptance open | tested photo → edit → publish on Cloud Run |
 | B5 | 2 | NGO onboarding and role gate, map/list, public offer search | frontend+backend | approved NGO discovers real offers |
 | B6 | 2 | ADK need extraction, deterministic offer matching, optional Maps route | AI+geo in parallel | 30-people query with evidence + route/fallback |
 | B7 | 2 | Claim transaction, pickup event state machine, deduped receipt/impact | backend primary | reservation race and verified receipt tests |

@@ -250,6 +250,35 @@ class OfferPublish(StrictModel):
     confirmed: Literal[True]
 
 
+class OfferCancel(StrictModel):
+    expected_version: Annotated[StrictInt, Field(ge=1)]
+    reason: Annotated[StrictStr, Field(min_length=2, max_length=280)]
+
+
+class OfferAnalyzeRequest(StrictModel):
+    media_ids: list[Annotated[StrictStr, Field(min_length=1, max_length=128)]] = Field(min_length=1, max_length=5)
+
+
+class OfferAnalyzeResult(StrictModel):
+    visible_food: list[Annotated[StrictStr, Field(min_length=1, max_length=120)]] = Field(default_factory=list)
+    suggested_title: Annotated[StrictStr, Field(max_length=120)] | None = None
+    suggested_category: Annotated[StrictStr, Field(max_length=80)] | None = None
+    packaging_observations: Annotated[StrictStr, Field(max_length=280)] | None = None
+    label_text: Annotated[StrictStr, Field(max_length=500)] | None = None
+    uncertainty: Annotated[StrictStr, Field(max_length=280)] | None = None
+    missing_fields: list[Annotated[StrictStr, Field(min_length=1, max_length=80)]] = Field(default_factory=list)
+    ai_provider: Annotated[StrictStr, Field(max_length=50)] | None = None
+
+
+class OfferMediaUploadResult(StrictModel):
+    media_id: Annotated[StrictStr, Field(min_length=1, max_length=128)]
+    offer_id: Annotated[StrictStr, Field(min_length=1, max_length=128)]
+    version: Annotated[StrictInt, Field(ge=1)]
+    mime_type: Literal["image/jpeg", "image/png", "image/webp"]
+    upload_state: Literal["PENDING", "UPLOADED", "DELETED", "FAILED"]
+
+
+
 class ClaimCreate(StrictModel):
     quantity_minor: Annotated[StrictInt, Field(gt=0, le=1_000_000_000)]
     unit: OfferUnit

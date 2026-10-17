@@ -27,10 +27,11 @@ export default function HomePage() {
   return <div className="space-y-5 sm:space-y-7">
     <header><p className="text-xs font-extrabold uppercase tracking-[.14em] text-muted">Your household</p><Heading as="h1" className="mt-1">A clear view of your kitchen</Heading><p className="mt-2 text-sm leading-relaxed text-muted">Home summarizes confirmed household records returned by the API. Suggestions and activity summaries appear only when their services provide them.</p></header>
     <LiveDestinationNotice />
-    <nav aria-label="Quick household actions" className="grid grid-cols-3 gap-2 sm:gap-3">
+    <nav aria-label="Quick household actions" className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
       <Link href="/kitchen/add" className="flex min-h-12 items-center justify-center rounded-full bg-primary px-2 text-center text-xs font-semibold text-white sm:text-sm">Scan or add food</Link>
       <Link href="/shop" className="flex min-h-12 items-center justify-center rounded-full bg-surface-muted px-2 text-center text-xs font-semibold text-primary sm:text-sm">Shopping list</Link>
       <a href="#saved-plans-heading" className="flex min-h-12 items-center justify-center rounded-full bg-surface-muted px-2 text-center text-xs font-semibold text-primary sm:text-sm">Meal plans</a>
+      <Link href="/offers" className="flex min-h-12 items-center justify-center rounded-full bg-primary-soft px-2 text-center text-xs font-semibold text-primary sm:text-sm">Share surplus</Link>
     </nav>
     {live.phase === "loading" && <Card role="status" className="p-5 text-sm text-muted">Loading household kitchen…</Card>}
     {live.phase === "error" && <Card role="alert" className="space-y-3 border border-danger/30 p-5"><p className="text-sm text-danger">{live.error}</p><Button variant="secondary" onClick={live.refresh}>Retry</Button></Card>}
