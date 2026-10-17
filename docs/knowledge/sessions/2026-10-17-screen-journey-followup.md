@@ -25,6 +25,7 @@ The review was static against local Stitch PNG/HTML and source. Browser inspecti
 - `git diff --check`: passed.
 - No unit tests ran. Production build was skipped because Next build may load ignored real env files, which were prohibited from inspection in this pass. PWA agent lint and `git diff --check` passed; its isolated typecheck/build was blocked by an incomplete dependency installation. The integrated root typecheck closes the compiler check for its merged source.
 - Read-only browser inspection of `http://127.0.0.1:3000/` showed the signed-out auth gate. `/activity` showed the household-selection gate when signed in without an active selected household. No browser mutation, model call, or database write ran.
+- Final integration checkpoint `f6e5f9d` was pushed to `origin/codex/demo-integration`. The only registered worktree is now the root integration checkout; feature branches remain as recovery refs and are fully reachable from the integration branch.
 
 ## Remaining
 
