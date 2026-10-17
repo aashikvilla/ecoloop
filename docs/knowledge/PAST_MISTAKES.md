@@ -1,5 +1,10 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-17 — Activity summaries must identify their page scope
+
+Observation: household history endpoints are paginated. A count or quantity from the first page can look like a complete household total if its coverage is not stated. Share offers also describe a different state from completed handovers.
+Pattern: summarize only fetched records, label the loaded-page scope and expose continuation when another page exists. Keep offers separate from outcome events, and add quantities only when their recorded measurement basis and units support the same total.
+
 ## 2026-10-17 — Correction commands must preserve zero and unknown provenance
 
 Observation: outcome recording can legitimately reduce a known balance to zero, while the fact-confirm input schema initially accepted only positive amounts. The same schema also allowed a date source when the date was unknown. Prevention: make correction schemas reflect every valid persisted state, and enforce unknown/date-source consistency at the API boundary as well as in UI builders.
