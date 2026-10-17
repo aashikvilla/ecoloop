@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     PHOTO_THINKING_LEVEL: Literal["MINIMAL", "LOW", "MEDIUM", "HIGH"] = "MINIMAL"
     AGENT_VERTEX_PROJECT_ID: str | None = None
     AGENT_VERTEX_LOCATION: str | None = None
+    AGENT_VERTEX_ENGINE_LOCATION: str | None = None
     AGENT_SESSION_STORE: Literal["in_memory", "vertex_ai"] = "in_memory"
     AGENT_VERTEX_ENGINE_ID: str | None = None
     AGENT_SESSION_IDLE_TTL_SECONDS: int = 86_400

@@ -9,6 +9,12 @@ on:
       - "deploy/**"
       - ".github/workflows/**"
   workflow_dispatch:
+    inputs:
+      promote:
+        description: Request promotion after managed-context acceptance evidence is reviewed
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -79,6 +85,8 @@ jobs:
       - name: Deploy candidate revisions
         run: |
           set -euo pipefail
+          AGENT_ENGINE_ID="${{ vars.ECOLOOP_AGENT_ENGINE_ID }}"
+          [[ "$AGENT_ENGINE_ID" =~ ^[A-Za-z0-9_-]{1,128}$ ]]
           cat > "$RUNNER_TEMP/ecoloop-api-env.yaml" <<EOF
           FIREBASE_PROJECT_ID: "${PROJECT_ID}"
           GOOGLE_CLOUD_PROJECT: "${PROJECT_ID}"
@@ -90,12 +98,14 @@ jobs:
           PHOTO_THINKING_LEVEL: "MINIMAL"
           AGENT_VERTEX_PROJECT_ID: "${PROJECT_ID}"
           AGENT_VERTEX_LOCATION: "global"
-          AGENT_SESSION_STORE: "in_memory"
+          AGENT_VERTEX_ENGINE_LOCATION: "asia-south1"
+          AGENT_VERTEX_ENGINE_ID: "${AGENT_ENGINE_ID}"
+          AGENT_SESSION_STORE: "vertex_ai"
           AGENT_SESSION_IDLE_TTL_SECONDS: "86400"
-          AGENT_MEMORY_BANK_ENABLED: "false"
+          AGENT_MEMORY_BANK_ENABLED: "true"
           AGENT_REQUEST_TIMEOUT_SECONDS: "50"
           AGENT_MAX_OUTPUT_TOKENS: "2048"
-          AI_DAILY_REQUEST_LIMIT: "3"
+          AI_DAILY_REQUEST_LIMIT: "12"
           MAX_REQUEST_BYTES: "256000"
           MAX_PHOTO_BYTES: "2000000"
           BACKEND_CORS_ORIGINS: '["${WEB_ORIGIN}"]'
@@ -141,6 +151,10 @@ jobs:
               raise SystemExit("Vertex assistant configuration is unavailable")
           if assistant.get("provider") != "vertex_ai":
               raise SystemExit("The assistant did not select Vertex AI")
+          if assistant.get("session_store") != "vertex_ai_configured_unverified" or assistant.get("managed_sessions_configured") is not True:
+              raise SystemExit("Managed Sessions are not configured")
+          if assistant.get("memory_bank") != "configured_unverified" or assistant.get("managed_memory_configured") is not True:
+              raise SystemExit("Memory Bank is not configured")
           PY
           status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$API_CANDIDATE_URL/api/v1/households")
           test "$status" = "401"
@@ -150,6 +164,7 @@ jobs:
           test "$cors" = "200"
 
       - name: Promote both verified revisions
+        if: vars.ECOLOOP_MANAGED_CONTEXT_ACCEPTED == 'true' && (github.event_name == 'push' || inputs.promote == true)
         run: |
           set -euo pipefail
           source "$RUNNER_TEMP/candidate-urls.env"

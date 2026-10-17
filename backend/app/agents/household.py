@@ -338,7 +338,7 @@ def _managed_session_configuration() -> tuple[str, str, str] | None:
     if settings.AGENT_SESSION_STORE != "vertex_ai":
         return None
     project = (settings.AGENT_VERTEX_PROJECT_ID or "").strip()
-    location = (settings.AGENT_VERTEX_LOCATION or "").strip()
+    location = (settings.AGENT_VERTEX_ENGINE_LOCATION or "").strip()
     engine_id = settings.AGENT_VERTEX_ENGINE_ID.strip() if settings.AGENT_VERTEX_ENGINE_ID else ""
     if not project or not location or not engine_id:
         return None
@@ -407,7 +407,7 @@ async def _get_runner() -> tuple[Runner, BaseSessionService]:
         if settings.AGENT_SESSION_STORE == "vertex_ai" and managed_session_config is None:
             raise DomainError(
                 "AGENT_UNAVAILABLE",
-                "Managed assistant sessions need a Vertex AI project, location, and Agent Engine ID.",
+                "Managed assistant sessions need an Agent Engine project, location, and resource ID.",
                 503,
                 True,
             )

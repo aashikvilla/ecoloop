@@ -45,7 +45,7 @@ def _config() -> MemoryBankConfig | None:
         return None
 
     project_id = (settings.AGENT_VERTEX_PROJECT_ID or "").strip()
-    location = (settings.AGENT_VERTEX_LOCATION or "").strip()
+    location = (settings.AGENT_VERTEX_ENGINE_LOCATION or "").strip()
     engine_id = (settings.AGENT_VERTEX_ENGINE_ID or "").strip()
     if (
         not _PROJECT_ID.fullmatch(project_id)

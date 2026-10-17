@@ -9,14 +9,21 @@ param(
     [string]$RuntimeServiceAccount,
     [string]$FrontendOrigin,
     [string]$GeminiApiSecretRef,
+    [ValidateSet("gemini_api", "vertex")]
     [string]$AgentProvider = "gemini_api",
+    [string]$AgentVertexProjectId,
+    [string]$AgentVertexLocation = "global",
+    [string]$AgentVertexEngineLocation,
+    [string]$AgentVertexEngineId,
     [string]$AgentModel = "gemini-3.1-flash-lite",
     [int]$AiDailyRequestLimit = 12,
-    [int]$AgentRequestTimeoutSeconds = 20,
-    [int]$AgentMaxOutputTokens = 4096,
+    [int]$AgentRequestTimeoutSeconds = 50,
+    [int]$AgentMaxOutputTokens = 2048,
     [string]$Revision,
     [switch]$AllowUnauthenticated,
     [switch]$EnableAssistant,
+    [switch]$EnableManagedSessions,
+    [switch]$EnableMemoryBank,
     [switch]$Apply
 )
 
@@ -54,8 +61,23 @@ if ($Mode -eq "Deploy") {
     if ([string]::IsNullOrWhiteSpace($RuntimeServiceAccount) -or $RuntimeServiceAccount -notmatch $serviceAccountPattern -or $RuntimeServiceAccount -match "^firebase-adminsdk") {
         throw "Deploy requires a dedicated -RuntimeServiceAccount in project $Project; Firebase Admin SDK and default service accounts are not accepted."
     }
-    if ($EnableAssistant -and ([string]::IsNullOrWhiteSpace($GeminiApiSecretRef) -or $AgentProvider -ne "gemini_api")) {
-        throw "-EnableAssistant requires Gemini Developer API and an exact -GeminiApiSecretRef."
+    if ($EnableAssistant -and $AgentProvider -eq "gemini_api" -and [string]::IsNullOrWhiteSpace($GeminiApiSecretRef)) {
+        throw "Gemini Developer API requires an exact -GeminiApiSecretRef."
+    }
+    if ($EnableAssistant -and $AgentProvider -eq "vertex" -and ([string]::IsNullOrWhiteSpace($AgentVertexProjectId) -or [string]::IsNullOrWhiteSpace($AgentVertexLocation))) {
+        throw "Vertex AI requires -AgentVertexProjectId and -AgentVertexLocation."
+    }
+    if ($AgentProvider -eq "vertex" -and $AgentVertexProjectId -ne $Project) {
+        throw "This hackathon deployment uses one project; -AgentVertexProjectId must match -Project."
+    }
+    if (($EnableManagedSessions -or $EnableMemoryBank) -and ($AgentProvider -ne "vertex" -or [string]::IsNullOrWhiteSpace($AgentVertexProjectId) -or [string]::IsNullOrWhiteSpace($AgentVertexEngineLocation) -or $AgentVertexEngineId -notmatch "^[A-Za-z0-9_-]{1,128}$")) {
+        throw "Managed Sessions/Memory Bank require Vertex and a project, Agent Engine location, and valid -AgentVertexEngineId."
+    }
+    if ($EnableMemoryBank -and -not $EnableManagedSessions) {
+        throw "Memory Bank shares the Agent Engine resource and requires -EnableManagedSessions."
+    }
+    if (($EnableManagedSessions -or $EnableMemoryBank) -and -not $EnableAssistant) {
+        throw "Managed Sessions/Memory Bank cannot be enabled while the assistant is disabled."
     }
     if ($AiDailyRequestLimit -lt 1 -or $AiDailyRequestLimit -gt 100) {
         throw "-AiDailyRequestLimit must be between 1 and 100."
@@ -74,9 +96,13 @@ if ($Mode -eq "Deploy") {
         AGENT_ENABLED = if ($EnableAssistant) { "true" } else { "false" }
         AGENT_PROVIDER = $AgentProvider
         AGENT_MODEL = $AgentModel
-        AGENT_SESSION_STORE = "in_memory"
+        AGENT_VERTEX_PROJECT_ID = if ($AgentProvider -eq "vertex") { $AgentVertexProjectId } else { "" }
+        AGENT_VERTEX_LOCATION = if ($AgentProvider -eq "vertex") { $AgentVertexLocation } else { "" }
+        AGENT_VERTEX_ENGINE_LOCATION = if ($EnableManagedSessions) { $AgentVertexEngineLocation } else { "" }
+        AGENT_VERTEX_ENGINE_ID = if ($EnableManagedSessions) { $AgentVertexEngineId } else { "" }
+        AGENT_SESSION_STORE = if ($EnableManagedSessions) { "vertex_ai" } else { "in_memory" }
         AGENT_SESSION_IDLE_TTL_SECONDS = "86400"
-        AGENT_MEMORY_BANK_ENABLED = "false"
+        AGENT_MEMORY_BANK_ENABLED = if ($EnableMemoryBank) { "true" } else { "false" }
         AGENT_REQUEST_TIMEOUT_SECONDS = $AgentRequestTimeoutSeconds.ToString()
         AGENT_MAX_OUTPUT_TOKENS = $AgentMaxOutputTokens.ToString()
         AI_DAILY_REQUEST_LIMIT = $AiDailyRequestLimit.ToString()
