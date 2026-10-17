@@ -116,6 +116,7 @@ Indicative effort: 2–3 engineering days. Entry: M1 reviewed exit gate. Exit: M
 - [ ] **M2.02.02 — Add truthful Home/use-soon prompts**
   - Owner: Full stack. Prerequisites: M2.01.03, M2.02.01.
   - Acceptance: Confirmed date reminders differ from last-checked prompts; no photo-derived safety/expiry assertion.
+  - Local implementation note (17 October 2026): Home now separates records with user-confirmed date/type from records without a date, links each prompt to the canonical item review, and offers an Add food entrypoint from Home and Kitchen. The prompt asks the household to review the stored date and check the food themselves; it makes no safety/freshness inference. Keep this task open until prerequisites and its authenticated acceptance evidence are reviewed.
 
 - [ ] **M2.02.03 — Review M2 exit evidence**
   - Owner: Reviewer. Prerequisites: M2.01.03, M2.02.02.

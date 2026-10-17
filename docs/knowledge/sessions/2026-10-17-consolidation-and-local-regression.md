@@ -47,6 +47,12 @@ The first follow-up HTTP check found that all frontend routes were returning 500
 
 An additional assistant-flow slice now lets the owner save a `PreferenceConsent` card through the existing private preferences API. It requires an explicit click, validates and reads the private preference list before enabling consent, rehydrates saved state on page load, uses the server-generated proposal ID as the stable preference ID to prevent duplicate records, and shows conflicts/settings review if that ID already holds different text. Frontend lint, TypeScript and production build passed after the change; the local routes returned HTTP 200 after restart. No unit tests, preference write or Gemini request ran.
 
+## Follow-up — Home date review and capture entrypoints
+
+Two static frontend audits found the capture route was orphaned from Home and Kitchen, and Home lacked distinct recorded-date versus no-date prompts. Home now displays up to four records of each kind from the authenticated canonical Kitchen response. A recorded date keeps its explicit date type and date-only value; a no-date record is labeled with its last observation date. Both link to canonical item review. Copy asks the owner to review/check the record and does not infer food safety, freshness, or photo-derived expiry. Home’s empty state and Kitchen now link to `/kitchen/add`. Implementation plan M2.02.02 records this local slice but remains unchecked pending prerequisites and acceptance evidence. `docs/planning/IMPLEMENTATION_PLAN.md` remains the phase task authority; no live task sheet was changed.
+
+Frontend ESLint, TypeScript and `git diff --check` passed. The running frontend returned HTTP 200 for `/`, `/kitchen` and `/kitchen/add`; this is route-serving evidence only, not an authenticated browser interaction. No browser click-through, unit tests, API writes, AI call, cloud operation, credential/environment file read, or deployment was performed for this slice.
+
 Git reports only `C:/Projects/ecoloop` as a registered worktree. A partial unregistered folder remains under `C:/Projects/ecoloop-worktrees/foundation`; it contains a junction to the root frontend `node_modules`. Cleanup was attempted only after verifying the junction target, but local deletion review blocked it, so that junction/folder was preserved. The ignored frontend/backend environment files and tracked user PDF remain present; their contents were not read.
 
 ## Follow-up coding slice — meal-plan approvals and private media API
