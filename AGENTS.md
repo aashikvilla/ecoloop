@@ -37,6 +37,7 @@ Do not create or run frontend/backend unit tests or add unit-test dependencies. 
 Load only relevant .agents/rules and skills.
 ## Work and evidence
 Plan bounded multi-step work; delegate independent work/reviews only when useful.
+Name branches for their feature or fix (for example, `feature/meal-plans` or `fix/household-create`); never use the `codex/` prefix.
 Correct → simple → maintainable → fast → elegant.
 Server Components default; explicit loading/empty/error/success/pending/conflict states.
 Follow Stitch, 44px controls and 360px layout; review contrast before claiming compliance.
