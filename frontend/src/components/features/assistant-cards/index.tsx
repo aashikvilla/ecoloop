@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Badge, Button, Card, Heading } from "@/components/ui";
 import { isExpired, type AssistantEnvelope, type ProposalCard } from "@/lib/assistant-cards";
+import type { ProposalResolution } from "@/lib/assistant-actions";
 
 const titleByType: Record<ProposalCard["type"], string> = {
   MealSuggestion: "Meal suggestion", PortionAdjustment: "Portion adjustment", BuyCheck: "Buy check", FoodAction: "Food action", PreferenceConsent: "Preference consent",
@@ -11,11 +12,11 @@ function ReviewLink({ href, children }: { href: string; children: ReactNode }) {
   return <Link href={href} className="inline-flex min-h-11 items-center rounded-full bg-primary-soft px-4 py-2 text-sm font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">{children}</Link>;
 }
 
-function ProposalStatus({ card }: { card: ProposalCard }) {
+function ProposalStatus({ card, resolution }: { card: ProposalCard; resolution?: ProposalResolution }) {
   const expired = isExpired(card);
   return <div className="flex flex-wrap gap-2" aria-label="Proposal status">
-    <Badge tone={card.simulated ? "amber" : "green"}>{card.simulated ? "Simulated proposal" : "Pending proposal"}</Badge>
-    {expired ? <Badge tone="terra">Expired</Badge> : <Badge>Pending · v{card.version}</Badge>}
+    <Badge tone={card.simulated ? "amber" : "green"}>{card.simulated ? "Assistant proposal" : "Pending proposal"}</Badge>
+    {resolution ? <Badge tone="green">{resolution.status === "APPROVED" ? "Added to list" : "Dismissed"}</Badge> : expired ? <Badge tone="terra">Expired</Badge> : <Badge>Pending · v{card.version}</Badge>}
   </div>;
 }
 
@@ -29,14 +30,19 @@ function ProposalDetails({ card }: { card: ProposalCard }) {
   }
 }
 
-function TypedCard({ card }: { card: ProposalCard }) {
+type ActionProps = { resolutions: Record<string, ProposalResolution>; onAction: (proposalId: string, version: number, action: "ADD" | "DISMISS") => void; actionBusy: string | null; actionsEnabled: boolean };
+
+function TypedCard({ card, resolutions, onAction, actionBusy, actionsEnabled }: { card: ProposalCard } & ActionProps) {
   const expired = isExpired(card);
-  return <Card className="min-w-0 break-words border border-line p-4 sm:p-5 [overflow-wrap:anywhere]"><div className="flex flex-wrap items-start justify-between gap-2"><p className="text-xs font-bold uppercase tracking-wide text-primary">{titleByType[card.type]}</p><ProposalStatus card={card} /></div><ProposalDetails card={card} /><div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4"><Button disabled aria-describedby={`approval-${card.proposal_id}`} variant="secondary">{expired ? "Proposal expired" : "Approval unavailable"}</Button><p id={`approval-${card.proposal_id}`} className="max-w-xl text-xs leading-relaxed text-muted">{expired ? "Review current records before asking for another proposal." : "Proposal approval is not connected. This suggestion has not changed household records."}</p></div></Card>;
+  const resolution = resolutions[card.proposal_id];
+  const canAct = actionsEnabled && !expired && !resolution;
+  const canAdd = card.type === "BuyCheck" && card.shopping_action === "ADD" && card.allowed_actions.includes("ADD");
+  return <Card className="min-w-0 break-words border border-line p-4 sm:p-5 [overflow-wrap:anywhere]"><div className="flex flex-wrap items-start justify-between gap-2"><p className="text-xs font-bold uppercase tracking-wide text-primary">{titleByType[card.type]}</p><ProposalStatus card={card} resolution={resolution} /></div><ProposalDetails card={card} /><div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">{canAdd && <Button disabled={!canAct || actionBusy !== null} aria-busy={actionBusy === `${card.proposal_id}:ADD`} onClick={() => onAction(card.proposal_id, card.version, "ADD")}>{actionBusy === `${card.proposal_id}:ADD` ? "Adding…" : "Add to shopping list"}</Button>}{!resolution && <Button disabled={!canAct || actionBusy !== null} aria-busy={actionBusy === `${card.proposal_id}:DISMISS`} onClick={() => onAction(card.proposal_id, card.version, "DISMISS")} variant="secondary">Dismiss</Button>}<p className="max-w-xl text-xs leading-relaxed text-muted">{resolution?.status === "APPROVED" ? "A shopping list entry was recorded. Stock was not changed." : resolution ? "This proposal is closed." : expired ? "Review current records before asking again." : !actionsEnabled ? "Household changes are not enabled for this app yet." : canAdd ? "Adding records a shopping plan only. It does not purchase or consume food." : "This card is advice only; no record changes until an action is supported."}</p></div></Card>;
 }
 
-export function AssistantCards({ envelope, rejectedCards = 0 }: { envelope: AssistantEnvelope; rejectedCards?: number }) {
+export function AssistantCards({ envelope, rejectedCards = 0, ...actions }: { envelope: AssistantEnvelope; rejectedCards?: number } & ActionProps) {
   return <section aria-labelledby="proposal-heading" className="space-y-3"><Card className="border border-line p-4 sm:p-5"><div className="flex flex-wrap items-center justify-between gap-2"><Heading id="proposal-heading" as="h2">Assistant proposals</Heading><Badge tone="green">Returned by household API</Badge></div><p className="mt-2 text-sm leading-relaxed">{envelope.message}</p><p className="mt-2 text-xs text-muted">Reviewing a proposal does not approve it or change records.</p></Card>
     {rejectedCards > 0 && <Card className="border border-tertiary/30 bg-tertiary-soft p-4" role="status"><p className="text-sm">{rejectedCards} unsupported or invalid {rejectedCards === 1 ? "card was" : "cards were"} safely omitted by the schema validator.</p></Card>}
-    {envelope.cards.length === 0 ? <Card className="border border-line p-4" role="status"><p className="text-sm text-muted">The assistant returned no valid proposals.</p></Card> : <div className="grid gap-3 sm:grid-cols-2">{envelope.cards.map((card) => <TypedCard key={card.proposal_id} card={card} />)}</div>}
+    {envelope.cards.length === 0 ? <Card className="border border-line p-4" role="status"><p className="text-sm text-muted">The assistant returned no valid proposals.</p></Card> : <div className="grid gap-3 sm:grid-cols-2">{envelope.cards.map((card) => <TypedCard key={card.proposal_id} card={card} {...actions} />)}</div>}
   </section>;
 }
