@@ -444,6 +444,7 @@ async def _get_runner() -> tuple[Runner, BaseSessionService]:
                 temperature=0.2,
                 max_output_tokens=settings.AGENT_MAX_OUTPUT_TOKENS,
                 response_mime_type="application/json",
+                thinking_config=types.ThinkingConfig(thinking_level=settings.AGENT_THINKING_LEVEL),
             ),
             tools=[read_confirmed_pantry, read_active_shopping_list, read_active_meal_plans],
         )

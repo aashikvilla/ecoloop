@@ -111,6 +111,7 @@ Only include an amount/unit when clearly visible as a package quantity; otherwis
                 response_schema=PhotoExtraction,
                 temperature=0,
                 max_output_tokens=2_048,
+                thinking_config=types.ThinkingConfig(thinking_level=settings.PHOTO_THINKING_LEVEL),
             ),
         )
     except Exception as exc:

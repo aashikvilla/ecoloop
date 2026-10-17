@@ -25,7 +25,9 @@ class Settings(BaseSettings):
     AGENT_ENABLED: bool = False
     AGENT_PROVIDER: Literal["auto", "gemini_api", "vertex"] = "auto"
     AGENT_MODEL: str = "gemini-3.1-flash-lite"
+    AGENT_THINKING_LEVEL: Literal["MINIMAL", "LOW", "MEDIUM", "HIGH"] = "MINIMAL"
     PHOTO_MODEL: str = "gemini-3.1-flash-lite"
+    PHOTO_THINKING_LEVEL: Literal["MINIMAL", "LOW", "MEDIUM", "HIGH"] = "MINIMAL"
     AGENT_VERTEX_PROJECT_ID: str | None = None
     AGENT_VERTEX_LOCATION: str | None = None
     AGENT_SESSION_STORE: Literal["in_memory", "vertex_ai"] = "in_memory"
