@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-17 — Correction commands must preserve zero and unknown provenance
+
+Observation: outcome recording can legitimately reduce a known balance to zero, while the fact-confirm input schema initially accepted only positive amounts. The same schema also allowed a date source when the date was unknown. Prevention: make correction schemas reflect every valid persisted state, and enforce unknown/date-source consistency at the API boundary as well as in UI builders.
+
 ## 2026-10-17 — Existing browser tabs can retain an old production page
 
 Observation: after rebuilding and restarting the local Next production server, the already-open browser tab still displayed its prior scripted page, while a new tab on the same port loaded the API-only build. Prevention: refresh or open a fresh tab after replacing a production build; do not use an existing tab's DOM as proof that a server restart changed the page.

@@ -111,7 +111,7 @@ Indicative effort: 2–3 engineering days. Entry: M1 reviewed exit gate. Exit: M
 - [ ] **M2.02.01 — Implement Kitchen observation editing and uncertainty**
   - Owner: Full stack. Prerequisites: M2.01.03.
   - Acceptance: Unknown/stale stock is visible; incompatible units and negative quantities rejected; confirmed dates retain type/source.
-  - Implementation note (17 October 2026): authenticated read-only item details are now linked from Kitchen. This partial UI slice shows unknown values and observation provenance honestly, but editing/rechecking and the M2.01.03 prerequisite remain open; do not mark this unit complete.
+  - Implementation note (17 October 2026): authenticated item details now include a default-off, versioned correction/recheck form using the canonical fact-confirm transaction. Known zero quantities are supported; unknown dates cannot retain stale provenance. Static lint/type checks pass, but no live edit/conflict journey ran, and M2.01.03 remains an open prerequisite. Do not mark this unit complete.
 
 - [ ] **M2.02.02 — Add truthful Home/use-soon prompts**
   - Owner: Full stack. Prerequisites: M2.01.03, M2.02.01.
