@@ -78,6 +78,21 @@ Transport allowlists routes/methods and trusted origin, bounds streamed response
 
 Third wave completed: commands `4f2a32a`, history `980d7fc`, stock hardening `fa64c64`; integrated application `f5c5683`, evidence/handoff `b22d067`. Root production build/type/lint and offline cross-language boundaries passed; browser sampled unavailable states at 360px/1440px. Full authenticated acceptance remains open. See [evidence](../evidence/account-commands-2026-10-16/README.md).
 
+## Local authenticated end-to-end follow-up — 17 October
+
+The owner asked for local end-to-end usability with real Firebase identity/Firestore and AI, keeping deployment deferred. Three isolated branches were integrated sequentially on `codex/demo-integration`: durable typed assistant proposals/private history/explicit shopping approval (`5364b78`, root transport/context `2d34eba`), consented private preference controls (`15ca34d`), and contextual Kitchen actions/Shop editing with soft archive (`8d6e05e`). Integration checkpoints are `48cfde7` and `443eaf4`. The other owned worktrees were not merged into this local lane.
+
+- [x] Signed-in route gate protects private destinations; Settings is available after sign-in even before household selection. Firebase Auth uses in-memory persistence.
+- [x] Preference controls read, consent, correct and revoke owner-private records; AI context includes only active, explicitly consented entries and labels them untrusted literal preferences. Managed Memory Bank is not connected.
+- [x] Assistant generation uses the durable proposal endpoint and stores owner-private turn history. Server-created proposal IDs/expiry and explicit idempotent BuyCheck approval are wired through API and UI. Only BuyCheck ADD can create a shopping entry; it never changes Kitchen stock. No new paid model request was made in this follow-up.
+- [x] Contextual item outcome/share controls and Shop add/edit/archive flows are integrated. Archive is soft, versioned and idempotent.
+- [x] Fresh synthetic Firebase Auth + Firestore acceptance passed: household create/discovery, canonical fact create/replay and stale conflict, Kitchen read, Shop create/replay/archive/replay/empty read, outcome/replay with stock decrement exactly once, Activity read, and foreign-household 403. Evidence was observed 17 Oct against the local API and `ecoloop-staging-20261015`; it does not prove every browser screen or cloud service.
+- [x] Verification: 15 backend unit tests, backend compileall, targeted frontend ESLint, TypeScript and `git diff --check` passed. API OpenAPI contains proposal/history/action, preference and archive routes. No production build or browser interaction was run in this follow-up.
+- [ ] Durable assistant proposal persistence/history/approval still needs one bounded live provider acceptance when paid-call policy permits. Earlier legacy `/assistant/turns` returned HTTP 200 with a validated card; that does not prove the new durable route's model-to-Firestore path.
+- [ ] Manually refresh `/account`, sign in and verify onboarding/settings/Kitchen/Ask/Shop in the visible browser. Current browser automation blocks the local tab and prohibits alternate-interface workarounds.
+- [ ] Reconcile live MVPTasks with dated evidence; M0–M5 acceptance and phase exit reviews remain open. Do not merge PR #1 to `main` based on this local checkpoint.
+- [ ] Private photo lifecycle/extraction, managed ADK Runtime/Sessions/Memory Bank, live full-screen acceptance and deployment remain future work. Cloud Run/App Hosting, billing, provisioning and deployment were not touched.
+
 ## Fourth wave — observed outcomes and private sharing controls
 
 17:35 UTC continuation found ordinary usage reset (1% five-hour / 34% weekly used), all prior workers completed, no PR reviews/checks, and preserved unrelated sign-in/config/skill changes. The separate chat “Review implementation document” owns `codex/docs-cleanup` and `codex/real-household-agent`; no takeover or merge without explicit handoff/evidence. Its newer cloud work is separate from this chat’s local-only authorization.

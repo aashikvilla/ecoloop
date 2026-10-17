@@ -66,6 +66,11 @@ def main() -> None:
         request("POST", "shopping", shopping)
         request("POST", "shopping", shopping)
         assert len(request("GET", "shopping")["result"]["entries"]) == 1
+        archive = {"schema_version": 1, "idempotency_key": uuid4().hex, "entry_id": "demo-lemons", "base_version": 1, "archived": True}
+        archived = request("PATCH", "shopping/demo-lemons", archive)["result"]
+        assert archived["archived"] is True and archived["version"] == 2
+        assert request("PATCH", "shopping/demo-lemons", archive)["result"] == archived
+        assert request("GET", "shopping")["result"]["entries"] == []
         outcome = {"schema_version": 1, "idempotency_key": uuid4().hex, "outcome_id": "demo-used-tomatoes", "item_id": "demo-tomatoes", "base_version": 1, "outcome_type": "USED", "amount": 2, "unit": "pieces", "measurement_basis": "USER_ESTIMATED", "occurred_at": datetime.now(timezone.utc).isoformat()}
         request("POST", "outcomes", outcome)
         request("POST", "outcomes", outcome)
@@ -76,14 +81,27 @@ def main() -> None:
         request("GET", "kitchen", expected=403)
         if args.ai:
             headers["X-Household-ID"] = household
-            ai = client.post(args.origin + "/api/v1/assistant/turns", headers=headers, json={"schema_version": 1, "text": "Suggest one simple meal using our spinach and tomatoes. Keep amounts and freshness unknown unless the records provide them.", "session_id": "local-demo-" + run, "context_item_ids": ["demo-spinach", "demo-tomatoes"]})
-            evidence.append({"operation": "POST assistant/turns (real provider)", "status": ai.status_code, "expected": 200})
+            ai = client.post(args.origin + "/api/v1/assistant/proposals/turns", headers=headers, json={"schema_version": 1, "text": "I want to make tomato and spinach pasta, but pasta is not in the confirmed pantry. If it is missing, suggest adding pasta to the shopping list using a BuyCheck card. Keep quantities and freshness unknown unless records provide them.", "session_id": "local-demo-" + run, "context_item_ids": ["demo-spinach", "demo-tomatoes"]})
+            evidence.append({"operation": "POST assistant/proposals/turns (real provider + durable receipt)", "status": ai.status_code, "expected": 200})
             if ai.status_code != 200:
                 raise RuntimeError(json.dumps({"evidence": evidence, "ai_error": ai.json()}))
             envelope = ai.json()
             if not isinstance(envelope.get("cards"), list):
                 raise RuntimeError("Assistant response did not contain validated typed cards")
             evidence[-1]["validated_cards"] = len(envelope["cards"])
+            history = request("GET", "assistant/proposals/history")["result"]["turns"]
+            assert any(turn["user_text"].startswith("I want to make tomato and spinach pasta") for turn in history), "Durable private assistant turn is missing"
+            buy = next((card for card in envelope["cards"] if card.get("type") == "BuyCheck" and card.get("shopping_action") == "ADD" and "ADD" in card.get("allowed_actions", [])), None)
+            if buy:
+                action = {"schema_version": 1, "idempotency_key": uuid4().hex, "base_version": buy["version"], "action": "ADD"}
+                approved = request("POST", f"assistant/proposals/{buy['proposal_id']}/actions", action)["result"]
+                replay = request("POST", f"assistant/proposals/{buy['proposal_id']}/actions", action)["result"]
+                assert approved == replay and approved["status"] == "APPROVED", "Proposal approval retry was not idempotent"
+                entries = request("GET", "shopping")["result"]["entries"]
+                assert any(entry["entry_id"] == approved["entry_id"] for entry in entries), "Approved proposal is missing from the shopping list"
+                evidence.append({"operation": "explicit BuyCheck ADD + exact retry + shopping readback", "status": 200, "expected": 200})
+            else:
+                evidence.append({"operation": "explicit BuyCheck ADD", "status": "not offered by model", "expected": "typed card is conditional"})
         print(json.dumps({"project": project, "synthetic": True, "uid": user.uid, "household_id": household, "checks": evidence}, indent=2))
 
 
