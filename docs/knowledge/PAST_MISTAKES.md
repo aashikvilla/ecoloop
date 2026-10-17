@@ -91,3 +91,8 @@ Manual capture and persisted candidate review were implemented, but the shared s
 ## 2026-10-17 — Keep local app port, CORS and launcher flags in sync
 
 Observation: the browser used `localhost:3000`, but a stale production Next process served a build with household creation disabled while the local API only allowed CORS from ports 3002/3003. The page surfaced a disabled button and generic household-service error. Prevention: start the intended dev build from one launcher that sets its port and feature flags, include that exact origin in API CORS, verify a preflight for the browser origin, and have the owner manually reload before claiming browser acceptance.
+
+## 2026-10-17 — Activity summaries must identify their page scope
+
+Observation: household history endpoints are paginated. A count or quantity from the first page can look like a complete household total if its coverage is not stated. Share offers also describe a different state from completed handovers.
+Pattern: summarize only fetched records, label the loaded-page scope and expose continuation when another page exists. Keep offers separate from outcome events, and add quantities only when their recorded measurement basis and units support the same total.

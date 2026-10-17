@@ -5,12 +5,12 @@ import Link from "next/link";
 import { useLiveHousehold } from "@/lib/live-household";
 import { CanonicalApiError, readCanonicalRecords, type KitchenObservation, type ShoppingEntry } from "@/lib/canonical-api";
 import { canonicalRequest } from "@/lib/canonical-transport";
-import { parseActivityPage, type PrivateActivityEvent } from "@/lib/canonical-history";
+import { parseActivityPage, parseShareHistoryPage, type PrivateActivityEvent, type PrivateShareLog } from "@/lib/canonical-history";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-export type LiveKind = "kitchen" | "shopping" | "activity";
-export type LiveRecords = KitchenObservation[] | ShoppingEntry[] | PrivateActivityEvent[];
+export type LiveKind = "kitchen" | "shopping" | "activity" | "share-logs";
+export type LiveRecords = KitchenObservation[] | ShoppingEntry[] | PrivateActivityEvent[] | PrivateShareLog[];
 type LiveState = { phase: "idle" | "loading" | "ready" | "error"; records: LiveRecords; error: string; nextCursor: string | null; scopeKey: string };
 
 function requestError(error: unknown) {
@@ -34,9 +34,13 @@ export function useLiveRecords(kind: LiveKind) {
       if (kind === "kitchen" || kind === "shopping") {
         const result = await readCanonicalRecords(kind, token, householdId, signal);
         if (!signal?.aborted) setState({ phase: "ready", records: result.records, error: "", nextCursor: null, scopeKey: requestScope });
-      } else {
+      } else if (kind === "activity") {
         const raw = await canonicalRequest("activity", token, householdId, { query: { limit: 100 }, signal });
         const parsed = parseActivityPage(raw, householdId, user.uid);
+        if (!signal?.aborted) setState({ phase: "ready", records: parsed.records, error: "", nextCursor: parsed.nextCursor, scopeKey: requestScope });
+      } else {
+        const raw = await canonicalRequest("share-logs", token, householdId, { query: { limit: 100 }, signal });
+        const parsed = parseShareHistoryPage(raw, householdId, user.uid);
         if (!signal?.aborted) setState({ phase: "ready", records: parsed.records, error: "", nextCursor: parsed.nextCursor, scopeKey: requestScope });
       }
     } catch (error) {

@@ -13,3 +13,5 @@ Latest runtime audit: [17 October agent/GenUI review](../implementation/feature-
 Frontend foundation: Tailwind CSS v4 `@theme` in `frontend/src/app/globals.css` is the single semantic design-token source. `frontend/src/components/ui/` contains shared primitives; `frontend/src/components/layout/` contains shared navigation/page shell. Build mobile-first from 360px. No frontend/backend unit tests; use evidence from allowed integration, security, accessibility and end-to-end checks instead.
 
 Latest ADK tool slice: [authenticated pantry and active shopping reads](sessions/2026-10-17-adk-read-tools.md). Managed Sessions/Memory Bank/Runtime and live tool-call acceptance remain unverified.
+
+Activity now summarizes fetched outcome records and owner-private share offers from canonical APIs. It adds only measured quantities sharing the same recorded unit, reports estimated and unknown observations separately, and labels totals as summaries of the loaded page. It does not calculate a composite sustainability score or claim waste prevented/environmental savings.
