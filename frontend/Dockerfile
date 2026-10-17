@@ -1,0 +1,45 @@
+FROM node:22.23.2-bookworm-slim@sha256:4d676821dff059fd00d277ee4261ef34ea712317fed0737c03941481b5760c96 AS dependencies
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+FROM node:22.23.2-bookworm-slim@sha256:4d676821dff059fd00d277ee4261ef34ea712317fed0737c03941481b5760c96 AS build
+
+WORKDIR /app
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY . .
+
+ARG NEXT_PUBLIC_FIREBASE_API_KEY
+ARG NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+ARG NEXT_PUBLIC_FIREBASE_PROJECT_ID
+ARG NEXT_PUBLIC_FIREBASE_APP_ID
+ARG NEXT_PUBLIC_ECOLOOP_API_ORIGIN
+ARG NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS=false
+ARG NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE=false
+
+ENV NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY} \
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN} \
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID} \
+    NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID} \
+    NEXT_PUBLIC_ECOLOOP_API_ORIGIN=${NEXT_PUBLIC_ECOLOOP_API_ORIGIN} \
+    NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS=${NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS} \
+    NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE=${NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE}
+
+RUN npm run build
+
+FROM node:22.23.2-bookworm-slim@sha256:4d676821dff059fd00d277ee4261ef34ea712317fed0737c03941481b5760c96 AS runtime
+
+ENV NODE_ENV=production \
+    PORT=8080 \
+    HOSTNAME=0.0.0.0
+
+WORKDIR /app
+RUN groupadd --system --gid 1001 nextjs && useradd --system --uid 1001 --gid nextjs nextjs
+COPY --from=build --chown=nextjs:nextjs /app/public ./public
+COPY --from=build --chown=nextjs:nextjs /app/.next/standalone ./
+COPY --from=build --chown=nextjs:nextjs /app/.next/static ./.next/static
+
+USER nextjs
+EXPOSE 8080
+CMD ["node", "server.js"]

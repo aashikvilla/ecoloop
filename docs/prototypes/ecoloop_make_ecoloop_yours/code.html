@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_blank" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: 'class', theme: { extend: { colors: { 'on-secondary-fixed': '#3a0b00', 'on-tertiary': '#ffffff', 'on-primary-container': '#98bbab', 'on-tertiary-fixed-variant': '#5f4100', 'on-tertiary-fixed': '#271900', 'on-surface-variant': '#414844', 'on-surface': '#151d1a', 'surface-bright': '#f3fbf6', 'error-container': '#ffdad6', 'tertiary': '#402b00', 'inverse-surface': '#2a322f', 'surface-container': '#e7f0eb', 'primary-fixed-dim': '#aacfbd', 'secondary': '#994529', 'on-secondary-container': '#762b11', 'secondary-container': '#fe9472', 'on-secondary-fixed-variant': '#7b2f15', 'background': '#f3fbf6', 'on-secondary': '#ffffff', 'surface': '#f3fbf6', 'surface-variant': '#dce5df', 'on-primary': '#ffffff', 'outline': '#717974', 'on-tertiary-container': '#e0aa45', 'on-error': '#ffffff', 'tertiary-fixed': '#ffdea9', 'primary-container': '#2b4c3f', 'surface-container-lowest': '#ffffff', 'primary': '#143529', 'tertiary-fixed-dim': '#f5bd56', 'inverse-primary': '#aacfbd', 'surface-tint': '#446557', 'on-background': '#151d1a', 'secondary-fixed-dim': '#ffb59e', 'surface-container-high': '#e2eae5', 'on-primary-fixed-variant': '#2c4d40', 'secondary-fixed': '#ffdbd0', 'surface-container-low': '#edf6f0', 'inverse-on-surface': '#eaf3ee', 'on-error-container': '#93000a', 'tertiary-container': '#5d4000', 'error': '#ba1a1a', 'on-primary-fixed': '#002116', 'surface-dim': '#d3dcd7', 'primary-fixed': '#c6ebd9', 'outline-variant': '#c1c8c3', 'surface-container-highest': '#dce5df' }, borderRadius: { 'DEFAULT': '1rem', 'lg': '2rem', 'xl': '3rem', 'full': '9999px' }, fontFamily: { 'headline': ['Plus Jakarta Sans'], 'display': ['Plus Jakarta Sans'], 'body': ['Plus Jakarta Sans'], 'label': ['Plus Jakarta Sans'] } } } };</script><style>@layer base{html,body{width:100vw;margin:0;padding:0;}body{overscroll-behavior:none;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body text-on-surface min-h-screen flex flex-col selection:bg-primary-fixed selection:text-on-primary-fixed"><header class="fixed top-0 w-full z-50 bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,53,41,0.03)] pt-safe"><div class="h-16 px-4 flex items-center justify-between"><div class="flex items-center gap-2.5"><div class="w-9 h-9 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-[20px] text-primary-fixed">all_inclusive</span></div><span class="font-headline font-bold text-base text-primary tracking-tight">EcoLoop</span></div><div class="flex items-center gap-3"><div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-low"><span class="w-1.5 h-1.5 rounded-full bg-primary"></span><span class="w-1.5 h-1.5 rounded-full bg-surface-variant"></span><span class="w-1.5 h-1.5 rounded-full bg-surface-variant"></span></div><a class="min-h-[44px] px-2.5 flex items-center text-xs font-label font-semibold text-on-surface-variant hover:text-primary transition-colors" data-path="shop-harvest" href="#">Skip</a></div></div></header><main class="flex-1 flex flex-col w-full bg-surface pt-16 pb-safe"><div class="flex flex-col w-full px-4 pb-10">
+<!-- Top Navigation & Progress -->
+<div class="flex items-center justify-between py-3">
+<a aria-label="Go back to Household step" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-primary hover:bg-surface-container transition-colors" data-path="onboarding-household" href="#">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</a>
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant font-label text-xs font-semibold">
+<span>Step 2 of 2</span>
+</div>
+</div>
+<!-- Header Block -->
+<div class="mt-2 mb-6">
+<h1 class="font-headline text-[26px] leading-[34px] font-bold text-primary tracking-tight">
+      Let's make EcoLoop yours.
+    </h1>
+<p class="font-body text-sm leading-relaxed text-on-surface-variant mt-1.5">
+      A few preferences help us suggest things you'll actually enjoy.
+    </p>
+</div>
+<!-- Main Preferences Card Stack -->
+<div class="flex flex-col gap-5">
+<!-- Section 1: Food preferences -->
+<section class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<label class="font-headline text-sm font-semibold text-primary tracking-tight flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">restaurant_menu</span>
+          Dietary preferences
+        </label>
+<span class="text-xs text-on-surface-variant font-body">Select all that apply</span>
+</div>
+<div class="flex flex-wrap gap-2 pt-1" id="dietary-chips">
+<button class="chip-item min-h-[44px] px-4 py-2.5 rounded-full text-xs font-label font-semibold flex items-center gap-1.5 bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all" data-active="false" type="button">
+<span class="material-symbols-outlined text-[16px] hidden icon-check">check</span>
+<span>Vegetarian</span>
+</button>
+<button class="chip-item min-h-[44px] px-4 py-2.5 rounded-full text-xs font-label font-semibold flex items-center gap-1.5 bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all" data-active="false" type="button">
+<span class="material-symbols-outlined text-[16px] hidden icon-check">check</span>
+<span>Vegan</span>
+</button>
+<!-- Active Default Option -->
+<button class="chip-item min-h-[44px] px-4 py-2.5 rounded-full text-xs font-label font-semibold flex items-center gap-1.5 bg-primary text-on-primary shadow-sm transition-all" data-active="true" type="button">
+<span class="material-symbols-outlined text-[16px] icon-check">check</span>
+<span>No specific preference</span>
+</button>
+<button class="min-h-[44px] px-4 py-2.5 rounded-full text-xs font-label font-semibold flex items-center gap-1.5 bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all" id="toggle-other-btn" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span>Other preferences (optional)</span>
+</button>
+</div>
+<!-- Expandable Dietary Input Container -->
+<div class="hidden mt-1 pt-2" id="other-input-container">
+<div class="bg-surface-container-low rounded-2xl p-3 flex flex-col gap-2">
+<span class="text-[11px] font-label font-medium text-on-surface-variant">Separate with commas (e.g., Gluten-aware, Dairy-free, Nut allergy)</span>
+<div class="relative flex items-center">
+<input class="w-full bg-surface-container-lowest text-on-surface text-xs font-body rounded-xl px-3.5 py-2.5 placeholder:text-outline outline-none focus:bg-surface-container-lowest transition-all" placeholder="Gluten-aware, Dairy-free..." type="text"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: What matters most? -->
+<section class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<label class="font-headline text-sm font-semibold text-primary tracking-tight flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">target</span>
+          Your kitchen priorities
+        </label>
+<span class="text-[11px] font-label font-semibold text-secondary-container bg-surface-container px-2 py-0.5 rounded-full">Pick up to 2</span>
+</div>
+<div class="flex flex-col gap-2 pt-1" id="priorities-group">
+<!-- Selected Priority 1 -->
+<button class="priority-item min-h-[48px] w-full px-4 py-3 rounded-2xl text-left text-xs font-label font-semibold flex items-center justify-between bg-primary text-on-primary shadow-sm transition-all" data-selected="true" type="button">
+<div class="flex items-center gap-3">
+<span class="w-7 h-7 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[16px]">hourglass_bottom</span>
+</span>
+<span class="leading-snug">Use food before it goes unused</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-primary-fixed shrink-0">check_circle</span>
+</button>
+<!-- Selected Priority 2 -->
+<button class="priority-item min-h-[48px] w-full px-4 py-3 rounded-2xl text-left text-xs font-label font-semibold flex items-center justify-between bg-primary text-on-primary shadow-sm transition-all" data-selected="true" type="button">
+<div class="flex items-center gap-3">
+<span class="w-7 h-7 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[16px]">skillet</span>
+</span>
+<span class="leading-snug">Cook more at home</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-primary-fixed shrink-0">check_circle</span>
+</button>
+<!-- Unselected Priority -->
+<button class="priority-item min-h-[48px] w-full px-4 py-3 rounded-2xl text-left text-xs font-label font-semibold flex items-center justify-between bg-surface-container-low text-on-surface hover:bg-surface-container transition-all" data-selected="false" type="button">
+<div class="flex items-center gap-3">
+<span class="w-7 h-7 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[16px]">eco</span>
+</span>
+<span class="leading-snug">Shop thoughtfully</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-outline shrink-0">radio_button_unchecked</span>
+</button>
+<!-- Unselected Priority -->
+<button class="priority-item min-h-[48px] w-full px-4 py-3 rounded-2xl text-left text-xs font-label font-semibold flex items-center justify-between bg-surface-container-low text-on-surface hover:bg-surface-container transition-all" data-selected="false" type="button">
+<div class="flex items-center gap-3">
+<span class="w-7 h-7 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[16px]">auto_awesome_motion</span>
+</span>
+<span class="leading-snug">Eat a greater variety of meals</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-outline shrink-0">radio_button_unchecked</span>
+</button>
+</div>
+</section>
+<!-- Section 3: Typical cooking time -->
+<section class="bg-surface-container-lowest p-5 rounded-2xl shadow-sm flex flex-col gap-3">
+<label class="font-headline text-sm font-semibold text-primary tracking-tight flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">schedule</span>
+        How much time do you usually have for meals?
+      </label>
+<!-- 3 Segmented Pills Grid -->
+<div class="grid grid-cols-3 gap-2 p-1 bg-surface-container-low rounded-2xl" id="time-pills">
+<button class="time-pill min-h-[44px] py-2.5 px-2 rounded-xl text-xs font-label font-semibold text-center transition-all bg-transparent text-on-surface-variant hover:text-on-surface" data-selected="false" type="button">
+          Under 15 min
+        </button>
+<!-- Pre-selected default -->
+<button class="time-pill min-h-[44px] py-2.5 px-2 rounded-xl text-xs font-label font-semibold text-center transition-all bg-surface-container-lowest text-primary shadow-sm" data-selected="true" type="button">
+          15–30 min
+        </button>
+<button class="time-pill min-h-[44px] py-2.5 px-2 rounded-xl text-xs font-label font-semibold text-center transition-all bg-transparent text-on-surface-variant hover:text-on-surface" data-selected="false" type="button">
+          Flexible
+        </button>
+</div>
+</section>
+<!-- Section 4: Personalization memory & privacy (Consent Card) -->
+<section class="bg-primary-fixed/30 p-5 rounded-3xl flex flex-col gap-4">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[18px] text-primary-fixed">psychology</span>
+</div>
+<div>
+<h2 class="font-headline text-sm font-semibold text-primary tracking-tight">
+            Personalized Assistant Memory
+          </h2>
+<span class="text-[11px] font-label text-on-primary-fixed-variant">Local and strictly privacy-first</span>
+</div>
+</div>
+<!-- Toggle 1: Remember preferences (OFF by default) -->
+<div class="bg-surface-container-lowest p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm">
+<div class="flex items-start justify-between gap-3">
+<div class="flex-1 pr-1">
+<span class="text-xs font-label font-semibold text-on-surface block leading-tight">
+              Remember my preferences for future conversations
+            </span>
+</div>
+<!-- Visibly OFF switch by default -->
+<button aria-checked="false" class="relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full bg-surface-variant transition-colors duration-200 ease-in-out focus:outline-none" id="memory-toggle" role="switch" type="button">
+<span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-surface-container-lowest shadow-sm ring-0 transition duration-200 ease-in-out translate-x-1 mt-1" id="memory-toggle-thumb"></span>
+</button>
+</div>
+<p class="text-[11px] font-body leading-relaxed text-on-surface-variant">
+          You can review, export, or erase remembered preferences anytime in Settings.
+        </p>
+</div>
+<!-- Optional Reminder Preference Check -->
+<div class="bg-surface-container-lowest p-4 rounded-2xl flex flex-col gap-2.5 shadow-sm">
+<div class="flex items-start justify-between gap-3">
+<div class="flex-1 pr-1">
+<span class="text-xs font-label font-semibold text-on-surface block leading-tight">
+              Tell me when recorded food may need attention
+            </span>
+<p class="text-[11px] font-body text-on-surface-variant mt-1 leading-relaxed">
+              Helpful pantry glance when you open the app. Notes that browser notifications are not enabled yet.
+            </p>
+</div>
+<!-- OFF toggle for reminder -->
+<button aria-checked="false" class="relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full bg-surface-variant transition-colors duration-200 ease-in-out focus:outline-none" id="reminder-toggle" role="switch" type="button">
+<span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-surface-container-lowest shadow-sm ring-0 transition duration-200 ease-in-out translate-x-1 mt-1" id="reminder-toggle-thumb"></span>
+</button>
+</div>
+</div>
+<!-- Explicit Privacy Constraint Pill -->
+<div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-container-low text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">shield_person</span>
+<span class="text-[10px] font-label font-medium leading-tight">
+          No browser notification permission is requested on this screen.
+        </span>
+</div>
+</section>
+</div>
+<!-- Bottom Actions -->
+<div class="mt-8 flex flex-col items-center gap-3">
+<a class="w-full h-12 rounded-full bg-primary text-on-primary font-headline text-sm font-semibold tracking-wide flex items-center justify-center gap-2 shadow-md hover:bg-primary-container active:scale-[0.99] transition-all" data-path="home" href="#">
+<span>Start using EcoLoop</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</a>
+<a class="min-h-[44px] flex items-center justify-center text-xs font-label font-semibold text-on-surface-variant hover:text-primary transition-colors" data-path="home" href="#">
+      Skip for now
+    </a>
+</div>
+</div>
+<script>
+  // Section 1: Expandable custom dietary input
+  const toggleOtherBtn = document.getElementById('toggle-other-btn');
+  const otherContainer = document.getElementById('other-input-container');
+  if (toggleOtherBtn && otherContainer) {
+    toggleOtherBtn.addEventListener('click', () => {
+      otherContainer.classList.toggle('hidden');
+    });
+  }
+
+  // Dietary chips toggle behavior
+  const dietChips = document.querySelectorAll('#dietary-chips .chip-item');
+  dietChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const isCurrentlyActive = chip.getAttribute('data-active') === 'true';
+      const checkIcon = chip.querySelector('.icon-check');
+      if (isCurrentlyActive) {
+        chip.setAttribute('data-active', 'false');
+        chip.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+        chip.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+        if (checkIcon) checkIcon.classList.add('hidden');
+      } else {
+        chip.setAttribute('data-active', 'true');
+        chip.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        chip.classList.remove('bg-surface-container-low', 'text-on-surface-variant');
+        if (checkIcon) checkIcon.classList.remove('hidden');
+      }
+    });
+  });
+
+  // Section 2: Priority Selection (Max 2)
+  const priorityButtons = document.querySelectorAll('#priorities-group .priority-item');
+  priorityButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const isSelected = btn.getAttribute('data-selected') === 'true';
+      const selectedCount = document.querySelectorAll('#priorities-group .priority-item[data-selected="true"]').length;
+      const icon = btn.querySelector('.material-symbols-outlined:last-child');
+      const badge = btn.querySelector('span.rounded-full');
+
+      if (isSelected) {
+        btn.setAttribute('data-selected', 'false');
+        btn.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+        btn.classList.add('bg-surface-container-low', 'text-on-surface');
+        if (icon) {
+          icon.textContent = 'radio_button_unchecked';
+          icon.classList.remove('text-primary-fixed');
+          icon.classList.add('text-outline');
+        }
+        if (badge) {
+          badge.classList.remove('bg-primary-container', 'text-on-primary-container');
+          badge.classList.add('bg-surface-variant', 'text-on-surface-variant');
+        }
+      } else {
+        if (selectedCount >= 2) {
+          // Deselect first selected to keep at max 2
+          const firstSelected = document.querySelector('#priorities-group .priority-item[data-selected="true"]');
+          if (firstSelected) firstSelected.click();
+        }
+        btn.setAttribute('data-selected', 'true');
+        btn.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        btn.classList.remove('bg-surface-container-low', 'text-on-surface');
+        if (icon) {
+          icon.textContent = 'check_circle';
+          icon.classList.add('text-primary-fixed');
+          icon.classList.remove('text-outline');
+        }
+        if (badge) {
+          badge.classList.add('bg-primary-container', 'text-on-primary-container');
+          badge.classList.remove('bg-surface-variant', 'text-on-surface-variant');
+        }
+      }
+    });
+  });
+
+  // Section 3: Segmented Time Pills
+  const timePills = document.querySelectorAll('#time-pills .time-pill');
+  timePills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      timePills.forEach(p => {
+        p.setAttribute('data-selected', 'false');
+        p.classList.remove('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+        p.classList.add('bg-transparent', 'text-on-surface-variant');
+      });
+      pill.setAttribute('data-selected', 'true');
+      pill.classList.remove('bg-transparent', 'text-on-surface-variant');
+      pill.classList.add('bg-surface-container-lowest', 'text-primary', 'shadow-sm');
+    });
+  });
+
+  // Section 4: Assistant Switches Toggle Helper
+  function setupToggle(toggleId, thumbId) {
+    const toggle = document.getElementById(toggleId);
+    const thumb = document.getElementById(thumbId);
+    if (!toggle || !thumb) return;
+
+    toggle.addEventListener('click', () => {
+      const isChecked = toggle.getAttribute('aria-checked') === 'true';
+      if (isChecked) {
+        toggle.setAttribute('aria-checked', 'false');
+        toggle.classList.remove('bg-primary');
+        toggle.classList.add('bg-surface-variant');
+        thumb.classList.remove('translate-x-6');
+        thumb.classList.add('translate-x-1');
+      } else {
+        toggle.setAttribute('aria-checked', 'true');
+        toggle.classList.remove('bg-surface-variant');
+        toggle.classList.add('bg-primary');
+        thumb.classList.remove('translate-x-1');
+        thumb.classList.add('translate-x-6');
+      }
+    });
+  }
+
+  setupToggle('memory-toggle', 'memory-toggle-thumb');
+  setupToggle('reminder-toggle', 'reminder-toggle-thumb');
+</script></main></body></html>

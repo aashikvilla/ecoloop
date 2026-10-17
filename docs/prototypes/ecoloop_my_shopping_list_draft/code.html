@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/><meta content="mobile_tab" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "error-container": "#ffdad6", "inverse-surface": "#2a322f", "on-tertiary-container": "#e0aa45", "on-tertiary-fixed": "#271900", "surface-container-low": "#edf6f0", "primary-fixed": "#c6ebd9", "surface-tint": "#446557", "surface-container-high": "#e2eae5", "tertiary-fixed-dim": "#f5bd56", "surface-container-highest": "#dce5df", "on-tertiary-fixed-variant": "#5f4100", "tertiary-fixed": "#ffdea9", "secondary": "#994529", "on-primary": "#ffffff", "secondary-fixed-dim": "#ffb59e", "background": "#f3fbf6", "on-secondary-fixed": "#3a0b00", "secondary-fixed": "#ffdbd0", "primary-container": "#2b4c3f", "on-secondary-container": "#762b11", "on-error": "#ffffff", "surface-container": "#e7f0eb", "on-error-container": "#93000a", "tertiary": "#402b00", "outline": "#717974", "on-secondary-fixed-variant": "#7b2f15", "surface": "#f3fbf6", "on-primary-fixed-variant": "#2c4d40", "inverse-on-surface": "#eaf3ee", "surface-container-lowest": "#ffffff", "error": "#ba1a1a", "secondary-container": "#fe9472", "surface-dim": "#d3dcd7", "on-surface-variant": "#414844", "primary-fixed-dim": "#aacfbd", "tertiary-container": "#5d4000", "surface-variant": "#dce5df", "on-background": "#151d1a", "on-primary-container": "#98bbab", "on-surface": "#151d1a", "surface-bright": "#f3fbf6", "inverse-primary": "#aacfbd", "outline-variant": "#c1c8c3", "on-primary-fixed": "#002116", "primary": "#143529", "on-tertiary": "#ffffff", "on-secondary": "#ffffff" }, borderRadius: { "DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px" }, fontFamily: { "headline": ["Plus Jakarta Sans"], "display": ["Plus Jakarta Sans"], "body": ["Plus Jakarta Sans"], "label": ["Plus Jakarta Sans"] } } } }</script><style>@layer base { html, body { min-height: 100%; margin: 0; padding: 0; background-color: #f3fbf6; -webkit-tap-highlight-color: transparent; } .pb-safe { padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body text-on-surface antialiased"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_4px_20px_-4px_rgba(20,53,41,0.05)]"><div class="h-16 px-4 flex items-center justify-between"><div class="flex items-center gap-2.5 min-w-0"><div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-primary-fixed shadow-sm"><span class="material-symbols-outlined text-[20px]">all_inclusive</span></div><div class="flex flex-col min-w-0"><div class="flex items-center gap-1.5"><span class="font-headline font-bold text-sm tracking-tight text-primary leading-none">EcoLoop</span><span class="text-[11px] font-label font-semibold text-on-surface-variant/70 tracking-wide">• Shop</span></div><button class="flex items-center gap-1 text-left mt-0.5 group"><span class="material-symbols-outlined text-secondary text-[14px]">roofing</span><span class="text-xs font-label font-semibold text-on-surface truncate">My Home (Family)</span><span class="material-symbols-outlined text-outline text-[16px] group-hover:text-primary transition-colors">arrow_drop_down</span></button></div></div><div class="flex items-center gap-2"><button aria-label="Notifications" class="w-11 h-11 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high/60 transition-colors"><span class="material-symbols-outlined text-[22px]">notifications</span></button><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary-fixed" src="https://lh3.googleusercontent.com/aida/AEtjO1Ug8-AmFH1ySPo6cHjsq_P254c_h0wpzO5WAD5MaTGy80gZbhEl5d5FugUbT9Kec8mQcEcmj1sWSMB9etA-wVQWYUCnUogZhe3NGahCtHHMfroerfa9k0VyyFUhq2bZpEiRe2SGfdwNsPjx-o3o9qUBORcTgUbmh6OZnyQBxfCzn8UwHamhUtBTeR0G9kaWiaXlyzURAP755E52No5vFjpWE7LDtl31ZDnDifuShe9qR-AdHD5widdDFPo"/></div></div></header><main class="flex flex-col relative w-full pt-16 pb-28 px-4 bg-surface min-h-screen"><div class="flex flex-col w-full pb-8">
+<!-- Header Subtitle & Segmented Control -->
+<div class="flex flex-col gap-3 mb-5">
+<div class="flex items-baseline justify-between">
+<div>
+<h1 class="text-2xl font-headline font-bold text-primary tracking-tight">Your Shopping List</h1>
+<p class="text-xs font-body text-on-surface-variant mt-0.5">A little planning before you buy.</p>
+</div>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed text-[11px] font-label font-bold tracking-tight shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+        Synchronized
+      </span>
+</div>
+<!-- Segmented Toggle -->
+<div class="p-1 rounded-full bg-surface-container flex items-center shadow-inner">
+<button class="flex-1 py-2 px-3 rounded-full text-xs font-label font-semibold text-primary bg-surface-container-lowest shadow-sm transition-all text-center flex items-center justify-center gap-1.5" id="toggle-list" onclick="setMode('list')">
+<span class="material-symbols-outlined text-[16px]">checklist</span>
+<span>List View</span>
+<span class="w-4 h-4 rounded-full bg-primary/10 text-primary text-[10px] flex items-center justify-center font-bold">2</span>
+</button>
+<button class="flex-1 py-2 px-3 rounded-full text-xs font-label font-semibold text-on-surface-variant hover:text-primary transition-all text-center flex items-center justify-center gap-1.5" id="toggle-draft" onclick="setMode('draft')">
+<span class="material-symbols-outlined text-[16px]">shopping_cart_checkout</span>
+<span>Draft Cart</span>
+<span class="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-secondary/10 text-secondary font-bold">Demo</span>
+</button>
+</div>
+</div>
+<!-- VIEW: LIST (DEFAULT) -->
+<div class="flex flex-col gap-5" id="view-list">
+<!-- Section 1: Need to Buy -->
+<section class="flex flex-col gap-2.5">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<h2 class="font-headline font-bold text-sm text-on-surface tracking-tight">Need to buy <span class="text-on-surface-variant font-normal text-xs">(2 items)</span></h2>
+</div>
+<span class="text-[11px] font-label text-on-surface-variant font-medium">Estimated 250g</span>
+</div>
+<!-- Item 1: Baby Spinach -->
+<div class="bg-surface-container-lowest rounded-2xl p-3.5 shadow-sm flex flex-col gap-3 transition-transform active:scale-[0.99]">
+<div class="flex items-start gap-3">
+<button aria-label="Mark bought" class="w-6 h-6 mt-0.5 rounded-lg bg-surface-container flex items-center justify-center text-primary transition-colors focus:outline-none" onclick="toggleBought(this)">
+<span class="material-symbols-outlined text-[18px] opacity-0 check-icon">check</span>
+</button>
+<div class="w-12 h-12 rounded-xl bg-surface-container-low overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Vibrant fresh green baby spinach leaves in an earthy ceramic bowl with soft natural window lighting, clean minimalist eco-grocer style, deep sage green hues" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnUUnoW4INgxoi14BP0TeNzXLC8oFLuJcPynUeRxPK62Lzd6Y-Wj61OWb8iq4FRKQwhW02meLoZay11y8VDFL-PH1u6ZbHvzzlegZQUTwSpqyFlC3bVGVNXOVDNeYHx22_GuCj145Af3-wUiCh0ozO-e90zSAbNwxge75nW4waYC5BnQUs1EohlcqBSzUiM247TBE0aV_APJP5ZuO1QWGAJuwr3QIcZ81hHyfy6AuYkeCYEqrz_LxgmQ"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="font-headline font-semibold text-sm text-on-surface item-name">Baby Spinach</span>
+<span class="text-[10px] font-label font-semibold text-secondary-container bg-secondary/15 text-secondary px-2 py-0.5 rounded-full whitespace-nowrap">High Priority</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-primary">chat_spark</span>
+<span class="text-[11px] font-body text-on-surface-variant truncate">Suggested during cooking chat</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1 border-t-0">
+<span class="text-[11px] font-label text-on-surface-variant/80">Container Deposit: <strong class="text-on-surface">None (Compostable)</strong></span>
+<!-- Stepper -->
+<div class="flex items-center bg-surface-container-low rounded-full px-1 py-0.5 shadow-inner">
+<button aria-label="Decrease quantity" class="w-7 h-7 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-highest transition-colors active:scale-95" onclick="stepQty(this, -50, 'g')">
+<span class="material-symbols-outlined text-[14px]">remove</span>
+</button>
+<span class="px-2 text-xs font-label font-semibold tabular-nums text-on-surface">200g</span>
+<button aria-label="Increase quantity" class="w-7 h-7 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-highest transition-colors active:scale-95" onclick="stepQty(this, 50, 'g')">
+<span class="material-symbols-outlined text-[14px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Item 2: Cumin Seeds -->
+<div class="bg-surface-container-lowest rounded-2xl p-3.5 shadow-sm flex flex-col gap-3 transition-transform active:scale-[0.99]">
+<div class="flex items-start gap-3">
+<button aria-label="Mark bought" class="w-6 h-6 mt-0.5 rounded-lg bg-surface-container flex items-center justify-center text-primary transition-colors focus:outline-none" onclick="toggleBought(this)">
+<span class="material-symbols-outlined text-[18px] opacity-0 check-icon">check</span>
+</button>
+<div class="w-12 h-12 rounded-xl bg-surface-container-low overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A small reusable glass apothecary jar filled with fragrant whole cumin seeds on an oatmeal linen fabric with soft warm diffused light, organic kitchen pantry aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCt7Yf_LHbBo6CxNEqMgMmvRuwqtSswrLmtLlySMJpJrnPlCQr2W6Fr9Obp0noV_9ti7HN25ITPG2s3n7Y1x942Ul00RRvEGR36wo1DJvUyWzPsEiEbs4zYzUX5aSsoZjhS6d01zcgz0Hjik4mEkzmqyLncBuxJx2dvy8fHUHx-Wsr_aIWQSf57CBZ516oTc4uZx6LJ7sU_WiqgbxfYt-n7m47O_2P0e8DwBX8ssriq84XWrm5MTSugHg"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between gap-1">
+<span class="font-headline font-semibold text-sm text-on-surface item-name">Cumin Seeds</span>
+<span class="text-[10px] font-label font-semibold text-primary bg-primary-fixed/60 px-2 py-0.5 rounded-full whitespace-nowrap">Returnable Jar</span>
+</div>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="material-symbols-outlined text-[13px] text-outline">edit_note</span>
+<span class="text-[11px] font-body text-on-surface-variant truncate">Added manually</span>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="text-[11px] font-label text-on-surface-variant/80">Glass return loop: <strong class="text-primary">+$1.00 deposit</strong></span>
+<!-- Stepper -->
+<div class="flex items-center bg-surface-container-low rounded-full px-1 py-0.5 shadow-inner">
+<button aria-label="Decrease quantity" class="w-7 h-7 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-highest transition-colors active:scale-95" onclick="stepQtyJar(this, -1)">
+<span class="material-symbols-outlined text-[14px]">remove</span>
+</button>
+<span class="px-2 text-xs font-label font-semibold tabular-nums text-on-surface">1 jar (50g)</span>
+<button aria-label="Increase quantity" class="w-7 h-7 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-highest transition-colors active:scale-95" onclick="stepQtyJar(this, 1)">
+<span class="material-symbols-outlined text-[14px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Add Custom Item Action Chip -->
+<button class="w-full py-2.5 px-4 rounded-xl bg-surface-container hover:bg-surface-container-high text-primary font-label text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+<span>Add custom grocery item</span>
+</button>
+</section>
+<!-- Section 2: Check at home first (Pantry Guard) -->
+<section class="flex flex-col gap-2">
+<div class="bg-tertiary-fixed/20 rounded-2xl p-3.5 shadow-sm flex flex-col gap-3">
+<!-- Guard Header -->
+<div class="flex items-start gap-2.5">
+<div class="w-8 h-8 rounded-full bg-tertiary-container flex items-center justify-center text-tertiary-fixed flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">shelves</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<h2 class="font-headline font-bold text-xs text-on-tertiary-fixed uppercase tracking-wider">Pantry Guard™ Active</h2>
+<span class="text-[10px] font-label font-bold text-secondary bg-secondary-fixed/50 px-1.5 py-0.2 rounded-full">2 items flagged</span>
+</div>
+<p class="text-[11px] font-body text-on-surface-variant leading-tight mt-0.5">
+              Checking these avoids duplicate purchases and prevents kitchen waste.
+            </p>
+</div>
+</div>
+<!-- Guarded Items -->
+<div class="flex flex-col gap-2 pt-1">
+<!-- Guarded 1: Tomatoes -->
+<div class="bg-surface-container-lowest rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container-low overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Plump ripe red vine tomatoes resting on a wooden pantry board, gentle natural illumination, organic wholesome grocery vibe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhpMWPEHWPBCaWVhjAgVgr65kbxYY_427dhfj_zQT1IDFHdSDCYZHtGjB2s23fbfyEWMJbFAPxZ2qrUhnbULzuI69u7Uq8Iv2pcqb8F7CVuidyzmXa7DiqH_lYp46IQdKoXTE7HinQqTMC4ukO5tdzn0ChMMNgHmy5T7o2hgh1lIHHWV04Gp7Wi2Mi68Gu7uCjXGzXWNHAGhmNTDkK9aAJBD7DicdzePsrXlT_eF8N5Y1BMgO9_M_crg"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline font-semibold text-xs text-on-surface truncate">Vine Tomatoes</span>
+<span class="text-[10px] font-body text-on-surface-variant">4 in crisper • Confirmed today</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 flex-shrink-0">
+<button class="px-2.5 py-1 rounded-full bg-surface-container text-primary font-label text-[11px] font-semibold hover:bg-surface-container-high transition-colors" onclick="dismissGuard(this, 'Verified: Fresh')">
+                Check condition
+              </button>
+<button class="w-7 h-7 flex items-center justify-center rounded-full text-outline hover:text-error transition-colors" onclick="removeGuardedItem(this)" title="Remove from list">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Guarded 2: Whole Milk -->
+<div class="bg-surface-container-lowest rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container-low overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A classic glass bottle with cold farm fresh whole milk and a reusable cap on a neutral stone countertop in an airy kitchen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuyyTGTT1Qgr_UlHb6FWin5t49DlWHC7kNZeVG0HsquBvNSyBPZZIz11Pc--BfJpOpwoSBt5oBECvFIjm6P-tYfwerZB5SmEW1ja2ZzFDLyzBoIyE6O0F55kOAHbu6TVfA2K8dqtGTjbULsLNtRuRU97yfMhDcwE5CwMrwgDDiaYpvRTZnHZL6idZIWgI4NAvEXVo1_h8G5dE_cHthU3MqRYClw2UiITDrnUDl7zZpICCpfjBvmu222w"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline font-semibold text-xs text-on-surface truncate">Organic Whole Milk</span>
+<span class="text-[10px] font-body text-secondary font-medium">Quantity uncertain (check fridge)</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 flex-shrink-0">
+<button class="px-2.5 py-1 rounded-full bg-primary-fixed text-on-primary-fixed font-label text-[11px] font-semibold hover:bg-primary-fixed-dim transition-colors" onclick="dismissGuard(this, 'Fridge has 1/2 gal')">
+                Verify in fridge
+              </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Already recorded at home -->
+<section class="flex flex-col gap-2">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[16px]">inventory_2</span>
+<h2 class="font-headline font-bold text-sm text-on-surface tracking-tight">Already recorded at home</h2>
+</div>
+<span class="text-[11px] font-label text-on-surface-variant font-medium">Auto-deducted</span>
+</div>
+<div class="bg-surface-container-low rounded-2xl p-3 flex items-center justify-between gap-3 shadow-sm">
+<div class="flex items-center gap-2.5 min-w-0">
+<div class="w-10 h-10 rounded-xl bg-surface-container overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A clean sealed airtight glass pantry canister containing fragrant long-grain raw basmati rice in a warm earthy kitchen setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMENr99esychEzI3HQHIt54BHo94E6cL4DfRsT3nM7AOngEv7QYwPemELuZvoUX5EglI55mUSQ_NT3rsAY6HaABreOBQHVmiD6nfsZ9AvprXvcSn8harzEpVV1IHaLuU3QeG49ILHF6Bjd2agxkcfmreNf83fD37snegjWm4x9DdqRIji1NnPvlkghego00slBcFGFJDcEZbCwfQPgqOrS2IwK2FQmnWfF3ti8bJLIgJinEnom3_Fz4A"/>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline font-semibold text-xs text-on-surface truncate">Basmati Rice</span>
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="text-[11px] font-body text-on-surface-variant">750g confirmed yesterday</span>
+<span class="text-[10px] font-label font-bold text-primary bg-primary-fixed px-1.5 py-0.2 rounded-full">~6 meals left</span>
+</div>
+</div>
+</div>
+<button class="flex-shrink-0 px-2 py-1 rounded-full bg-surface-container-lowest text-on-surface-variant hover:text-primary font-label text-[11px] font-medium transition-colors shadow-sm whitespace-nowrap" onclick="addBackToList(this)">
+          + Need more
+        </button>
+</div>
+</section>
+<!-- Section 4: Item Provenance Summary Card -->
+<div class="bg-surface-container-lowest rounded-2xl p-3.5 shadow-sm flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-label uppercase tracking-wider text-on-surface-variant/80 font-bold">List Intelligence &amp; Provenance</span>
+<span class="material-symbols-outlined text-outline text-[16px]">info</span>
+</div>
+<div class="flex flex-wrap gap-1.5">
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary-fixed/50 text-on-primary-fixed text-[11px] font-label">
+<span class="material-symbols-outlined text-[13px] text-primary">forum</span>
+<span>2 suggested in Ask EcoLoop</span>
+</div>
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container text-on-surface-variant text-[11px] font-label">
+<span class="material-symbols-outlined text-[13px]">person</span>
+<span>1 added manually</span>
+</div>
+<div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-tertiary-fixed/40 text-on-tertiary-fixed text-[11px] font-label">
+<span class="material-symbols-outlined text-[13px]">kitchen</span>
+<span>1 verified against kitchen stock</span>
+</div>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-2.5 pt-1">
+<button class="w-full h-12 rounded-full bg-primary text-on-primary font-headline font-bold text-sm tracking-wide flex items-center justify-center gap-2 shadow-md active:scale-[0.98] transition-all" onclick="setMode('draft')">
+<span>Review draft &amp; check before buying</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+<a class="w-full h-11 rounded-full bg-surface-container-lowest text-primary font-label font-semibold text-xs flex items-center justify-center gap-2 shadow-sm hover:bg-surface-container-low transition-colors" data-path="ask" href="#">
+<span class="material-symbols-outlined text-[16px] text-primary">chat</span>
+<span>Continue in Ask EcoLoop (Refine with AI)</span>
+</a>
+</div>
+</div>
+<!-- VIEW: DRAFT CART (DEMO PREVIEW) -->
+<div class="hidden flex flex-col gap-5" id="view-draft">
+<!-- Draft Cart Header Card -->
+<div class="bg-surface-container-lowest rounded-3xl p-4 shadow-sm flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+</div>
+<div>
+<h2 class="font-headline font-bold text-sm text-on-surface">Draft Cart Allocation</h2>
+<p class="text-[11px] font-body text-on-surface-variant">Prepared for zero-waste fulfillment</p>
+</div>
+</div>
+<span class="text-xs font-label font-bold text-primary bg-primary-fixed/50 px-2 py-0.5 rounded-full">Demo preview</span>
+</div>
+<div class="p-3 rounded-2xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex justify-between items-center text-xs font-body text-on-surface">
+<span>Items to procure (2 items)</span>
+<span class="font-semibold tabular-nums">$6.80 est.</span>
+</div>
+<div class="flex justify-between items-center text-xs font-body text-on-surface">
+<span>Glass return loop deposit (1 jar)</span>
+<span class="font-semibold tabular-nums text-primary">+$1.00</span>
+</div>
+<div class="flex justify-between items-center text-xs font-body text-secondary">
+<span>Estimated packaging waste avoided</span>
+<span class="font-bold">42g saved</span>
+</div>
+<div class="pt-2 border-t border-outline-variant/30 flex justify-between items-center">
+<span class="font-headline font-bold text-sm text-on-surface">Est. Basket Total</span>
+<span class="font-headline font-bold text-base text-primary tabular-nums">$7.80</span>
+</div>
+</div>
+</div>
+<!-- Merchant Section / Preview -->
+<div class="bg-surface-container-lowest rounded-3xl p-4 shadow-sm flex flex-col gap-3.5">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col">
+<span class="text-[10px] font-label uppercase tracking-wider text-secondary font-bold">External Merchant Order</span>
+<h3 class="font-headline font-bold text-sm text-on-surface mt-0.5">Local Cooperative &amp; Merchant Sync</h3>
+</div>
+<span class="material-symbols-outlined text-outline-variant text-[20px]">storefront</span>
+</div>
+<p class="text-xs font-body text-on-surface-variant leading-relaxed">
+        Export your curated loop basket to a participating cooperative, zero-waste delivery partner, or walk-in grocery counter.
+      </p>
+<!-- Merchant Button Disabled / Conditional Preview -->
+<div class="flex flex-col gap-2">
+<button class="w-full h-12 rounded-full bg-surface-container-highest text-on-surface-variant/60 font-headline font-semibold text-xs flex items-center justify-center gap-2 cursor-not-allowed shadow-none" disabled="">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+<span>Open merchant when available</span>
+</button>
+<span class="text-center text-[10px] font-label text-on-surface-variant/70 italic">
+          Demo preview — No live checkout or pricing without authorized connection.
+        </span>
+</div>
+<!-- Informational Disclaimer Banner -->
+<div class="p-3 rounded-2xl bg-surface-container flex items-start gap-2.5">
+<span class="material-symbols-outlined text-[16px] text-primary flex-shrink-0 mt-0.5">verified_user</span>
+<p class="text-[11px] font-body text-on-surface-variant leading-normal">
+<strong class="text-primary font-semibold">User Sovereignty:</strong> Connect a supported shopping service later or simply take your list anywhere. EcoLoop never requires external app connections or paid retailer tie-ins.
+        </p>
+</div>
+</div>
+<!-- Return to List Control -->
+<button class="w-full h-11 rounded-full bg-surface-container-lowest text-primary font-label font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm hover:bg-surface-container-low transition-colors" onclick="setMode('list')">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+<span>Back to interactive list</span>
+</button>
+</div>
+</div>
+<script>
+  function setMode(mode) {
+    const listView = document.getElementById('view-list');
+    const draftView = document.getElementById('view-draft');
+    const toggleList = document.getElementById('toggle-list');
+    const toggleDraft = document.getElementById('toggle-draft');
+
+    if (mode === 'draft') {
+      listView.classList.add('hidden');
+      draftView.classList.remove('hidden');
+
+      toggleDraft.className = 'flex-1 py-2 px-3 rounded-full text-xs font-label font-semibold text-primary bg-surface-container-lowest shadow-sm transition-all text-center flex items-center justify-center gap-1.5';
+      toggleList.className = 'flex-1 py-2 px-3 rounded-full text-xs font-label font-semibold text-on-surface-variant hover:text-primary transition-all text-center flex items-center justify-center gap-1.5';
+    } else {
+      draftView.classList.add('hidden');
+      listView.classList.remove('hidden');
+
+      toggleList.className = 'flex-1 py-2 px-3 rounded-full text-xs font-label font-semibold text-primary bg-surface-container-lowest shadow-sm transition-all text-center flex items-center justify-center gap-1.5';
+      toggleDraft.className = 'flex-1 py-2 px-3 rounded-full text-xs font-label font-semibold text-on-surface-variant hover:text-primary transition-all text-center flex items-center justify-center gap-1.5';
+    }
+  }
+
+  function toggleBought(btn) {
+    const icon = btn.querySelector('.check-icon');
+    const card = btn.closest('.bg-surface-container-lowest');
+    const itemName = card.querySelector('.item-name');
+    
+    if (icon.classList.contains('opacity-0')) {
+      icon.classList.remove('opacity-0');
+      btn.classList.add('bg-primary-fixed', 'text-on-primary-fixed');
+      itemName.classList.add('line-through', 'text-on-surface-variant/60');
+    } else {
+      icon.classList.add('opacity-0');
+      btn.classList.remove('bg-primary-fixed', 'text-on-primary-fixed');
+      itemName.classList.remove('line-through', 'text-on-surface-variant/60');
+    }
+  }
+
+  function stepQty(btn, delta, unit) {
+    const parent = btn.parentElement;
+    const label = parent.querySelector('span:nth-child(2)');
+    let current = parseInt(label.textContent);
+    current = Math.max(50, current + delta);
+    label.textContent = current + unit;
+  }
+
+  function stepQtyJar(btn, delta) {
+    const parent = btn.parentElement;
+    const label = parent.querySelector('span:nth-child(2)');
+    let current = parseInt(label.textContent);
+    current = Math.max(1, current + delta);
+    label.textContent = current + (current === 1 ? ' jar (50g)' : ' jars (' + (current * 50) + 'g)');
+  }
+
+  function dismissGuard(btn, statusText) {
+    const parent = btn.parentElement;
+    parent.innerHTML = '<span class="text-[11px] font-label font-semibold text-primary bg-primary-fixed px-2 py-0.5 rounded-full flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">done</span>' + statusText + '</span>';
+  }
+
+  function removeGuardedItem(btn) {
+    const card = btn.closest('.bg-surface-container-lowest');
+    card.style.transition = 'all 0.25s ease';
+    card.style.opacity = '0';
+    card.style.transform = 'translateX(20px)';
+    setTimeout(() => card.remove(), 250);
+  }
+
+  function addBackToList(btn) {
+    btn.innerHTML = '<span class="material-symbols-outlined text-[13px] text-primary">done</span> Added';
+    btn.classList.add('bg-primary-fixed', 'text-primary');
+    btn.disabled = true;
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe px-4 pointer-events-none" data-active-classes="text-primary font-semibold"><div class="mx-auto max-w-md pointer-events-auto mb-2 bg-surface-container-lowest/90 backdrop-blur-xl rounded-full shadow-[0_10px_30px_-8px_rgba(20,53,41,0.12),0_4px_12px_-2px_rgba(20,53,41,0.04)] px-3 py-1.5 flex items-center justify-between"><a class="flex-1 flex flex-col items-center justify-center h-12 text-on-surface-variant hover:text-primary transition-all" data-path="home" href="#"><span class="material-symbols-outlined text-[22px]">eco</span><span class="text-[11px] font-label tracking-tight mt-0.5">Home</span></a><a class="flex-1 flex flex-col items-center justify-center h-12 text-on-surface-variant hover:text-primary transition-all" data-path="kitchen" href="#"><span class="material-symbols-outlined text-[22px]">countertops</span><span class="text-[11px] font-label tracking-tight mt-0.5">Kitchen</span></a><a class="flex-1 flex flex-col items-center justify-center h-12 text-on-surface-variant hover:text-primary transition-all" data-path="ask" href="#"><span class="material-symbols-outlined text-[22px]">chat_bubble</span><span class="text-[11px] font-label tracking-tight mt-0.5">Ask</span></a><a aria-current="page" class="flex-1 flex flex-col items-center justify-center h-12 transition-all text-primary font-semibold" data-path="shop" href="#"><span class="material-symbols-outlined text-[22px]">storefront</span><span class="text-[11px] font-label tracking-tight mt-0.5">Shop</span></a></div></nav></body></html>

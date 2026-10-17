@@ -1,287 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { LiveDestinationNotice, useLiveRecords } from "@/components/account/live-destination";
+import { Card } from "@/components/ui/card";
+import { Heading } from "@/components/ui/heading";
+import { Button } from "@/components/ui/button";
+import { useLiveMealPlans } from "@/components/account/live-meal-plans";
+import { useState } from "react";
+import type { KitchenObservation } from "@/lib/canonical-api";
+import type { PrivateActivityEvent } from "@/lib/canonical-history";
 
-interface EcoItem {
-  id: number;
-  title: string;
-  description: string;
-  category: string;
-  eco_impact_score: number;
-  is_active: boolean;
+function dateLabel(date: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(year, month - 1, day));
 }
 
-export default function Home() {
-  const [backendStatus, setBackendStatus] = useState<"checking" | "online" | "offline">("checking");
-  const [items, setItems] = useState<EcoItem[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>("All");
-
-  const fallbackItems: EcoItem[] = [
-    {
-      id: 1,
-      title: "Industrial Recycled Polypropylene Pellets",
-      description: "High-grade post-consumer recycled PP pellets suitable for automotive & consumer injection molding.",
-      category: "Plastics",
-      eco_impact_score: 45.2,
-      is_active: true,
-    },
-    {
-      id: 2,
-      title: "Reclaimed Architectural Timber Beams",
-      description: "Salvaged historic pine and oak beams preserved from urban deconstruction projects.",
-      category: "Timber",
-      eco_impact_score: 120.0,
-      is_active: true,
-    },
-    {
-      id: 3,
-      title: "Recovered Post-Industrial Textile Fibers",
-      description: "Clean shredded denim and cotton blend fibers engineered for thermal and acoustic insulation.",
-      category: "Textiles",
-      eco_impact_score: 32.5,
-      is_active: true,
-    },
-  ];
-
-  useEffect(() => {
-    async function checkBackend() {
-      try {
-        const res = await fetch("http://localhost:8000/api/v1/health", {
-          signal: AbortSignal.timeout(2500),
-        });
-        if (res.ok) {
-          setBackendStatus("online");
-          const itemsRes = await fetch("http://localhost:8000/api/v1/items");
-          if (itemsRes.ok) {
-            const data = await itemsRes.json();
-            setItems(data);
-            return;
-          }
-        } else {
-          setBackendStatus("offline");
-        }
-      } catch {
-        setBackendStatus("offline");
-      }
-      setItems(fallbackItems);
-    }
-
-    checkBackend();
-  }, []);
-
-  const categories = ["All", "Plastics", "Timber", "Textiles"];
-  const displayItems = activeCategory === "All" ? items : items.filter((i) => i.category === activeCategory);
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white">
-      {/* Background Glow */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[720px] h-[360px] bg-emerald-500/15 blur-[120px] rounded-full" />
-        <div className="absolute top-1/3 -right-40 w-[420px] h-[300px] bg-teal-500/10 blur-[100px] rounded-full" />
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-6 py-12 flex flex-col gap-16">
-        {/* Navigation Bar */}
-        <header className="flex items-center justify-between border-b border-slate-800/80 pb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-slate-950 text-lg shadow-lg shadow-emerald-500/20">
-              ♺
-            </div>
-            <div>
-              <span className="font-extrabold text-xl tracking-tight text-white">Eco<span className="text-emerald-400">Loop</span></span>
-              <p className="text-xs text-slate-400">Circular Economy Monorepo</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* Backend Connectivity Status Badge */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-800 bg-slate-900/60 text-xs font-medium">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  backendStatus === "online"
-                    ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-                    : backendStatus === "checking"
-                    ? "bg-amber-400 animate-pulse"
-                    : "bg-rose-400"
-                }`}
-              />
-              <span>
-                FastAPI:{" "}
-                <span className={backendStatus === "online" ? "text-emerald-400" : backendStatus === "checking" ? "text-amber-300" : "text-rose-400"}>
-                  {backendStatus === "online" ? "Connected (:8000)" : backendStatus === "checking" ? "Connecting..." : "Offline (Mock Mode)"}
-                </span>
-              </span>
-            </div>
-
-            <a
-              href="http://localhost:8000/api/v1/docs"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-all"
-            >
-              API Docs (Swagger) &rarr;
-            </a>
-          </div>
-        </header>
-
-        {/* Hero Section */}
-        <section className="text-center flex flex-col items-center gap-6 pt-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-            <span>🌱</span> Built with Next.js 15 & FastAPI Monorepo
-          </div>
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white max-w-3xl leading-tight">
-            Accelerating the <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">Closed-Loop</span> Resource Economy
-          </h1>
-          <p className="text-slate-400 max-w-2xl text-base sm:text-lg leading-relaxed">
-            EcoLoop empowers enterprises to trace, exchange, and re-circulate secondary materials, minimizing landfill waste and quantifying carbon offsets in real-time.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <a
-              href="#catalog"
-              className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors shadow-lg shadow-emerald-500/20"
-            >
-              Explore Circular Catalog
-            </a>
-            <a
-              href="https://github.com/aashikvilla/ecoloop"
-              target="_blank"
-              rel="noreferrer"
-              className="px-5 py-2.5 rounded-xl font-semibold text-sm bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 transition-colors"
-            >
-              View on GitHub
-            </a>
-          </div>
-        </section>
-
-        {/* Core Pillars */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl">
-              🔄
-            </div>
-            <h3 className="font-semibold text-lg text-white">Closed-Loop Tracing</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Track raw material provenance, lifecycle cycles, and transformations across manufacturing lifecycles.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col gap-3">
-            <div className="w-10 h-10 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center text-xl">
-              📊
-            </div>
-            <h3 className="font-semibold text-lg text-white">CO₂ Impact Quantification</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Automated greenhouse gas reduction metrics calculation for verified sustainability compliance and reporting.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col gap-3">
-            <div className="w-10 h-10 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-xl">
-              ⚡
-            </div>
-            <h3 className="font-semibold text-lg text-white">High-Speed API Core</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              High-performance asynchronous Python FastAPI backend with Pydantic type safety and OpenAPI auto-generation.
-            </p>
-          </div>
-        </section>
-
-        {/* Circular Material Catalog Section */}
-        <section id="catalog" className="flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-800 pb-4">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Active Circular Materials</h2>
-              <p className="text-sm text-slate-400 mt-1">
-                Real-time listings synchronized with the FastAPI backend service
-              </p>
-            </div>
-
-            {/* Filter buttons */}
-            <div className="flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800 text-xs">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-3 py-1.5 rounded-lg transition-colors font-medium ${
-                    activeCategory === cat
-                      ? "bg-emerald-500 text-slate-950 font-semibold"
-                      : "text-slate-400 hover:text-white"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {displayItems.map((item) => (
-              <div
-                key={item.id}
-                className="group p-5 rounded-2xl bg-slate-900/30 border border-slate-800/90 hover:border-emerald-500/40 hover:bg-slate-900/60 transition-all flex flex-col justify-between"
-              >
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs px-2.5 py-0.5 rounded-md font-medium bg-slate-800 text-emerald-300 border border-slate-700">
-                      {item.category}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-400">ID #{item.id}</span>
-                  </div>
-                  <h3 className="font-semibold text-white group-hover:text-emerald-300 transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-
-                <div className="mt-5 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs">
-                  <span className="text-slate-400">Carbon Saved:</span>
-                  <span className="font-bold text-emerald-400">
-                    +{item.eco_impact_score} kg CO₂e
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Monorepo Architecture Reference */}
-        <section className="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 text-xs font-mono">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <span className="text-emerald-400 font-semibold"># Monorepo Development Environment</span>
-            <span className="text-slate-500">v0.1.0</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 text-slate-300">
-            <div>
-              <div className="text-slate-400 font-semibold mb-1">Frontend Server (Next.js)</div>
-              <code>npm run dev:frontend</code>
-              <div className="text-slate-500 text-[11px] mt-0.5">Listening at: http://localhost:3000</div>
-            </div>
-            <div>
-              <div className="text-slate-400 font-semibold mb-1">Backend Server (FastAPI)</div>
-              <code>uvicorn app.main:app --reload --port 8000</code>
-              <div className="text-slate-500 text-[11px] mt-0.5">API Docs: http://localhost:8000/api/v1/docs</div>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="border-t border-slate-800/80 pt-6 pb-12 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© 2026 EcoLoop. Designed for circular economy and sustainability acceleration.</p>
-          <div className="flex items-center gap-4">
-            <span>Next.js 15</span>
-            <span>•</span>
-            <span>FastAPI</span>
-            <span>•</span>
-            <span>TypeScript</span>
-            <span>•</span>
-            <span>Python 3.12</span>
-          </div>
-        </footer>
-      </div>
-    </div>
-  );
+export default function HomePage() {
+  const live = useLiveRecords("kitchen");
+  const activityLive = useLiveRecords("activity");
+  const mealPlansLive = useLiveMealPlans();
+  const [visiblePlanCount, setVisiblePlanCount] = useState(6);
+  const items = live.records as KitchenObservation[];
+  const datedItems = items.filter((item) => item.date_value !== null).sort((left, right) => (left.date_value ?? "").localeCompare(right.date_value ?? ""));
+  const undatedItems = items.filter((item) => item.date_value === null);
+  const events = activityLive.records as PrivateActivityEvent[];
+  return <div className="space-y-5 sm:space-y-7">
+    <header><p className="text-xs font-extrabold uppercase tracking-[.14em] text-muted">Your household</p><Heading as="h1" className="mt-1">A clear view of your kitchen</Heading><p className="mt-2 text-sm leading-relaxed text-muted">Home summarizes confirmed household records returned by the API. Suggestions and activity summaries appear only when their services provide them.</p></header>
+    <LiveDestinationNotice />
+    <nav aria-label="Quick household actions" className="grid grid-cols-3 gap-2 sm:gap-3">
+      <Link href="/kitchen/add" className="flex min-h-12 items-center justify-center rounded-full bg-primary px-2 text-center text-xs font-semibold text-white sm:text-sm">Scan or add food</Link>
+      <Link href="/shop" className="flex min-h-12 items-center justify-center rounded-full bg-surface-muted px-2 text-center text-xs font-semibold text-primary sm:text-sm">Shopping list</Link>
+      <a href="#saved-plans-heading" className="flex min-h-12 items-center justify-center rounded-full bg-surface-muted px-2 text-center text-xs font-semibold text-primary sm:text-sm">Meal plans</a>
+    </nav>
+    {live.phase === "loading" && <Card role="status" className="p-5 text-sm text-muted">Loading household kitchen…</Card>}
+    {live.phase === "error" && <Card role="alert" className="space-y-3 border border-danger/30 p-5"><p className="text-sm text-danger">{live.error}</p><Button variant="secondary" onClick={live.refresh}>Retry</Button></Card>}
+    {live.phase === "ready" && <>
+      <Card className="space-y-2 border border-line p-5"><p className="text-xs font-bold uppercase tracking-wide text-muted">Meal suggestions</p><Heading as="h2">Ask about what to make</Heading><p className="text-sm leading-relaxed text-muted">Ask can check your confirmed kitchen records and show a suggestion when one is returned. Home does not show scripted suggestions as household guidance.</p><Link href="/ask" className="inline-flex min-h-11 items-center font-semibold text-primary underline">Open Ask</Link></Card>
+      <section aria-labelledby="home-kitchen-heading" className="space-y-3"><div className="flex items-center justify-between gap-3"><Heading id="home-kitchen-heading" as="h2">Kitchen records</Heading><span className="text-sm text-muted">{items.length} returned</span></div>
+        {items.length === 0 ? <Card className="p-5"><p className="font-semibold text-primary">No confirmed food records</p><p className="mt-1 text-sm text-muted">The household API returned an empty kitchen.</p><Link href="/kitchen/add" className="mt-3 inline-flex min-h-11 items-center font-semibold text-primary underline">Add food</Link></Card> : <ul className="grid gap-3 sm:grid-cols-2">{items.slice(0, 3).map((item) => <li key={item.item_id}><Card className="h-full p-4"><p className="font-semibold text-primary">{item.name}</p><p className="mt-1 text-sm text-muted">{item.amount === null ? "Amount unknown" : `${item.amount} ${item.unit}`} · {item.date_value ? `${item.date_type.replaceAll("_", " ").toLowerCase()} ${dateLabel(item.date_value)}` : "Date unknown"}</p><p className="mt-2 text-xs text-muted">Last observed {new Date(item.observed_at).toLocaleDateString()}. A record does not assess condition or safety.</p></Card></li>)}</ul>}
+        <div className="flex flex-wrap gap-x-5 gap-y-1"><Link href="/kitchen" className="inline-flex min-h-11 items-center font-semibold text-primary underline">View Kitchen</Link><Link href="/kitchen/add" className="inline-flex min-h-11 items-center font-semibold text-primary underline">Add food</Link></div>
+      </section>
+      <section aria-labelledby="home-review-heading" className="space-y-3"><Heading id="home-review-heading" as="h2">Review your records</Heading><div className="grid gap-3 sm:grid-cols-2">
+        {datedItems.slice(0, 4).map((item) => <Card key={`date-${item.item_id}`} className="p-4"><p className="text-xs font-bold uppercase tracking-wide text-secondary">Recorded date to review</p><p className="mt-1 font-semibold text-primary">{item.name}</p><p className="mt-1 text-sm text-muted">{item.date_type.replaceAll("_", " ").toLowerCase()} · {item.date_value ? dateLabel(item.date_value) : "Date not recorded"}</p><p className="mt-2 text-sm text-muted">Review this recorded date and check the food yourself; it does not assess condition or safety.</p><Link href={`/kitchen/items/${encodeURIComponent(item.item_id)}`} className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary underline">Review record</Link></Card>)}
+        {undatedItems.slice(0, 4).map((item) => <Card key={`check-${item.item_id}`} className="p-4"><p className="text-xs font-bold uppercase tracking-wide text-muted">Last checked · no date recorded</p><p className="mt-1 font-semibold text-primary">{item.name}</p><p className="mt-1 text-sm text-muted">Last recorded {new Date(item.observed_at).toLocaleDateString()}.</p><Link href={`/kitchen/items/${encodeURIComponent(item.item_id)}`} className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary underline">Check record</Link></Card>)}
+        {items.length === 0 && <Card className="p-4 text-sm text-muted">Add confirmed Kitchen records to see their recorded dates and last-check prompts here.</Card>}
+      </div></section>
+    </>}
+      <section aria-labelledby="saved-plans-heading" className="space-y-3">
+        <div className="flex items-center justify-between gap-3"><Heading id="saved-plans-heading" as="h2">Saved meal plans</Heading><Link href="/ask" className="inline-flex min-h-11 items-center font-semibold text-primary underline">Open Ask</Link></div>
+        {mealPlansLive.phase === "loading" && <Card role="status" className="p-4 text-sm text-muted">Loading saved meal plans…</Card>}
+        {mealPlansLive.phase === "error" && <Card role="alert" className="space-y-3 p-4"><p className="text-sm text-danger">{mealPlansLive.error}</p><Button variant="secondary" onClick={mealPlansLive.refresh}>Retry</Button></Card>}
+        {mealPlansLive.phase === "ready" && (mealPlansLive.plans.length === 0 ? <Card className="p-4 text-sm text-muted">No saved meal plans were returned for this household.</Card> : <ul className="grid gap-3 sm:grid-cols-2">{mealPlansLive.plans.slice(0, visiblePlanCount).map((plan) => {
+          const context = `planId=${encodeURIComponent(plan.plan_id)}`;
+          const linkedIngredients = plan.ingredients.filter((ingredient) => ingredient.item_id !== null);
+          return <li key={plan.plan_id}><Card className="h-full space-y-3 p-4"><div><p className="text-xs font-bold uppercase tracking-wide text-secondary">Saved plan · approval-time stage {plan.preparation_stage.toLowerCase().replaceAll("_", " ")}</p><h3 className="mt-1 font-semibold text-primary">{plan.title}</h3><p className="mt-1 text-sm text-muted">{plan.servings} servings · saved {new Date(plan.created_at).toLocaleDateString()}</p></div><ul className="space-y-1 border-t border-line pt-3 text-sm">{plan.ingredients.slice(0, 5).map((ingredient, index) => <li key={`${plan.plan_id}-${index}`} className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1"><span>{ingredient.name}{ingredient.uncertain ? " · uncertain" : ""}{ingredient.item_id && <><Link href={`/kitchen/items/${encodeURIComponent(ingredient.item_id)}`} className="ml-2 inline-flex min-h-11 items-center font-semibold text-primary underline">Review item</Link><Link href={`/kitchen/items/${encodeURIComponent(ingredient.item_id)}/outcome?${context}`} className="ml-2 inline-flex min-h-11 items-center font-semibold text-primary underline">Record outcome</Link></>}</span><span className="shrink-0 text-muted">{ingredient.amount === null ? "Amount unknown" : `${ingredient.amount} ${ingredient.unit ?? ""}`}<span className="block text-right text-xs">{ingredient.quantity_basis === "ASSISTANT_ESTIMATE" ? "Assistant estimate" : ingredient.quantity_basis === "MEASURED" ? "Measured" : "Basis unknown"}</span></span></li>)}</ul><p className="text-xs leading-relaxed text-muted">Saving a plan does not record that it was prepared or eaten, and does not change Kitchen stock. Record only an outcome you observed; choose a linked item or select a current Kitchen item.</p><Link href={linkedIngredients.length ? `/kitchen/items/${encodeURIComponent(linkedIngredients[0].item_id!)}/outcome?${context}` : `/kitchen/outcome?${context}`} className="inline-flex min-h-11 items-center font-semibold text-primary underline">{linkedIngredients.length ? "Record outcome for a linked item" : "Choose a Kitchen item for an outcome"}</Link><Link href="/kitchen" className="inline-flex min-h-11 items-center font-semibold text-primary underline">Open Kitchen</Link></Card></li>;
+        })}</ul>)}
+        {mealPlansLive.phase === "ready" && (visiblePlanCount < mealPlansLive.plans.length || mealPlansLive.nextCursor) && <Button variant="secondary" onClick={() => { if (visiblePlanCount < mealPlansLive.plans.length) setVisiblePlanCount((count) => count + 6); else { setVisiblePlanCount((count) => count + 6); mealPlansLive.loadMore(); } }} disabled={mealPlansLive.loadingMore}>{mealPlansLive.loadingMore ? "Loading…" : visiblePlanCount < mealPlansLive.plans.length ? "Show more saved plans" : "Load more saved plans"}</Button>}
+        {mealPlansLive.error && mealPlansLive.phase === "ready" && <p role="alert" className="text-sm text-danger">{mealPlansLive.error}</p>}
+        {mealPlansLive.phase === "idle" && mealPlansLive.auth === "signed-in" && <Card className="p-4 text-sm text-muted">Choose a household above to view its private meal plans.</Card>}
+      </section>
+      <Card className="border border-line bg-surface-muted p-4"><div className="flex items-center justify-between gap-2"><Heading as="h2">Recorded activity</Heading><Link className="font-semibold text-primary underline" href="/activity">Open Activity</Link></div>{activityLive.phase === "loading" && <p role="status" className="mt-2 text-sm text-muted">Loading activity…</p>}{activityLive.phase === "error" && <p role="alert" className="mt-2 text-sm text-danger">Activity could not be loaded: {activityLive.error}</p>}{activityLive.phase === "ready" && <><div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-2xl bg-white p-3"><p className="text-2xl font-bold text-primary">{events.length}</p><p className="text-xs text-muted">Outcomes returned</p></div><div className="rounded-2xl bg-white p-3"><p className="text-2xl font-bold text-secondary">{events.filter((event) => event.amount !== null).length}</p><p className="text-xs text-muted">With recorded amount</p></div></div><p className="mt-3 text-xs text-muted">This is the API’s first page only; see Activity for the full paginated record.</p></>}</Card>
+    {live.phase === "idle" && live.auth !== "signed-in" && <Card className="p-5 text-sm text-muted">Home is waiting for a signed-in household. No demo records are shown here.</Card>}
+  </div>;
 }

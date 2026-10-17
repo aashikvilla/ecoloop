@@ -2,13 +2,13 @@
   "name": "ecoloop-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "EcoLoop - Circular Economy Monorepo with Next.js Frontend and FastAPI Backend",
+  "description": "EcoLoop household food assistant with Next.js and FastAPI",
   "scripts": {
     "dev:frontend": "npm --prefix frontend run dev",
     "build:frontend": "npm --prefix frontend run build",
     "lint:frontend": "npm --prefix frontend run lint",
-    "backend:setup": "cd backend && uv venv && uv pip install -r requirements.txt",
-    "backend:dev": "cd backend && uvicorn app.main:app --reload --port 8000"
+    "backend:setup": "uv sync --locked --project backend",
+    "backend:dev": "uv run --project backend uvicorn app.main:app --app-dir backend --reload --reload-dir backend/app --port 8000"
   },
   "keywords": [
     "circular-economy",
