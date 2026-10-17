@@ -23,6 +23,57 @@
         { "fieldPath": "state", "order": "ASCENDING" },
         { "fieldPath": "expires_at", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "organization_members",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "surplus_offers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "visibility", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "surplus_offers",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "donor.kind", "order": "ASCENDING" },
+        { "fieldPath": "donor.owner_id", "order": "ASCENDING" },
+        { "fieldPath": "created_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "offer_claims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recipient_org_id", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "reserved_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "offer_claims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "offer_id", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "pickup_events",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "claim_id", "order": "ASCENDING" },
+        { "fieldPath": "occurred_at", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [

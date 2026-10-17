@@ -1,5 +1,9 @@
 # Decision knowledge
 
+## Social impact offer foundation (2026-10-17)
+
+Keep surplus offers in a separate canonical collection; never publish pantry observations implicitly. `X-Actor-Kind` and `X-Actor-Id` select a requested scope but are resolved from Firebase UID plus current membership on every request and again inside mutations. Business and recipient organizations start pending; recipients cannot self-approve, and no approval endpoint is exposed in this foundation. Public discovery exposes approximate pickup area and general offer attributes; exact address, coordinates, instructions and private media IDs require donor ownership or an approved active claim. Store quantities as bounded integers with explicit units; do not convert or aggregate mixed units. Firestore and deployed Firebase Storage client rules are deny-all. Provision the default bucket through the Firebase Storage API in `ASIA-SOUTH1`; enforce public access prevention and uniform access, with only bucket-scoped read permission added for the operator. Transactional reservations use one transaction for offer balance, claim, append-only reservation event and actor-bound idempotency. Separate incomplete-draft and populated-offer schemas match persisted snapshots. Live AC0-01–08 and reviewer sign-off are complete (Codex `phase0_review`, 2026-10-17). Shared Firebase sign-in remains the Phase 0 entry; business/NGO entry screens can wait for their release phases. See [implementation record](../implementation/social-impact-phase0.md).
+
 ## Use canonical API data in household destinations (2026-10-17)
 
 Home, Kitchen, Ask, Shop and Activity must read household data from the authenticated API. Do not fall back to browser-generated records when auth, membership, API, assistant, capture, outcome, sharing or managed preference services are unavailable; show an explicit unavailable state instead. Keep canonical writes disabled until identity, database and idempotency acceptance is reviewed.

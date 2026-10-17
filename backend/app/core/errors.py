@@ -28,7 +28,7 @@ async def domain_error_handler(request: Request, exc: DomainError) -> JSONRespon
 async def http_error_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     known = {
         401: ("UNAUTHENTICATED", "A valid Firebase identity is required."),
-        403: ("FORBIDDEN", "The requested household membership is not available."),
+        403: ("FORBIDDEN", "The requested membership is not available."),
         404: ("NOT_FOUND", "The requested resource was not found."),
         413: ("PAYLOAD_TOO_LARGE", "The request exceeds the allowed size."),
         422: ("VALIDATION_ERROR", "The request does not match the required schema."),

@@ -16,6 +16,7 @@ Runtime settings come from process environment variables, which take precedence 
 ## API
 
 - `GET /api/v1/health` reports liveness and configured assistant capability without probing providers; it does not prove Firebase or provider access.
+- Social-impact foundation routes expose organization membership, private surplus offer draft/edit/publish, approved-recipient discovery and transactional claim reservation. Select scope with `X-Actor-Kind` and `X-Actor-Id`; the server resolves each value against the Firebase UID and current membership. Pending organizations cannot publish or reserve. Public offer views omit precise pickup details and private media identifiers. See [`docs/implementation/social-impact-phase0.md`](../docs/implementation/social-impact-phase0.md) for contracts and emulator acceptance.
 - `GET /api/v1/kitchen` and `GET /api/v1/shopping` require `Authorization: Bearer <Firebase ID token>` and `X-Household-ID`.
 - `POST /api/v1/facts/confirm`, `/api/v1/outcomes`, and `/api/v1/shopping` are strict, versioned commands with idempotency keys. Shopping also supports scoped list reads and versioned entry changes.
 - `GET|POST /api/v1/share-logs`, `PATCH /api/v1/share-logs/{share_id}`, and `GET /api/v1/activity` provide an owner-private sharing lifecycle and bounded, owner-recorded activity. Only an eligible confirmed handover can create a `HANDED_OVER` outcome.

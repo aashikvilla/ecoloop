@@ -1,6 +1,16 @@
 # EcoLoop implementation status
 
-Updated 17 October 2026 after the Cloud Run backend first release. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+Updated 17 October 2026 after Phase 0 live acceptance closure. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+
+## Social impact Phase 0 foundation — 17 October 2026
+
+- Implemented the initial server-side contracts for household/business/recipient actors, organization memberships, private surplus offers, sanitized discovery, and atomic reservation claims. Existing household identity dependencies remain unchanged; business/recipient actor scopes are additive.
+- Offer publication and recipient access require server-approved organization status. Firestore membership is checked on reads and rechecked inside claim transactions. Public views omit exact address, instructions, coordinates, media IDs, donor owner ID and creator UID. Offer inventory is not copied from household pantry facts.
+- **Phase 0 / G0 is complete:** live AC0-01–AC0-08, stored-record schema validation and household regression passed. Reviewer: Codex `phase0_review`, 2026-10-17. Synthetic Auth accounts, Firestore records and private image were removed.
+- Deployed Firestore indexes are `READY`. Cloud Build `6a4c652f-c121-4dd6-b8df-1743cb757819` produced image `sha256:e54eabec73a8551b8e92e758828cd5595917475888b0c6b475e9795ddf6313ff`; matching Cloud Run revision `ecoloop-api-00028-gig` now receives 100% traffic in `asia-south1`. Post-promotion health/unauthenticated household/CORS checks returned 200/401/200. Rollback target: `ecoloop-api-00026-rej`.
+- Provisioned the configured default bucket through the Firebase Storage API in `ASIA-SOUTH1`. Enabled uniform bucket access, enforced public access prevention and deployed checked-in deny-all client rules. An actual image returned 200 to the authorized operator and 403 for anonymous Firebase, unrelated signed-in Firebase and direct public GCS reads. The earlier general GCS API domain error was misleading; enabling Firebase Storage and using its default-bucket API resolved provisioning. The owner has bucket-scoped object read access for administrative verification.
+- Separate business/NGO entry screens can stay deferred to Phases 1/2; the shared Firebase sign-in and verified actor scope satisfy Phase 0. End-user media upload/retention and public donor/recipient features remain later-phase work.
+- Evidence and live run procedure: [social impact Phase 0 implementation record](implementation/social-impact-phase0.md). Latest journal: [Phase 0 live closure](knowledge/sessions/2026-10-17-phase0-live-closure.md).
 
 ## Cloud Run AI activation — 17 October 2026
 

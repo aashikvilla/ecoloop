@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 from typing import List, Literal
 from pydantic import field_validator
 from pydantic import SecretStr
@@ -100,7 +101,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=True,
         extra="ignore",
-        env_file=BACKEND_DIR / ".env",
+        env_file=None if os.environ.get("ECOLOOP_DISABLE_DOTENV", "").lower() == "true" else BACKEND_DIR / ".env",
         env_file_encoding="utf-8",
     )
 

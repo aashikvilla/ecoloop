@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import accounts, activity, health, household, intakes, meal_plans, preferences, private_media, proposals, saved_meal_plans, shopping_archive
+from app.api.v1.endpoints import accounts, activity, health, household, intakes, meal_plans, preferences, private_media, proposals, saved_meal_plans, shopping_archive, social_impact
 
 api_router = APIRouter()
 api_router.include_router(health.router)
@@ -13,3 +13,4 @@ api_router.include_router(shopping_archive.router)
 api_router.include_router(household.router)
 api_router.include_router(activity.router)
 api_router.include_router(intakes.router)
+api_router.include_router(social_impact.router)

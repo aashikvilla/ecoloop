@@ -1,5 +1,13 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-17 — Provision default Storage buckets through Firebase
+
+Observation: the Firebase web app referenced `ecoloop-staging-20261015.firebasestorage.app`, but the Firebase Storage API was disabled and no default bucket existed. Creating the dotted name through the general GCS API returned a domain ownership error; that did not establish that another project owned the bucket. Enabling `firebasestorage.googleapis.com` and calling Firebase `projects.defaultBucket.create` successfully provisioned the intended bucket in `ASIA-SOUTH1`. Uniform bucket access also required an explicit bucket-scoped object reader role for the project owner to read back a synthetic image. Prevention: use Firebase's provisioning API for its default bucket, verify API activation and the selected region, deploy deny-all rules and public access prevention, then prove an existing object is readable by the authorized operator and denied to unrelated clients. Keep acceptance open until that positive read and negative access proof both pass; never infer protection from a missing object or an operator permission error.
+
+## 2026-10-17 — Check Firebase emulator prerequisites before acceptance
+
+Observation: Firebase Emulator Suite could not start because Java was absent, and Windows exposed only its Microsoft Store `python` alias despite the backend virtual environment being present. A checksum-verified temporary JRE plus `backend/.venv/Scripts/python.exe` enabled isolated acceptance. Concurrent claims occasionally returned 503 instead of 409; bounded transient retries plus actor-bound idempotent reconciliation produced two consecutive passing acceptance runs. Prevention: check runtime prerequisites and use the project interpreter explicitly; never substitute live project writes for isolated emulator checks. Keep diagnostic claim responses and the Cloud Run/reviewer gate visible.
+
 ## 2026-10-17 — Gemini 3 default thinking can consume the response budget
 
 Observation: Vertex health showed the provider configured/enabled, but live ADK calls timed out at 20 and 50 seconds. Gemini 3 defaults to `HIGH` thinking, and the generation token ceiling covers both thinking and visible output. A direct provider check or health response did not prove the full ADK tool-and-history path worked.
