@@ -203,3 +203,5 @@ Full route map, local evidence distinction, CLI errors and owner setup sequence:
 - [ ] Managed ADK Sessions/Memory, managed Runtime, photo intake/media retention, and full browser-screen/command acceptance remain incomplete. No live MVPTasks statuses or phase gates were advanced; PR #1 remains draft and `main` is not eligible for merge.
 
 Evidence and the owner billing gate are recorded in [the 17 October local auth/AI/deploy session](../knowledge/sessions/2026-10-17-local-auth-ai-deploy.md). No unit tests, reset credits, billing changes, cloud provisioning, or deployment occurred.
+
+- [ ] Independent frontend dependency review found nine high, zero critical npm advisories. `npm audit fix --dry-run` made no changes and suggested major downgrades (Firebase 12→9 and `eslint-config-next` 16→14); no lockfile was changed. Deployment remains gated pending a compatible fix or reviewed remediation. Details are in the [local auth/AI/deploy session](../knowledge/sessions/2026-10-17-local-auth-ai-deploy.md).
