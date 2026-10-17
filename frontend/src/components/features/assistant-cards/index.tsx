@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Badge, Button, Card, Heading } from "@/components/ui";
 import { isExpired, type AssistantEnvelope, type ProposalCard } from "@/lib/assistant-cards";
-import type { ProposalResolution } from "@/lib/assistant-actions";
+import type { ProposalResolution, SavedPreference } from "@/lib/assistant-actions";
 
 const titleByType: Record<ProposalCard["type"], string> = {
   MealSuggestion: "Meal suggestion", PortionAdjustment: "Portion adjustment", BuyCheck: "Buy check", FoodAction: "Food action", PreferenceConsent: "Preference consent",
@@ -30,18 +30,37 @@ function ProposalDetails({ card }: { card: ProposalCard }) {
       const href = `/kitchen/items/${encodeURIComponent(card.item_id)}/${share ? "share" : "outcome"}`;
       return <><p className="mt-3 text-sm">Suggested action: <strong>{card.action.toLowerCase()}</strong>{card.amount !== null && card.unit ? ` · ${card.amount} ${card.unit}` : " · amount unknown"}</p><p className="mt-2 text-xs text-muted">This suggestion does not change Kitchen records. Review the current item and confirm any outcome yourself.</p><div className="mt-3"><ReviewLink href={href}>{share ? "Review private share offer" : "Review item outcome"}</ReviewLink></div></>;
     }
-    case "PreferenceConsent": return <><p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted">Preference preview · {card.preference_key}</p><blockquote className="mt-2 rounded-2xl bg-surface-muted p-4 text-sm leading-relaxed">{card.proposed_text}</blockquote><p className="mt-2 text-xs text-muted">This assistant card does not save a preference. Add or change one in Settings only if you choose.</p><div className="mt-3"><ReviewLink href="/settings">Review preference settings</ReviewLink></div></>;
+    case "PreferenceConsent": return <><p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted">Preference preview · {card.preference_key}</p><blockquote className="mt-2 rounded-2xl bg-surface-muted p-4 text-sm leading-relaxed">{card.proposed_text}</blockquote><p className="mt-2 text-xs text-muted">This preference is private to your account. It is saved only when you choose “Save this preference.”</p><div className="mt-3"><ReviewLink href="/settings">Review saved preferences</ReviewLink></div></>;
   }
 }
 
-type ActionProps = { resolutions: Record<string, ProposalResolution>; onAction: (proposalId: string, version: number, action: "ADD" | "DISMISS") => void; actionBusy: string | null; actionsEnabled: boolean };
+type ActionProps = {
+  resolutions: Record<string, ProposalResolution>;
+  privatePreferences: SavedPreference[];
+  preferenceLoadState: "idle" | "loading" | "ready" | "error";
+  preferenceErrors: Record<string, string>;
+  onAction: (proposalId: string, version: number, action: "ADD" | "DISMISS") => void;
+  onConsent: (proposalId: string, proposedText: string) => void;
+  actionBusy: string | null;
+  actionsEnabled: boolean;
+};
 
-function TypedCard({ card, resolutions, onAction, actionBusy, actionsEnabled }: { card: ProposalCard } & ActionProps) {
+function TypedCard({ card, resolutions, privatePreferences, preferenceLoadState, preferenceErrors, onAction, onConsent, actionBusy, actionsEnabled }: { card: ProposalCard } & ActionProps) {
   const expired = isExpired(card);
   const resolution = resolutions[card.proposal_id];
+  const preferenceIdIsValid = /^[A-Za-z0-9_-]{16,64}$/.test(card.proposal_id);
+  const existingPreference = card.type === "PreferenceConsent" ? privatePreferences.find((item) => item.preference_id === card.proposal_id) : undefined;
+  const savedPreference = existingPreference && card.type === "PreferenceConsent" && existingPreference.text === card.proposed_text ? existingPreference : undefined;
+  const preferenceConflict = card.type === "PreferenceConsent" && (!preferenceIdIsValid
+    ? "This proposal ID cannot be used for a saved preference. Review preferences in Settings."
+    : existingPreference && existingPreference.text !== card.proposed_text
+      ? "A different preference already uses this ID. Nothing was changed; review saved preferences in Settings."
+      : "");
   const canAct = actionsEnabled && !expired && !resolution;
   const canAdd = card.type === "BuyCheck" && card.shopping_action === "ADD" && card.allowed_actions.includes("ADD");
-  return <Card className="min-w-0 break-words border border-line p-4 sm:p-5 [overflow-wrap:anywhere]"><div className="flex flex-wrap items-start justify-between gap-2"><p className="text-xs font-bold uppercase tracking-wide text-primary">{titleByType[card.type]}</p><ProposalStatus card={card} resolution={resolution} /></div><ProposalDetails card={card} /><div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">{canAdd && <Button disabled={!canAct || actionBusy !== null} aria-busy={actionBusy === `${card.proposal_id}:ADD`} onClick={() => onAction(card.proposal_id, card.version, "ADD")}>{actionBusy === `${card.proposal_id}:ADD` ? "Adding…" : "Add to shopping list"}</Button>}{!resolution && <Button disabled={!canAct || actionBusy !== null} aria-busy={actionBusy === `${card.proposal_id}:DISMISS`} onClick={() => onAction(card.proposal_id, card.version, "DISMISS")} variant="secondary">Dismiss</Button>}<p className="max-w-xl text-xs leading-relaxed text-muted">{resolution?.status === "APPROVED" ? "A shopping list entry was recorded. Stock was not changed." : resolution ? "This proposal is closed." : expired ? "Review current records before asking again." : !actionsEnabled ? "Household changes are not enabled for this app yet." : canAdd ? "Adding records a shopping plan only. It does not purchase or consume food." : "This card is advice only; no record changes until an action is supported."}</p></div></Card>;
+  const canSavePreference = card.type === "PreferenceConsent" && card.allowed_actions.includes("CONSENT") && !savedPreference && !preferenceConflict;
+  const consentBusy = actionBusy === `${card.proposal_id}:CONSENT`;
+  return <Card className="min-w-0 break-words border border-line p-4 sm:p-5 [overflow-wrap:anywhere]"><div className="flex flex-wrap items-start justify-between gap-2"><p className="text-xs font-bold uppercase tracking-wide text-primary">{titleByType[card.type]}</p><div className="flex flex-wrap gap-2"><ProposalStatus card={card} resolution={resolution} />{savedPreference && <Badge tone="green">Saved privately</Badge>}</div></div><ProposalDetails card={card} /><div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-4">{canAdd && <Button disabled={!canAct || actionBusy !== null} aria-busy={actionBusy === `${card.proposal_id}:ADD`} onClick={() => onAction(card.proposal_id, card.version, "ADD")}>{actionBusy === `${card.proposal_id}:ADD` ? "Adding…" : "Add to shopping list"}</Button>}{canSavePreference && <Button disabled={!canAct || actionBusy !== null || preferenceLoadState !== "ready"} aria-busy={consentBusy} onClick={() => { if (card.type === "PreferenceConsent") onConsent(card.proposal_id, card.proposed_text); }}>{consentBusy ? "Saving…" : preferenceLoadState === "loading" ? "Checking saved preferences…" : preferenceLoadState === "error" ? "Saved preferences unavailable" : preferenceErrors[card.proposal_id] ? "Retry saving preference" : "Save this preference"}</Button>}{!resolution && <Button disabled={!canAct || actionBusy !== null} aria-busy={actionBusy === `${card.proposal_id}:DISMISS`} onClick={() => onAction(card.proposal_id, card.version, "DISMISS")} variant="secondary">Dismiss</Button>}<p className="max-w-xl text-xs leading-relaxed text-muted">{savedPreference ? "Saved privately to your account with your explicit consent." : resolution?.status === "APPROVED" ? "A shopping list entry was recorded. Stock was not changed." : resolution ? "This proposal is closed." : expired ? "Review current records before asking again." : !actionsEnabled ? "Household changes are not enabled for this app yet." : canAdd ? "Adding records a shopping plan only. It does not purchase or consume food." : card.type === "PreferenceConsent" ? "Saving is optional. Your click sends only the preference text to your private account preferences." : "This card is advice only; no record changes until an action is supported."}</p></div>{preferenceConflict && <p role="alert" className="mt-3 text-sm text-danger">{preferenceConflict} <ReviewLink href="/settings">Review preferences</ReviewLink></p>}{preferenceErrors[card.proposal_id] && !savedPreference && !preferenceConflict && <p role="alert" className="mt-3 text-sm text-danger">{preferenceErrors[card.proposal_id]} Retry uses the same request identity.</p>}</Card>;
 }
 
 export function AssistantCards({ envelope, rejectedCards = 0, ...actions }: { envelope: AssistantEnvelope; rejectedCards?: number } & ActionProps) {

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLiveHousehold } from "@/lib/live-household";
 import { CanonicalApiError } from "@/lib/canonical-transport";
 import type { AssistantEnvelope } from "@/lib/assistant-cards";
-import { readAssistantHistory, requestDurableTurn, submitProposalAction, type ProposalResolution } from "@/lib/assistant-actions";
+import { readAssistantHistory, readSavedPreferences, requestDurableTurn, saveProposedPreference, submitProposalAction, type ProposalResolution, type SavedPreference } from "@/lib/assistant-actions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
@@ -34,6 +34,10 @@ function ScopedAskAssistant() {
   const [assistantResponse, setAssistantResponse] = useState<AssistantEnvelope | null>(null);
   const [rejectedCards, setRejectedCards] = useState(0);
   const [resolutions, setResolutions] = useState<Record<string, ProposalResolution>>({});
+  const [privatePreferences, setPrivatePreferences] = useState<SavedPreference[]>([]);
+  const [preferenceLoadState, setPreferenceLoadState] = useState<"idle" | "loading" | "ready" | "error">(auth === "signed-in" ? "loading" : "idle");
+  const [preferenceReload, setPreferenceReload] = useState(0);
+  const [preferenceErrors, setPreferenceErrors] = useState<Record<string, string>>({});
   const [historyPhase, setHistoryPhase] = useState<"loading" | "ready" | "error">("loading");
   const [actionBusy, setActionBusy] = useState<string | null>(null);
   const actionKeys = useRef<Record<string, string>>({});
@@ -66,6 +70,28 @@ function ScopedAskAssistant() {
     })();
     return () => { controller.abort(); requestController.current?.abort(); };
   }, [auth, user, householdId]);
+  useEffect(() => {
+    const controller = new AbortController();
+    if (auth !== "signed-in" || !user) {
+      setPrivatePreferences([]);
+      setPreferenceLoadState("idle");
+      return () => controller.abort();
+    }
+    setPreferenceLoadState("loading");
+    void (async () => {
+      try {
+        const token = await user.getIdToken();
+        if (controller.signal.aborted) return;
+        const records = await readSavedPreferences(token, controller.signal);
+        if (controller.signal.aborted) return;
+        setPrivatePreferences(records);
+        setPreferenceLoadState("ready");
+      } catch {
+        if (!controller.signal.aborted) setPreferenceLoadState("error");
+      }
+    })();
+    return () => controller.abort();
+  }, [auth, user, preferenceReload]);
   async function send(text: string) {
     const value = text.trim();
     if (!value || busy || actionBusy) return;
@@ -111,6 +137,32 @@ function ScopedAskAssistant() {
       setActionBusy(null);
     }
   }
+  async function consentToPreference(proposalId: string, proposedText: string) {
+    if (!user || actionBusy) return;
+    actionKeys.current[`${proposalId}:CONSENT`] ??= crypto.randomUUID();
+    const key = `${proposalId}:CONSENT`;
+    const controller = new AbortController();
+    requestController.current = controller;
+    setActionBusy(key);
+    setPreferenceErrors((current) => { const next = { ...current }; delete next[proposalId]; return next; });
+    setError(""); setNotice("");
+    try {
+      const token = await user.getIdToken();
+      const saved = await saveProposedPreference(token, proposalId, proposedText, actionKeys.current[key], controller.signal);
+      if (controller.signal.aborted) return;
+      setPrivatePreferences((current) => [saved, ...current.filter((record) => record.preference_id !== proposalId)]);
+      delete actionKeys.current[key];
+      setNotice("Preference saved privately to your account with your explicit consent.");
+    } catch (caught) {
+      if (!controller.signal.aborted) {
+        setPreferenceErrors((current) => ({ ...current, [proposalId]: readError(caught) }));
+        if (caught instanceof CanonicalApiError && caught.code === "conflict") setPreferenceReload((current) => current + 1);
+      }
+    } finally {
+      if (requestController.current === controller) requestController.current = null;
+      setActionBusy(null);
+    }
+  }
   function submit(event: FormEvent) { event.preventDefault(); void send(prompt); }
   return <div className="mx-auto max-w-4xl space-y-5 px-4 pb-12 pt-6 sm:px-6 lg:pt-10">
     <header><p className="text-xs font-bold uppercase tracking-wide text-muted">Ask</p><Heading as="h1" className="mt-1">Cook thoughtfully</Heading><p className="mt-2 text-sm leading-relaxed text-muted">Ask for suggestions based on your household records. Review every proposal before taking action.</p></header>
@@ -120,6 +172,8 @@ function ScopedAskAssistant() {
       <form className="flex flex-col gap-2 sm:flex-row" onSubmit={submit}><label htmlFor="ask-prompt" className="sr-only">Ask a question</label><Input id="ask-prompt" className="flex-1" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask about a meal or what to buy" maxLength={8000} /><Button type="submit" disabled={busy || actionBusy !== null || !prompt.trim()} aria-busy={busy}>{busy ? "Asking…" : "Send"}</Button></form>
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}{notice && <p role="status" className="text-sm text-muted">{notice}</p>}
     </Card>
-    {assistantResponse && <AssistantCards envelope={assistantResponse} rejectedCards={rejectedCards} resolutions={resolutions} onAction={act} actionBusy={actionBusy} actionsEnabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"} />}
+    {auth === "signed-in" && preferenceLoadState === "loading" && <p role="status" className="text-sm text-muted">Checking private saved preferences…</p>}
+    {auth === "signed-in" && preferenceLoadState === "error" && <div role="alert" className="flex flex-wrap items-center gap-3 text-sm text-danger"><span>Saved preferences could not be checked, so preference cards are unavailable until they can be checked.</span><Button variant="secondary" onClick={() => setPreferenceReload((current) => current + 1)}>Retry checking preferences</Button></div>}
+    {assistantResponse && <AssistantCards envelope={assistantResponse} rejectedCards={rejectedCards} resolutions={resolutions} privatePreferences={privatePreferences} preferenceLoadState={preferenceLoadState} preferenceErrors={preferenceErrors} onAction={act} onConsent={consentToPreference} actionBusy={actionBusy} actionsEnabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"} />}
   </div>;
 }
