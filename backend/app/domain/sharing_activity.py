@@ -361,6 +361,7 @@ def list_activity(principal: Principal, limit: int, cursor: str | None) -> dict[
             events.append({
                 "event_id": record.get("outcome_id", record["id"]),
                 "item_id": record.get("item_id"),
+                "plan_id": record.get("plan_id"),
                 "type": record.get("outcome_type"),
                 "occurred_at": record.get("occurred_at"),
                 "recorded_at": record.get("recorded_at"),

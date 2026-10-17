@@ -10,7 +10,7 @@ import { useLiveHousehold } from "@/lib/live-household";
 import type { KitchenObservation } from "@/lib/canonical-api";
 import { PageIntro, QuietLink } from "./ui";
 
-function useItemContext(itemId: string) {
+function useItemContext(itemId?: string) {
   const household = useLiveHousehold();
   const live = useLiveRecords("kitchen");
   const item = (live.records as KitchenObservation[]).find((record) => record.item_id === itemId);
@@ -32,16 +32,16 @@ function ItemContextSummary({ live, item }: { live: ReturnType<typeof useLiveRec
   </>;
 }
 
-export function OutcomeItem({ itemId }: { itemId: string }) {
+export function OutcomeItem({ itemId, planId, planTitle }: { itemId?: string; planId?: string; planTitle?: string }) {
   const { household, live, item, getIdToken, onCommitted, enabled } = useItemContext(itemId);
-  const scopeKey = `${household.user?.uid ?? household.auth}:${household.householdId}:${itemId}`;
-  const ready = household.auth === "signed-in" && household.user !== null && Boolean(household.householdId) && live.phase === "ready" && item !== undefined;
+  const scopeKey = `${household.user?.uid ?? household.auth}:${household.householdId}:${itemId ?? "select-item"}:${planId ?? "no-plan"}`;
+  const ready = household.auth === "signed-in" && household.user !== null && Boolean(household.householdId) && live.phase === "ready" && (!itemId || item !== undefined);
   return <div className="mx-auto max-w-3xl space-y-5 px-4 pb-12 pt-6 sm:px-6 lg:pt-10">
     <PageIntro eyebrow="Kitchen · observed outcome" title={item ? `What happened to ${item.name}?` : "Record what happened"} description="Record an outcome you personally observed. Kitchen quantity changes only from the explicit outcome amount, compatible units, and current version." />
     <LiveDestinationNotice />
-    <QuietLink href={`/kitchen/items/${encodeURIComponent(itemId)}`}>Back to item details</QuietLink>
-    <ItemContextSummary live={live} item={item} />
-    {ready && <div key={scopeKey}><OutcomeControls getIdToken={getIdToken} householdId={household.householdId} enabled={enabled} onCommitted={onCommitted} initialItemId={itemId} /></div>}
+    {itemId ? <QuietLink href={`/kitchen/items/${encodeURIComponent(itemId)}`}>Back to item details</QuietLink> : <QuietLink href="/">Back to Home</QuietLink>}
+    {itemId && <ItemContextSummary live={live} item={item} />}
+    {ready && <div key={scopeKey}><OutcomeControls getIdToken={getIdToken} householdId={household.householdId} enabled={enabled} onCommitted={onCommitted} initialItemId={itemId} planId={planId} planTitle={planTitle} /></div>}
   </div>;
 }
 

@@ -118,6 +118,7 @@ class RecordOutcomeCommand(StrictModel):
     idempotency_key: IdempotencyKey
     outcome_id: OpaqueId
     item_id: OpaqueId
+    plan_id: OpaqueId | None = None
     base_version: Annotated[StrictInt, Field(ge=1)]
     outcome_type: OutcomeType
     amount: Amount | None = None

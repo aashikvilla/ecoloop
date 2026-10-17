@@ -147,6 +147,7 @@ def record_outcome(principal: Principal, command: RecordOutcomeCommand) -> dict[
     db = get_firestore()
     household = db.collection("households").document(principal.household_id)
     item_ref = household.collection("food_observations").document(command.item_id)
+    plan_ref = household.collection("meal_plans").document(command.plan_id) if command.plan_id else None
     outcome_ref = household.collection("outcomes").document(command.outcome_id)
     idem_ref = _idempotency_ref(household, "outcome", command.idempotency_key, principal.uid)
     payload_hash = _payload_hash(command)
@@ -160,10 +161,18 @@ def record_outcome(principal: Principal, command: RecordOutcomeCommand) -> dict[
             return previous
         item_snapshot = item_ref.get(transaction=transaction)
         outcome_snapshot = outcome_ref.get(transaction=transaction)
+        plan_snapshot = plan_ref.get(transaction=transaction) if plan_ref is not None else None
         if outcome_snapshot.exists:
             raise DomainError("VERSION_CONFLICT", "This outcome identifier has already been recorded.", 409)
         if not item_snapshot.exists:
             raise DomainError("NOT_FOUND", "The kitchen item was not found.", 404)
+        if plan_ref is not None:
+            plan = plan_snapshot.to_dict() if plan_snapshot and plan_snapshot.exists else None
+            if not plan or plan.get("plan_id") != command.plan_id or plan.get("household_id") != principal.household_id:
+                raise DomainError("NOT_FOUND", "The saved meal plan was not found in this household.", 404)
+            plan_version = plan.get("version")
+            if isinstance(plan_version, bool) or not isinstance(plan_version, int) or plan_version < 1:
+                raise DomainError("DATA_UNAVAILABLE", "The saved meal plan reference is invalid.", 503, True)
         item = item_snapshot.to_dict() or {}
         _validate_outcome_time(command, item, recorded_at)
         if _stored_version(item, default=-1) != command.base_version:
