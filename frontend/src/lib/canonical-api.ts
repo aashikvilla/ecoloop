@@ -23,6 +23,7 @@ export type ShoppingEntry = {
 };
 
 export type CreatedHousehold = { household_id: string; name: string; role: string };
+export type HouseholdMembership = CreatedHousehold;
 
 export type CanonicalData =
   | { kind: "kitchen"; records: KitchenObservation[] }
@@ -87,4 +88,16 @@ export async function createCanonicalHousehold(idToken: string, name: string, id
     throw new CanonicalApiError("invalid_response", "The household service returned an unexpected creation result.", payload.request_id);
   }
   return { household_id: result.household_id, name: result.name, role: result.role };
+}
+
+export async function listCanonicalHouseholds(idToken: string, signal?: AbortSignal): Promise<HouseholdMembership[]> {
+  const payload = await canonicalRequest("households", idToken, null, { method: "GET", signal });
+  if (!object(payload) || payload.schema_version !== 1 || !boundedString(payload.request_id, 128) || !object(payload.result) || !Array.isArray(payload.result.households) || payload.result.households.length > 50) {
+    throw new CanonicalApiError("invalid_response", "The household service returned an unexpected membership list.");
+  }
+  const rows = payload.result.households;
+  if (!rows.every((row) => object(row) && typeof row.household_id === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(row.household_id) && boundedString(row.name, 60) && boundedString(row.role, 32) && /^[a-z][a-z_-]*$/i.test(row.role)) || new Set(rows.map((row) => (row as Record<string, unknown>).household_id)).size !== rows.length) {
+    throw new CanonicalApiError("invalid_response", "The household service returned memberships that do not match the supported format.");
+  }
+  return rows as HouseholdMembership[];
 }

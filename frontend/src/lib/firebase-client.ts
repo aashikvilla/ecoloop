@@ -34,7 +34,7 @@ export async function getFirebaseClient(): Promise<FirebaseClient | null> {
     return {
       app,
       auth: authSdk.initializeAuth(app, {
-        persistence: authSdk.browserSessionPersistence,
+        persistence: authSdk.inMemoryPersistence,
         popupRedirectResolver: authSdk.browserPopupRedirectResolver,
       }),
       provider: new authSdk.GoogleAuthProvider(),

@@ -46,6 +46,13 @@ def main() -> None:
         ("judge-tomatoes", "Tomatoes", 6, "pieces", "fridge"),
         ("judge-spinach", "Spinach", 200, "g", "fridge"),
         ("judge-rice", "Rice", 1, "kg", "pantry"),
+        ("judge-lentils", "Lentils", 500, "g", "pantry"),
+        ("judge-onions", "Onions", 4, "pieces", "pantry"),
+        ("judge-carrots", "Carrots", 6, "pieces", "fridge"),
+        ("judge-oats", "Oats", 500, "g", "pantry"),
+        ("judge-yogurt", "Yogurt", 400, "g", "fridge"),
+        ("judge-chickpeas", "Chickpeas", 400, "g", "pantry"),
+        ("judge-potatoes", "Potatoes", 6, "pieces", "pantry"),
     ]:
         docs.append((root.collection("food_observations").document(item_id), {
             "item_id": item_id, "name": name, "amount": amount, "unit": unit,
@@ -67,7 +74,7 @@ def main() -> None:
     print(f"Household ID: {HOUSEHOLD}. Existing stock and memberships were not overwritten.")
     print("Auth user was not created (--data-only)." if args.data_only else
           "Password configured for operator-supplied sign-in." if password else
-          "Login not configured: set ECOLOOP_JUDGE_PASSWORD and rerun; UI email/password support is still required.")
+          "Existing login credentials unchanged; set ECOLOOP_JUDGE_PASSWORD only to configure a password.")
 
 
 if __name__ == "__main__":

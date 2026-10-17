@@ -19,6 +19,7 @@ import {
   CanonicalApiError,
   createCanonicalHousehold,
   readCanonicalRecords,
+  listCanonicalHouseholds,
   type CanonicalData,
   type CreatedHousehold,
 } from "@/lib/canonical-api";
@@ -38,6 +39,7 @@ type PendingHouseholdCreation = { uid: string; idempotencyKey: string; name: str
 
 export function AccountConnection() {
   const liveHousehold = useLiveHousehold();
+  const setLiveHouseholdId = liveHousehold.setHouseholdId;
   const [authState, setAuthState] = useState<AuthState>("loading");
   const [authError, setAuthError] = useState("");
   const [email, setEmail] = useState("");
@@ -47,6 +49,9 @@ export function AccountConnection() {
   const [user, setUser] = useState<User | null>(null);
   const [householdId, setHouseholdId] = useState("");
   const [selectedHousehold, setSelectedHousehold] = useState("");
+  const [memberships, setMemberships] = useState<CreatedHousehold[]>([]);
+  const [membershipLoading, setMembershipLoading] = useState(false);
+  const [membershipError, setMembershipError] = useState("");
   const [householdName, setHouseholdName] = useState("");
   const [onboardingStep, setOnboardingStep] = useState<"name" | "review" | "complete">("name");
   const [createIdempotencyKey, setCreateIdempotencyKey] = useState("");
@@ -84,6 +89,9 @@ export function AccountConnection() {
             const nextKey = nextUser?.uid ?? "";
             if (identityRef.current !== nextKey) {
               householdScopeRevisionRef.current += 1;
+              setMemberships([]);
+              setMembershipError("");
+              setMembershipLoading(Boolean(nextUser));
               requestRef.current?.abort();
               createRequestRef.current?.abort();
               createRequestRef.current = null;
@@ -150,6 +158,28 @@ export function AccountConnection() {
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!user || authState !== "signed-in") return;
+    const controller = new AbortController();
+    void Promise.resolve().then(() => {
+      if (controller.signal.aborted) return [];
+      setMembershipLoading(true);
+      setMembershipError("");
+      return user.getIdToken().then((token) => listCanonicalHouseholds(token, controller.signal));
+    }).then((rows) => {
+      if (controller.signal.aborted) return;
+      setMemberships(rows);
+      if (rows.length === 1) {
+        setSelectedHousehold(rows[0].household_id);
+        setHouseholdId(rows[0].household_id);
+        setLiveHouseholdId(rows[0].household_id);
+      }
+    }).catch((error: unknown) => {
+      if (!controller.signal.aborted) setMembershipError(error instanceof Error ? error.message : "Your households could not be loaded.");
+    }).finally(() => { if (!controller.signal.aborted) setMembershipLoading(false); });
+    return () => controller.abort();
+  }, [authState, setLiveHouseholdId, user]);
 
   const getIdToken = useCallback(async () => {
     if (!user)
@@ -593,11 +623,13 @@ export function AccountConnection() {
             Choose a household
           </Heading>
           <p className="mt-1 text-sm leading-relaxed text-muted">
-            Use the exact ID for a household you already belong to. Access is
-            checked by the API for every request; this picker does not change
-            household membership.
+            Your active memberships come from Firebase-backed account records. Selecting one does not change who belongs to it.
           </p>
         </div>
+        {membershipLoading && <p role="status" className="text-sm text-muted">Loading your households…</p>}
+        {membershipError && <p role="alert" className="text-sm text-danger">{membershipError}</p>}
+        {memberships.length > 0 && <div className="space-y-2" role="group" aria-label="Your households">{memberships.map((membership) => <Button key={membership.household_id} type="button" fullWidth variant={selectedHousehold === membership.household_id ? "primary" : "secondary"} onClick={() => { updateHousehold(membership.household_id); setSelectedHousehold(membership.household_id); liveHousehold.setHouseholdId(membership.household_id); }}>{membership.name} · {membership.role.toLowerCase()}</Button>)}</div>}
+        {!membershipLoading && !membershipError && user && memberships.length === 0 && <p className="rounded-xl bg-primary-soft p-3 text-sm text-primary">No household membership yet. Create your household above to begin.</p>}
         <form onSubmit={submitHousehold} className="space-y-3">
           <label
             htmlFor="household-id"

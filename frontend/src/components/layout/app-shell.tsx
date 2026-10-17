@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import { useLiveHousehold } from "@/lib/live-household";
 
 const destinations = [
   { href: "/", label: "Home", icon: "home" },
@@ -27,6 +28,7 @@ function DestinationNav({ pathname }: { pathname: string }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const household = useLiveHousehold();
   const accountPage = pathname === "/account" || pathname.startsWith("/account/");
   const itemDetailPage = /^\/kitchen\/items\/[^/]+$/.test(pathname);
   const canonicalPage = ["/", "/kitchen", "/ask", "/shop", "/activity"].includes(pathname) || itemDetailPage;
@@ -48,7 +50,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
     </header>
     <div className="mx-auto min-h-[calc(100vh-68px)] max-w-6xl px-4 pb-28 pt-5 sm:ml-[208px] sm:px-7 sm:pb-12 sm:pt-8">
-      <main id="main-content">{children}</main>
+      <main id="main-content">
+        {accountPage || !canonicalPage && !settingsPage && !intakePage || household.auth === "signed-in" && household.householdId
+          ? children
+          : <section className="mx-auto max-w-xl rounded-card border border-line bg-surface p-6 shadow-card" aria-live="polite">
+            <p className="text-xs font-bold uppercase tracking-wide text-secondary">Household access</p>
+            <h1 className="mt-2 text-2xl font-extrabold text-primary">{household.auth === "loading" ? "Checking your sign-in…" : household.auth === "signed-out" ? "Sign in to continue" : household.auth === "signed-in" ? "Choose your household" : "Household connection unavailable"}</h1>
+            <p className="mt-2 text-sm leading-6 text-muted">{household.auth === "signed-out" ? "Kitchen, shopping, activity and assistant pages require a signed-in household member." : household.auth === "signed-in" ? "Open your account to create or select a household before viewing its records." : household.auth === "loading" ? "Private household records remain hidden while your identity is checked." : "Reload after restoring the Firebase connection."}</p>
+            {household.auth !== "loading" && <Link href="/account" className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full bg-primary px-6 text-sm font-bold text-white">{household.auth === "signed-out" ? "Sign in or create account" : "Open household account"}</Link>}
+          </section>}
+      </main>
     </div>
     <div className="fixed inset-x-0 bottom-3 z-40 mx-auto w-full max-w-[460px] px-4 safe-bottom sm:hidden"><DestinationNav pathname={pathname} /></div>
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-[208px] border-r border-line/70 bg-background px-4 pt-24 sm:block">
