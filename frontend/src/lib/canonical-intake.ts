@@ -1,6 +1,6 @@
 import { CanonicalApiError } from "./canonical-transport";
 
-export type IntakeSource = "MANUAL" | "TEXT";
+export type IntakeSource = "MANUAL" | "TEXT" | "PHOTO";
 export type IntakeDateType = "USE_BY" | "EXPIRY" | "BEST_BEFORE" | "USER_TARGET" | "UNKNOWN";
 
 export type IntakeEntry = {
@@ -167,7 +167,19 @@ function apiOrigin(): string {
   return url.origin;
 }
 
-function responseError(status: number, writing: boolean): CanonicalApiError {
+function responseError(status: number, writing: boolean, payload: unknown): CanonicalApiError {
+  const errorBody = object(payload) && object(payload.error) && typeof payload.error.code === "string" ? payload.error.code : "";
+  const photoErrors: Record<string, [CanonicalApiError["code"], string]> = {
+    PHOTO_EXTRACTION_UNAVAILABLE: ["unavailable", "Photo extraction is unavailable because Gemini is not enabled or configured. Use manual or text intake."],
+    PHOTO_PROVIDER_UNAVAILABLE: ["unavailable", "Gemini could not process this photo. Try again later or use manual intake."],
+    PHOTO_EXTRACTION_INVALID: ["invalid_response", "Gemini did not return candidates in the supported format. Try another photo or enter food manually."],
+    PHOTO_NO_CANDIDATES: ["validation", "No food candidates were identified. Try another photo or enter food manually."],
+    UNSUPPORTED_IMAGE: ["validation", "Choose a valid JPEG, PNG, or WebP image."],
+    EMPTY_IMAGE: ["validation", "Choose a non-empty photo."],
+    PAYLOAD_TOO_LARGE: ["validation", "The photo exceeds the 2 MB size limit."],
+  };
+  const photoError = photoErrors[errorBody];
+  if (photoError) return new CanonicalApiError(...photoError);
   if (status === 401) return new CanonicalApiError("unauthenticated", "Your sign-in is not accepted. Sign in again to continue.");
   if (status === 403) return new CanonicalApiError("forbidden", "This account cannot access that household. Check the household ID.");
   if (status === 409) return new CanonicalApiError("conflict", "This request conflicts with current records. Review the intake before trying again.");
@@ -206,26 +218,33 @@ async function readJson(response: Response): Promise<unknown> {
   try { return JSON.parse(text) as unknown; } catch { throw new CanonicalApiError("invalid_response", "The household service returned unreadable data."); }
 }
 
-async function requestIntake<T>(path: string, token: string, householdId: string, options: { method: "GET" | "POST"; body?: unknown; signal?: AbortSignal; parse: (payload: unknown) => T }): Promise<T> {
+async function requestIntake<T>(path: string, token: string, householdId: string, options: { method: "GET" | "POST"; body?: unknown; rawBody?: BodyInit; rawContentType?: string; idempotencyKey?: string; timeoutMs?: number; signal?: AbortSignal; parse: (payload: unknown) => T }): Promise<T> {
   if (!token || token.length > 8192 || /[\r\n]/.test(token)) throw new CanonicalApiError("unauthenticated", "Sign in before accessing household records.");
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(householdId)) throw new CanonicalApiError("validation", "Enter a valid household ID.");
   if (options.method === "POST" && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS !== "true") {
     throw new CanonicalApiError("not_configured", "Household changes are not enabled for this app yet.");
   }
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12_000);
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 12_000);
   const abort = () => controller.abort(options.signal?.reason);
   if (options.signal?.aborted) controller.abort(options.signal.reason);
   options.signal?.addEventListener("abort", abort, { once: true });
   try {
     const response = await fetch(new URL(`/api/v1/${path}`, apiOrigin()), {
       method: options.method,
-      ...(options.body ? { body: JSON.stringify(options.body) } : {}),
-      headers: { Authorization: `Bearer ${token}`, "X-Household-ID": householdId, Accept: "application/json", ...(options.body ? { "Content-Type": "application/json" } : {}) },
+      ...(options.rawBody ? { body: options.rawBody } : options.body ? { body: JSON.stringify(options.body) } : {}),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "X-Household-ID": householdId,
+        Accept: "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.rawContentType ? { "Content-Type": options.rawContentType } : {}),
+        ...(options.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : {}),
+      },
       cache: "no-store", credentials: "omit", redirect: "error", signal: controller.signal,
     });
     const payload = await readJson(response);
-    if (!response.ok) throw responseError(response.status, options.method === "POST");
+    if (!response.ok) throw responseError(response.status, options.method === "POST", payload);
     return parseEnvelope(payload, options.parse);
   } catch (error) {
     if (controller.signal.aborted) {
@@ -245,6 +264,22 @@ export function submitIntake(token: string, householdId: string, command: Intake
     return Promise.reject(new CanonicalApiError("validation", "Review the intake entries before sending."));
   }
   return requestIntake("intakes", token, householdId, { method: "POST", body: command, signal, parse: parseResult });
+}
+
+export function submitPhotoIntake(token: string, householdId: string, file: File, idempotencyKey: string, signal?: AbortSignal): Promise<IntakeResult> {
+  const supportedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+  if (!supportedTypes.has(file.type) || file.size < 1 || file.size > 2_000_000 || !/^[A-Za-z0-9._:-]{8,128}$/.test(idempotencyKey)) {
+    return Promise.reject(new CanonicalApiError("validation", "Choose a JPEG, PNG, or WebP photo up to 2 MB."));
+  }
+  return requestIntake("intakes/photo", token, householdId, {
+    method: "POST",
+    rawBody: file,
+    rawContentType: file.type,
+    idempotencyKey,
+    timeoutMs: 45_000,
+    signal,
+    parse: parseResult,
+  });
 }
 
 export function readIntake(token: string, householdId: string, intakeId: string, signal?: AbortSignal): Promise<IntakeRecord> {

@@ -13,6 +13,7 @@ from app.schemas.household import Amount, DateType, FoodSource, IdempotencyKey, 
 class IntakeSource(StrEnum):
     MANUAL = "MANUAL"
     TEXT = "TEXT"
+    PHOTO = "PHOTO"
 
 
 def _parse_iso_date(value: object) -> object:

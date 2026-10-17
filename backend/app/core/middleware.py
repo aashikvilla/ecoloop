@@ -8,9 +8,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 class RequestBoundaryMiddleware:
     """Adds request metadata and bounds streamed request bodies without buffering them."""
 
-    def __init__(self, app, max_request_bytes: int):
+    def __init__(self, app, max_request_bytes: int, max_photo_bytes: int):
         self.app = app
         self.max_request_bytes = max_request_bytes
+        self.max_photo_bytes = max_photo_bytes
 
     async def __call__(self, scope, receive, send):
         if scope["type"] != "http":
@@ -23,6 +24,9 @@ class RequestBoundaryMiddleware:
             (value.decode("latin-1") for key, value in scope.get("headers", []) if key.lower() == b"content-length"),
             None,
         )
+        path = scope.get("path", "")
+        is_photo_intake = path.endswith("/intakes/photo")
+        request_limit = self.max_photo_bytes if is_photo_intake else self.max_request_bytes
         if content_length is not None:
             try:
                 declared_length = int(content_length)
@@ -31,7 +35,7 @@ class RequestBoundaryMiddleware:
             except ValueError:
                 await self._send_error(send, 400, "INVALID_CONTENT_LENGTH", "The request could not be processed.", request_id)
                 return
-            if declared_length > self.max_request_bytes:
+            if declared_length > request_limit:
                 await self._send_error(send, 413, "PAYLOAD_TOO_LARGE", "The request exceeds the allowed size.", request_id)
                 return
 
@@ -42,7 +46,7 @@ class RequestBoundaryMiddleware:
             message = await receive()
             if message["type"] == "http.request":
                 total_bytes += len(message.get("body", b""))
-                if total_bytes > self.max_request_bytes:
+                if total_bytes > request_limit:
                     raise StarletteHTTPException(status_code=413)
             return message
 
