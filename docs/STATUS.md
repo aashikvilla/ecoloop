@@ -2,6 +2,16 @@
 
 Updated 17 October 2026 after the Cloud Run backend first release. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
 
+## Deployed household creation acceptance — 17 October 2026
+
+- The deployed account page showed a generic household-service error after sign-in. Root cause: the API verifies Firebase ID-token revocation with `check_revoked=True`, which performs an Auth user lookup; `ecoloop-api-runtime` had Firestore access but lacked `firebaseauth.users.get`.
+- Created project custom role `ecoloopFirebaseAuthUserLookup` with only `firebaseauth.users.get` and bound it to `ecoloop-api-runtime@ecoloop-staging-20261015.iam.gserviceaccount.com`. No broad Firebase Auth viewer/admin role was granted. No code revision or environment variable change was needed.
+- Deployed browser acceptance at `https://ecoloop-web-4wlelpcnca-el.a.run.app/account`: the signed-in test account `judge-demo@ecoloop.example` loaded its two existing memberships, showed “Create another household,” and completed the two-step creation flow. The API returned the created household as owner and the page showed “Household created and selected for this tab.”
+- Created synthetic demo household `EcoLoop Demo Home`, ID `df315b081a18471197b70b074cf7735a`. This is a real Firestore write under the explicitly synthetic judge account; it does not contain demo food records yet.
+- Both Cloud Run services route 100% traffic to the `rel-37179c60755d` revisions. API health is HTTP 200. Its current health response reports the assistant provider unavailable/disabled, unmanaged in-memory sessions and no managed Memory Bank; the IAM fix does not enable AI.
+- GitHub remote branches were checked: only `main` remains. PRs #1 and #2 are merged. `git worktree list` reports only the primary checkout. One stale local feature branch has a squash-equivalent change already on `main`; older local branch refs are recovery history, not remote branches.
+- The Cloud Run main-branch auto-deploy workflow remains configured. This fix was IAM-only and the already deployed frontend/backend revisions did not need rebuilding. No `.env` files or secret values were read.
+
 ## Cloud Run deployment follow-up — 17 October 2026
 
 - Cloud Run, Cloud Build, Artifact Registry, and Secret Manager APIs are enabled in `ecoloop-staging-20261015` (`asia-south1`). The existing billing account is open and the project is linked; EcoLoop was the only linked project returned. A ₹2,000 monthly all-services alert and the Gemini-specific ₹2,000 control were observed. The all-services budget is an alert, not a hard cap.
