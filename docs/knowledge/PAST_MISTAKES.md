@@ -6,7 +6,7 @@ Observation: outcome recording can legitimately reduce a known balance to zero, 
 
 ## 2026-10-17 — Existing browser tabs can retain an old production page
 
-Observation: after rebuilding and restarting the local Next production server, the already-open browser tab still displayed its prior scripted page, while a new tab on the same port loaded the API-only build. Prevention: refresh or open a fresh tab after replacing a production build; do not use an existing tab's DOM as proof that a server restart changed the page.
+Observation: after rebuilding and restarting the local Next production server, an already-open browser tab still displayed its prior scripted page, while a new tab on the same port loaded the API-only build. A later check also found separate local servers on ports 3002 and 3003, with the browser still on the scripted 3002 app and the integrated routes served from 3003. Prevention: verify the intended port and route after replacing or starting a server; do not use an old tab's DOM as proof that the current build loaded.
 
 ## 2026-10-17 — Cross-worktree dependency junctions can mutate the source checkout
 

@@ -1,6 +1,6 @@
 # EcoLoop implementation status
 
-Updated 17 October 2026. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+Updated 17 October 2026, 01:14 UTC. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
 
 ## Local application
 
@@ -8,6 +8,7 @@ Updated 17 October 2026. This repository file is a snapshot, not the live MVPTas
 - Manual/text capture creates candidate-only intake records; `/kitchen/review` loads, edits and explicitly confirms selected candidates through an atomic backend operation. A synthetic live journey created two candidates, edited one, partially confirmed it, then confirmed the remaining candidate and read both facts back from Kitchen. The UI confirmation flag remains false by default and was enabled only in a temporary local server process for this acceptance. Kitchen item detail now has a default-off correction/recheck flow using the versioned fact-confirm command; only code checks have run for that flow, with no live mutation. Photo extraction, proposal approval and managed preference controls remain unavailable. The detail page still explains the list limit and freshness uncertainty and points to existing Account outcome/sharing controls. Account includes manual fact confirmation, shopping commands, owner-reported outcome and private-sharing controls, plus paginated private-history reads.
 - Firebase browser sign-in supports Email/Password and Google. A synthetic Email/Password account (`judge-demo@ecoloop.example`, UID `ecoloop-judge-demo`) matches the seeded membership and has been used for authenticated reads. The account UI now offers a minimal “Just me” household onboarding flow and sign-out. A second synthetic household was created through the authenticated API and read back successfully; sign-out returned to signed-out UI state.
 - The API enforces Firebase identity plus active household membership and exposes Firestore-backed reads/commands. Local settings load the ignored `backend/.env`; no environment file was inspected during this pass. A prior bounded local Ask call returned a validated Gemini meal card. The latest read-only local health response reports Gemini configured but assistant disabled, with runtime check not performed. Release defaults and browser command writes remain disabled.
+- Runtime recheck: the open browser tab at `http://127.0.0.1:3002/ask` still renders the scripted browser-only demo. Read-only HTTP inspection returned 500 for `/kitchen/add` on port 3002, while the integrated API-backed app on port 3003 returned 200 for that route. Local API health on port 8001 remains healthy with the assistant disabled. No browser write or provider request was made; use port 3003 for the current integration.
 
 ## Cloud state
 

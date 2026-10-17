@@ -30,3 +30,9 @@ The photo gate audit found `storage.rules` denies all object access, `firebase.j
 ## Continuation pointers
 
 See [current status](../../STATUS.md), [implementation plan](../../planning/IMPLEMENTATION_PLAN.md), [parallel execution](../../planning/PARALLEL_EXECUTION.md), [architecture](../ARCHITECTURE.md), [decisions](../DECISIONS.md), and [correction evidence](../../evidence/item-correction-2026-10-17/README.md).
+
+## Runtime port recheck — 01:14 UTC
+
+The open in-app browser tab still points to `http://127.0.0.1:3002/ask`; its accessibility tree shows the scripted `DEMO · LOCAL ONLY` Ask page. Read-only HTTP requests returned 500 for `/kitchen/add` on port 3002 and 200 for the same route on port 3003, where the integrated API-backed app is served. The API health endpoint on port 8001 returned healthy, with Gemini configured but disabled and runtime unchecked. No provider request or database mutation was made.
+
+The browser automation policy rejected selecting the existing port-3003 tab. No alternate browser-control path was attempted. Interactive acceptance therefore remains pending; open port 3003 in the browser before continuing item-correction writes. The command flag remains off in the default app configuration.
