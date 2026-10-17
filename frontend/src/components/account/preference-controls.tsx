@@ -116,8 +116,15 @@ function PreferenceSession({ auth, user }: { auth: "loading" | "unavailable" | "
 
   useEffect(() => {
     let active = true;
+    const effectUid = auth === "signed-in" ? user?.uid ?? "" : "";
+    uidRef.current = effectUid;
     if (auth === "signed-in" && user) queueMicrotask(() => { if (active) void load(); });
-    return () => { active = false; uidRef.current = ""; readRef.current?.abort(); writeRef.current?.abort(); };
+    return () => {
+      active = false;
+      if (uidRef.current === effectUid) uidRef.current = "";
+      readRef.current?.abort();
+      writeRef.current?.abort();
+    };
   }, [auth, user, load]);
 
   async function submit(change: Attempt) {

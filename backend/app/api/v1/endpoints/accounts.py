@@ -18,7 +18,7 @@ def list_my_households(request: Request, uid: str = Depends(authenticated_uid)) 
     db = get_firestore()
     try:
         memberships = db.collection_group("members").where(filter=FieldFilter("uid", "==", uid)).limit(200).stream()
-        result = []
+        active_memberships = []
         for membership in memberships:
             data = membership.to_dict() or {}
             if data.get("uid") != uid or data.get("status") != "ACTIVE" or data.get("role") not in {"OWNER", "MEMBER"}:
@@ -26,11 +26,24 @@ def list_my_households(request: Request, uid: str = Depends(authenticated_uid)) 
             household_ref = membership.reference.parent.parent
             if household_ref is None:
                 continue
-            household = household_ref.get()
-            household_data = household.to_dict() if household.exists else None
+            active_memberships.append((household_ref, data["role"]))
+
+        household_snapshots = (
+            {
+                snapshot.reference.path: snapshot
+                for snapshot in db.get_all([household_ref for household_ref, _ in active_memberships])
+                if snapshot is not None
+            }
+            if active_memberships
+            else {}
+        )
+        result = []
+        for household_ref, role in active_memberships:
+            household = household_snapshots.get(household_ref.path)
+            household_data = household.to_dict() if household is not None and household.exists else None
             name = household_data.get("name") if household_data else None
             if isinstance(name, str) and name.strip():
-                result.append({"household_id": household_ref.id, "name": name, "role": data["role"]})
+                result.append({"household_id": household_ref.id, "name": name, "role": role})
     except Exception as exc:
         raise DomainError("DATA_UNAVAILABLE", "Your household list is unavailable.", 503, True) from exc
     result.sort(key=lambda row: (row["name"].casefold(), row["household_id"]))

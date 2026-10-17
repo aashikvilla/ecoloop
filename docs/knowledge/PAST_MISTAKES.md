@@ -13,6 +13,12 @@ Observation: updating `Session.state` on a session returned by `InMemorySessionS
 Observation: household history endpoints are paginated. A count or quantity from the first page can look like a complete household total if its coverage is not stated. Share offers also describe a different state from completed handovers.
 Pattern: summarize only fetched records, label the loaded-page scope and expose continuation when another page exists. Keep offers separate from outcome events, and add quantities only when their recorded measurement basis and units support the same total.
 
+## 2026-10-17 — Effect replay must restore identity-scoped refs
+
+Observation: a React StrictMode cleanup cleared the UID ref used by the next effect setup to accept or reject private-read results. The request completed, but both success and error paths discarded it and the Settings page stayed loading.
+
+Pattern: initialize identity-scoped refs in every effect setup. A cleanup should clear a shared ref only when it still owns that value, so stale cleanup cannot erase a newer setup's scope. Verify loading, empty and error states through the actual development browser, where StrictMode replays effects.
+
 ## 2026-10-17 — Correction commands must preserve zero and unknown provenance
 
 Observation: outcome recording can legitimately reduce a known balance to zero, while the fact-confirm input schema initially accepted only positive amounts. The same schema also allowed a date source when the date was unknown. Prevention: make correction schemas reflect every valid persisted state, and enforce unknown/date-source consistency at the API boundary as well as in UI builders.

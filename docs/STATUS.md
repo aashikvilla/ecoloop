@@ -1,6 +1,17 @@
 # EcoLoop implementation status
 
-Updated 17 October 2026 after local Agent Platform integration work. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+Updated 17 October 2026 after the authenticated local browser follow-up. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+
+## Latest local follow-up — 17 October 2026
+
+- Current integration base `59f2f80` is pushed on `codex/demo-integration`; the follow-up checkpoint is being finalized. PR #1 is open, draft, and has no reported check runs; `main` is not being merged from this local browser pass.
+- In the signed-in browser, the API-backed household list loaded two existing memberships. The selected synthetic household loaded Home, Kitchen (four records), Shop (one record), Activity (zero recorded outcomes/offers) and Settings (empty private preferences). This is selective read-only browser evidence, not full feature acceptance. No account/household or record mutation and no new AI request occurred in this pass.
+- Fixed the Settings preference loader's React StrictMode replay: each effect setup restores the current UID, and cleanup clears it only while that effect still owns the ref. The empty preferences response then rendered instead of remaining in loading state. Also replaced contradictory Settings copy that said a signed-in user needed to sign in.
+- Household discovery now batches the bounded parent-document fetch after validating active memberships, skips missing parent documents and avoids an empty batch call. Backend compile, frontend lint, TypeScript and `git diff --check` passed for this checkpoint.
+- AI health reports configured/enabled Gemini Developer API but `runtime_check=not_performed`, unmanaged in-process sessions and managed Sessions/Memory unavailable. No model request was sent in this pass. Managed Runtime/Sessions/Memory, private-media lifecycle, full mutation acceptance, Cloud Run/App Hosting deployment and live MVPTasks reconciliation remain open.
+- The owner selected ₹2,000 for the all-services monthly budget alert. It is an alert, not a guaranteed spend cap; billing-account linkage, credits and all linked projects remain incompletely verified.
+
+See [the authenticated browser follow-up journal](knowledge/sessions/2026-10-17-authenticated-browser-followup.md) for exact scope and checks.
 
 ## Latest local coding checkpoint — 17 October 2026
 
