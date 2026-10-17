@@ -21,6 +21,14 @@ Observed screen reads:
 
 These are selective read-only screen observations. They do not establish sign-in/onboarding writes, command acceptance, all-route accessibility, photo extraction, durable AI response, managed services, or whole-journey acceptance. A prior bounded Gemini response and history readback are recorded separately; they are not new evidence from this pass.
 
+### Read-only route and process check
+
+A fresh local browser tab completed the existing Google sign-in and loaded two Firebase-backed household memberships. After selecting the existing “EcoLoop Demo Kitchen” and using the in-app Kitchen link (client-side navigation), Kitchen showed four API-returned records and no mock fallback. A signed-out direct Kitchen load showed the “Sign in to continue” gate with no records. The household selection is in-memory tab state: it survives in-app navigation but clears on a full reload/direct route navigation, after which the owner must select it again.
+
+Only frontend port 3000 (PID 7768) and FastAPI port 8001 (PID 2464) were listening. Ports 3001, 3002, 3003 and 8002 were unavailable. An already-open port-3002 tab still displayed the older scripted-demo DOM, so it was stale content and not a live server; use `http://127.0.0.1:3000` for the integrated app. The signed-in tab was left open on `/account` with the existing household selected.
+
+The health endpoint returned `healthy`, Gemini Developer API configured/enabled, `runtime_check=not_performed`, unmanaged in-memory sessions, and Managed Sessions/Memory false. This endpoint does not probe the provider. The browser check performed sign-in and household selection only; it did not create/update records, send an AI prompt, or call a managed service.
+
 ## Local changes
 
 - `frontend/src/components/account/preference-controls.tsx`: React StrictMode replays effect setup/cleanup in development. Cleanup cleared `uidRef`, then the replacement read's success and error handlers both discarded their result, leaving Settings loading. Each effect setup now restores its captured UID, and cleanup clears the ref only if it still belongs to that effect. The existing in-flight request abort behavior remains.

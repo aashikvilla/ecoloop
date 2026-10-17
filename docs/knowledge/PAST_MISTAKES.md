@@ -19,6 +19,12 @@ Observation: a React StrictMode cleanup cleared the UID ref used by the next eff
 
 Pattern: initialize identity-scoped refs in every effect setup. A cleanup should clear a shared ref only when it still owns that value, so stale cleanup cannot erase a newer setup's scope. Verify loading, empty and error states through the actual development browser, where StrictMode replays effects.
 
+## 2026-10-17 — Stale browser DOM is not a running app
+
+Observation: an open localhost tab on port 3002 still displayed the old scripted demo after the server on that port had stopped. Relying on the tab alone made it look like multiple app instances were live.
+
+Pattern: confirm listening ports and make a fresh HTTP request before identifying the active local build. Treat a retained DOM from a closed server as stale; direct users to the one verified app origin and record the API port separately.
+
 ## 2026-10-17 — Correction commands must preserve zero and unknown provenance
 
 Observation: outcome recording can legitimately reduce a known balance to zero, while the fact-confirm input schema initially accepted only positive amounts. The same schema also allowed a date source when the date was unknown. Prevention: make correction schemas reflect every valid persisted state, and enforce unknown/date-source consistency at the API boundary as well as in UI builders.
