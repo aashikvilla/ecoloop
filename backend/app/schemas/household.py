@@ -79,7 +79,7 @@ class FoodObservationInput(StrictModel):
     item_id: OpaqueId
     base_version: Annotated[StrictInt, Field(ge=0)]
     name: ItemName
-    amount: Amount | None = None
+    amount: NonNegativeAmount | None = None
     unit: UnitName | None = None
     date_value: date | None = None
     date_type: DateType = DateType.UNKNOWN
@@ -93,6 +93,8 @@ class FoodObservationInput(StrictModel):
             raise ValueError("amount and unit must be provided together")
         if (self.date_value is None) != (self.date_type == DateType.UNKNOWN):
             raise ValueError("date_value and a known date_type must be provided together")
+        if self.date_value is None and self.date_source is not None:
+            raise ValueError("unknown dates must not include a date_source")
         if self.date_value is not None and self.date_source is None:
             raise ValueError("date_source is required when a date is provided")
         return self
