@@ -17,6 +17,10 @@ Pattern: summarize only fetched records, label the loaded-page scope and expose 
 
 The frontend Cloud Build requested `linux/amd64`, but its pinned Node digest was the `linux/arm/v7` child manifest. Local builds passed while the remote container failed at `COPY` with an architecture mismatch. When a build pins a multi-platform image, use the verified target-platform child digest or the index digest with explicit platform resolution; check Cloud Build's resolved OS/architecture before attributing failure to app code.
 
+## 2026-10-17 — Keep authentication failures diagnosable
+
+An account screen collapsed unrecognized Firebase sign-in errors into one generic message, so an enabled provider and authorized domain could not establish why the user was blocked. Map common codes to safe actions and expose only a validated provider error code for unknown cases; never surface raw messages, stacks, or credentials. See [auth diagnostics](sessions/2026-10-17-auth-error-diagnostics.md).
+
 ## 2026-10-17 — Effect replay must restore identity-scoped refs
 
 Observation: a React StrictMode cleanup cleared the UID ref used by the next effect setup to accept or reject private-read results. The request completed, but both success and error paths discarded it and the Settings page stayed loading.
