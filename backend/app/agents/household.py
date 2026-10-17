@@ -24,6 +24,7 @@ from app.core.errors import DomainError
 from app.core.firestore import get_firestore
 from app.core.identity import Principal
 from app.agents.memory_bank import memory_bank_status, retrieve_approved_preferences
+from app.domain.ai_usage import claim_daily_ai_request
 from app.domain.preferences import list_preferences
 from app.domain.repository import list_shopping_entries
 from app.schemas.household import AssistantEnvelope, AssistantTurnRequest, DateType, ProposalCard
@@ -754,6 +755,7 @@ async def generate_household_turn(
         if isinstance(sessions, VertexAiSessionService) and not re.fullmatch(r"[A-Za-z0-9_-]+", session_id):
             managed_session_id = "s-" + hashlib.sha256(session_id.encode("utf-8")).hexdigest()
         await _prepare_session(sessions, user_id=user_id, session_id=managed_session_id, principal=principal)
+        await asyncio.to_thread(claim_daily_ai_request, principal.uid)
         async with asyncio.timeout(settings.AGENT_REQUEST_TIMEOUT_SECONDS):
             events = [
                 event

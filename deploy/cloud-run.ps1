@@ -9,8 +9,14 @@ param(
     [string]$RuntimeServiceAccount,
     [string]$FrontendOrigin,
     [string]$GeminiApiSecretRef,
+    [string]$AgentProvider = "gemini_api",
+    [string]$AgentModel = "gemini-3.1-flash-lite",
+    [int]$AiDailyRequestLimit = 12,
+    [int]$AgentRequestTimeoutSeconds = 20,
+    [int]$AgentMaxOutputTokens = 4096,
     [string]$Revision,
     [switch]$AllowUnauthenticated,
+    [switch]$EnableAssistant,
     [switch]$Apply
 )
 
@@ -48,6 +54,12 @@ if ($Mode -eq "Deploy") {
     if ([string]::IsNullOrWhiteSpace($RuntimeServiceAccount) -or $RuntimeServiceAccount -notmatch $serviceAccountPattern -or $RuntimeServiceAccount -match "^firebase-adminsdk") {
         throw "Deploy requires a dedicated -RuntimeServiceAccount in project $Project; Firebase Admin SDK and default service accounts are not accepted."
     }
+    if ($EnableAssistant -and ([string]::IsNullOrWhiteSpace($GeminiApiSecretRef) -or $AgentProvider -ne "gemini_api")) {
+        throw "-EnableAssistant requires Gemini Developer API and an exact -GeminiApiSecretRef."
+    }
+    if ($AiDailyRequestLimit -lt 1 -or $AiDailyRequestLimit -gt 100) {
+        throw "-AiDailyRequestLimit must be between 1 and 100."
+    }
     $parsedOrigin = $null
     if (-not [System.Uri]::TryCreate($FrontendOrigin, [System.UriKind]::Absolute, [ref]$parsedOrigin) -or $parsedOrigin.Scheme -ne "https" -or [string]::IsNullOrWhiteSpace($parsedOrigin.Host) -or -not [string]::IsNullOrEmpty($parsedOrigin.UserInfo) -or $parsedOrigin.AbsolutePath -ne "/" -or -not [string]::IsNullOrEmpty($parsedOrigin.Query) -or -not [string]::IsNullOrEmpty($parsedOrigin.Fragment)) {
         throw "Deploy requires one exact HTTPS -FrontendOrigin (scheme and host only), such as https://app.example.com."
@@ -56,7 +68,17 @@ if ($Mode -eq "Deploy") {
     $environment = [ordered]@{
         FIREBASE_PROJECT_ID = $Project
         GOOGLE_CLOUD_PROJECT = $Project
-        AGENT_ENABLED = "false"
+        AGENT_ENABLED = if ($EnableAssistant) { "true" } else { "false" }
+        AGENT_PROVIDER = $AgentProvider
+        AGENT_MODEL = $AgentModel
+        AGENT_SESSION_STORE = "in_memory"
+        AGENT_SESSION_IDLE_TTL_SECONDS = "86400"
+        AGENT_MEMORY_BANK_ENABLED = "false"
+        AGENT_REQUEST_TIMEOUT_SECONDS = $AgentRequestTimeoutSeconds.ToString()
+        AGENT_MAX_OUTPUT_TOKENS = $AgentMaxOutputTokens.ToString()
+        AI_DAILY_REQUEST_LIMIT = $AiDailyRequestLimit.ToString()
+        MAX_REQUEST_BYTES = "256000"
+        MAX_PHOTO_BYTES = "2000000"
         BACKEND_CORS_ORIGINS = (ConvertTo-Json -InputObject ([object[]]@($parsedOrigin.GetLeftPart([System.UriPartial]::Authority))) -Compress)
     }
     $environmentFile = Join-Path ([System.IO.Path]::GetTempPath()) ("ecoloop-cloud-run-env-{0}.json" -f [guid]::NewGuid().ToString("N"))
