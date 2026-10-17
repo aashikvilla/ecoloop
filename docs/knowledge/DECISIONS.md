@@ -51,3 +51,7 @@ The 16 October note below records the state observed before the owner enabled bi
 ## Agent Platform local adapter boundary (2026-10-17)
 
 Keep Google managed Sessions and Memory Bank opt-in and disabled by default. The existing ADK orchestrator may use `VertexAiSessionService` only with a configured existing Agent Engine resource; health must label it configured-but-unverified until a real managed request and isolation check succeed. Firestore remains the source of truth. Memory Bank receives only explicitly consented saved preference facts and may supply assistant context only after each candidate is matched to the current owner-scoped Firestore record. Retain deletion tombstones until managed cleanup is confirmed; show unavailable/reconciliation state and allow explicit retry. No transcript ingestion or provider probe from health/GET. See [implementation session](sessions/2026-10-17-agent-platform-local-implementation.md).
+
+## Minimal PWA installability and reminder boundary (2026-10-17)
+
+Expose a manifest, platform icons and browser-supported installation prompt without adding a service worker: the current household app has authenticated data and no approved offline contract, so no runtime cache is introduced. Reminder readiness remains unavailable for push/email until a real device subscription and backend delivery/scheduler exist. Existing confirmed dates and last-check prompts stay in-app; browser notification permission is not presented as delivery readiness. See [PWA session](sessions/2026-10-17-pwa-reminders.md).

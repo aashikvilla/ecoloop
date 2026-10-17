@@ -39,18 +39,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   return <div className="min-h-screen bg-background text-foreground">
     <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
     <header className="sticky top-0 z-30 border-b border-line/70 bg-background/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-4 sm:px-7">
+      <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-4 md:px-7">
         <Link href="/" aria-label="EcoLoop home" className="flex items-center gap-2.5 rounded-xl">
           <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary"><Icon name="leaf" size={22} /></span>
           <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-tight text-primary">EcoLoop</span><span className="block text-[11px] font-medium text-muted">My kitchen</span></span>
         </Link>
         <div className="flex items-center gap-2">
-          <Badge tone="amber" className="text-[9px] sm:text-xs">{statusLabel}</Badge>
+          <Badge tone="amber" className="text-[9px] md:text-xs">{statusLabel}</Badge>
           <Link href="/settings" aria-label="Open settings" className={`flex size-11 items-center justify-center rounded-full transition-colors hover:bg-surface-muted ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted"}`}><Icon name="settings" size={20} /></Link>
         </div>
       </div>
     </header>
-    <div className="mx-auto min-h-[calc(100vh-68px)] max-w-6xl px-4 pb-28 pt-5 sm:ml-[208px] sm:px-7 sm:pb-12 sm:pt-8">
+    <div className="mx-auto min-h-[calc(100vh-68px)] max-w-6xl px-4 pb-28 pt-5 md:ml-[208px] md:px-7 md:pb-12 md:pt-8">
       <main id="main-content">
         {accountPage || !canonicalPage && !settingsPage && !intakePage || settingsPage && household.auth === "signed-in" || household.auth === "signed-in" && household.householdId
           ? children
@@ -62,8 +62,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </section>}
       </main>
     </div>
-    <div className="fixed inset-x-0 bottom-3 z-40 mx-auto w-full max-w-[460px] px-4 safe-bottom sm:hidden"><DestinationNav pathname={pathname} /></div>
-    <aside className="fixed inset-y-0 left-0 z-20 hidden w-[208px] border-r border-line/70 bg-background px-4 pt-24 sm:block">
+    <div className="fixed inset-x-0 bottom-3 z-40 mx-auto w-full max-w-[460px] px-4 safe-bottom md:hidden"><DestinationNav pathname={pathname} /></div>
+    <aside className="fixed inset-y-0 left-0 z-20 hidden w-[208px] border-r border-line/70 bg-background px-4 pt-24 md:block">
       <p className="mb-3 px-3 text-[10px] font-extrabold uppercase tracking-[.16em] text-muted">Your kitchen</p>
       <nav aria-label="Main navigation" className="space-y-1">
         {destinations.map(({ href, label, icon }) => {
