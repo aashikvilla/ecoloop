@@ -15,4 +15,6 @@ Frontend foundation: Tailwind CSS v4 `@theme` in `frontend/src/app/globals.css` 
 
 Latest ADK tool slice: [authenticated pantry and active shopping reads](sessions/2026-10-17-adk-read-tools.md). Local opt-in managed Sessions and consented Memory Bank adapters are now present, but no managed resource call, live tool trace, or two-session memory acceptance has been verified. Managed Agent Runtime remains absent.
 
+Current hackathon fit, rubric estimate and AI deployment caveats: [hackathon rules and AI acceptance review](sessions/2026-10-17-hackathon-rules-review.md). Product HLD/LLD diagram: [PRODUCT_HLD_LLD.md](../architecture/PRODUCT_HLD_LLD.md). Vertex is configured on the isolated AI-test revision; the two Cloud Run ADK turns timed out and product acceptance remains open. See [AI enablement session](sessions/2026-10-17-ai-enable-and-architecture.md).
+
 Activity now summarizes fetched outcome records and owner-private share offers from canonical APIs. It adds only measured quantities sharing the same recorded unit, reports estimated and unknown observations separately, and labels totals as summaries of the loaded page. It does not calculate a composite sustainability score or claim waste prevented/environmental savings.
