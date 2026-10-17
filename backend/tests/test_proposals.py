@@ -122,6 +122,14 @@ class ProposalActionTests(unittest.TestCase):
         self.assertEqual(saved.cards[0].version, 1)
         self.assertEqual(transaction.create.call_count, 2)
 
+    def test_overlong_agent_card_list_is_rejected_without_partial_history(self):
+        envelope = AssistantEnvelope(request_id="req", message="Four options", cards=[card() for _ in range(4)])
+        with patch("app.domain.proposals.get_firestore") as get_store:
+            with self.assertRaises(DomainError) as context:
+                persist_turn(self.principal, AssistantTurnRequest(text="What should I buy?"), envelope)
+        self.assertEqual(context.exception.status_code, 502)
+        get_store.assert_not_called()
+
 
 def result_time(transaction):
     return transaction.update.call_args_list[0].args[1]["resolved_at"]

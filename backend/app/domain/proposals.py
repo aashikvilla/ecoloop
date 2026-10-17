@@ -41,11 +41,13 @@ def _turns(db: Any, principal: Principal) -> Any:
 
 def persist_turn(principal: Principal, request: AssistantTurnRequest, envelope: AssistantEnvelope) -> AssistantEnvelope:
     """Receive validated agent output on the server; the browser cannot submit a card receipt."""
+    if len(envelope.cards) > 3:
+        raise DomainError("AGENT_INVALID_RESPONSE", "The assistant returned too many proposals. Please retry.", 502, True)
     db = get_firestore()
     now = datetime.now(timezone.utc)
     expires_at = now + PROPOSAL_LIFETIME
     cards = []
-    for source in envelope.cards[:3]:
+    for source in envelope.cards:
         # The agent's IDs, versions, and expiry have no authority over durable records.
         card = source.model_copy(update={
             "proposal_id": uuid.uuid4().hex,
