@@ -35,3 +35,7 @@ Use one named Google Cloud/Firebase project and one environment for the hackatho
 ## Require explicit local assistant activation (2026-10-17)
 
 Load local backend settings from the ignored `backend/.env` for development, with process environment taking precedence. Provider credentials and automatic provider selection do not authorize model calls: `AGENT_ENABLED` defaults to false and must be set true explicitly. Health reports the selected configured provider and activation state without validating credentials or calling a provider. Managed Sessions, Memory Bank and managed Agent Runtime remain separate unfinished requirements.
+
+## Archive removed shopping entries (2026-10-17)
+
+Shop removal is a versioned soft archive, scoped to the active household and authenticated actor, with an idempotent retry record. The active-list read filters archived rows after its existing bounded query, so removal preserves history without adding a Firestore index or changing Kitchen stock. A removal is reviewed explicitly before the command is sent.

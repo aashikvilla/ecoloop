@@ -31,7 +31,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const household = useLiveHousehold();
   const accountPage = pathname === "/account" || pathname.startsWith("/account/");
   const itemDetailPage = /^\/kitchen\/items\/[^/]+$/.test(pathname);
-  const canonicalPage = ["/", "/kitchen", "/ask", "/shop", "/activity"].includes(pathname) || itemDetailPage;
+  const itemActionPage = /^\/kitchen\/items\/[^/]+\/(share|outcome)$/.test(pathname);
+  const canonicalPage = ["/", "/kitchen", "/ask", "/shop", "/activity"].includes(pathname) || itemDetailPage || itemActionPage;
   const settingsPage = pathname === "/settings";
   const intakePage = pathname === "/kitchen/add" || pathname === "/kitchen/review";
   const statusLabel = accountPage ? "HOUSEHOLD ACCOUNT" : canonicalPage ? "HOUSEHOLD DATA" : intakePage ? "KITCHEN INTAKE" : settingsPage ? "HOUSEHOLD SETTINGS" : "FEATURE UNAVAILABLE";
@@ -51,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     </header>
     <div className="mx-auto min-h-[calc(100vh-68px)] max-w-6xl px-4 pb-28 pt-5 sm:ml-[208px] sm:px-7 sm:pb-12 sm:pt-8">
       <main id="main-content">
-        {accountPage || !canonicalPage && !settingsPage && !intakePage || household.auth === "signed-in" && household.householdId
+        {accountPage || !canonicalPage && !settingsPage && !intakePage || settingsPage && household.auth === "signed-in" || household.auth === "signed-in" && household.householdId
           ? children
           : <section className="mx-auto max-w-xl rounded-card border border-line bg-surface p-6 shadow-card" aria-live="polite">
             <p className="text-xs font-bold uppercase tracking-wide text-secondary">Household access</p>
@@ -73,7 +74,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Link href="/activity" className={`mt-7 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/activity" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="clock" size={19} />Activity</Link>
       <Link href="/settings" className={`mt-1 flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name="settings" size={19} />Settings</Link>
       <div className="absolute inset-x-4 bottom-6 rounded-2xl bg-primary-container p-4 text-white">
-        <p className="text-xs font-bold">{accountPage ? "Account connection" : itemDetailPage ? "Kitchen item" : canonicalPage ? "Household records" : intakePage ? "Kitchen intake" : settingsPage ? "Household settings" : "Unavailable feature"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{itemDetailPage ? "Item details show the latest confirmed household record; outcomes and private sharing remain in Account." : accountPage || canonicalPage ? "Live records require sign-in, household membership and an available API." : intakePage ? "Candidate drafts stay separate until you explicitly confirm selected details." : settingsPage ? "Managed preference controls are not connected." : "This item route has no canonical flow yet."}</p>
+        <p className="text-xs font-bold">{accountPage ? "Account connection" : itemActionPage ? "Kitchen action" : itemDetailPage ? "Kitchen item" : canonicalPage ? "Household records" : intakePage ? "Kitchen intake" : settingsPage ? "Household settings" : "Unavailable feature"}</p><p className="mt-1 text-xs leading-relaxed text-white/75">{itemActionPage ? "Actions use current household records and require an explicit review before any command is sent." : itemDetailPage ? "Item details show the latest confirmed household record; choose an outcome or private share action for this item." : accountPage || canonicalPage ? "Live records require sign-in, household membership and an available API." : intakePage ? "Candidate drafts stay separate until you explicitly confirm selected details." : settingsPage ? "Personal preference controls require sign-in and remain separate from household records." : "This item route has no canonical flow yet."}</p>
       </div>
     </aside>
   </div>;

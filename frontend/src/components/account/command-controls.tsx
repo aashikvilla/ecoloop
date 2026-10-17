@@ -11,14 +11,17 @@ import { CanonicalApiError, canonicalRequest } from "@/lib/canonical-transport";
 import {
   buildFoodObservationCommand,
   buildShoppingCommand,
+  buildShoppingArchiveCommand,
   CommandValidationError,
   createIdempotencyKey,
   createOpaqueId,
   parseFoodConfirmationResult,
   parseShoppingSaveResult,
+  parseShoppingArchiveResult,
   type FoodDraft,
   type FoodObservationCommand,
   type ShoppingCommand,
+  type ShoppingArchiveCommand,
   type ShoppingDraft,
 } from "@/lib/canonical-commands";
 
@@ -27,11 +30,14 @@ export type CanonicalCommandControlsProps = {
   householdId: string;
   enabled: boolean;
   onCommitted: () => void;
+  showKitchen?: boolean;
+  initialShoppingEntryId?: string;
 };
 
 type PendingCommand =
   | { kind: "kitchen"; command: FoodObservationCommand; status: "ready" | "ambiguous" | "conflict" | "rejected" }
-  | { kind: "shopping"; command: ShoppingCommand; status: "ready" | "ambiguous" | "conflict" | "rejected" };
+  | { kind: "shopping"; command: ShoppingCommand; status: "ready" | "ambiguous" | "conflict" | "rejected" }
+  | { kind: "shopping-archive"; command: ShoppingArchiveCommand; itemName: string; status: "ready" | "ambiguous" | "conflict" | "rejected" };
 
 type WriteError = { message: string; code?: string; requestId?: string };
 type Operation = "load-kitchen" | "load-shopping" | "write-kitchen" | "write-shopping" | null;
@@ -51,7 +57,7 @@ function isAmbiguous(error: unknown): boolean {
   return true;
 }
 
-export function CanonicalCommandControls({ getIdToken, householdId, enabled, onCommitted }: CanonicalCommandControlsProps) {
+export function CanonicalCommandControls({ getIdToken, householdId, enabled, onCommitted, showKitchen = true, initialShoppingEntryId }: CanonicalCommandControlsProps) {
   const [kitchenRecords, setKitchenRecords] = useState<KitchenObservation[] | null>(null);
   const [shoppingRecords, setShoppingRecords] = useState<ShoppingEntry[] | null>(null);
   const [foodDraft, setFoodDraft] = useState<FoodDraft>(emptyFoodDraft);
@@ -66,7 +72,6 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
   const mountedRef = useRef(false);
   const scopeRef = useRef("");
   const scopeKey = `${enabled ? "enabled" : "disabled"}:${householdId}`;
-  scopeRef.current = scopeKey;
   const scopeReady = enabled && /^[A-Za-z0-9_-]{1,128}$/.test(householdId);
 
   useEffect(() => {
@@ -80,6 +85,7 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
   }, []);
 
   useEffect(() => {
+    scopeRef.current = scopeKey;
     requestRef.current?.abort();
     requestRef.current = null;
     operationRef.current = false;
@@ -114,8 +120,14 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
       } else {
         const records = response.records;
         setShoppingRecords(records);
-        if (discardPending && pending?.kind === "shopping") {
-          const selected = records.find((record) => record.entry_id === shoppingDraft.entryId);
+        if (initialShoppingEntryId && !discardPending) {
+          const initialRecord = records.find((record) => record.entry_id === initialShoppingEntryId);
+          setShoppingDraft(initialRecord ? shoppingDraftFromRecord(initialRecord) : emptyShoppingDraft());
+          if (!initialRecord) setNotice("This entry was not present in the latest shopping read. Add a new entry or reload the list.");
+        }
+        if (discardPending && (pending?.kind === "shopping" || pending?.kind === "shopping-archive")) {
+          const targetEntryId = pending.kind === "shopping-archive" ? pending.command.entry_id : shoppingDraft.entryId;
+          const selected = records.find((record) => record.entry_id === targetEntryId);
           setShoppingDraft(selected ? shoppingDraftFromRecord(selected) : { ...shoppingDraft, entryId: "", baseVersion: 0 });
           setPending(null);
           setWriteError(null);
@@ -169,6 +181,17 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
     } catch (error) { setWriteError(readableError(error)); }
   }
 
+  function reviewShoppingArchive(record: ShoppingEntry) {
+    if (!scopeReady || pending || operation || operationRef.current) return;
+    setWriteError(null);
+    setNotice("");
+    try {
+      const command = buildShoppingArchiveCommand(record.entry_id, record.version, createIdempotencyKey());
+      setShoppingDraft(shoppingDraftFromRecord(record));
+      setPending({ kind: "shopping-archive", command, itemName: record.item_name, status: "ready" });
+    } catch (error) { setWriteError(readableError(error)); }
+  }
+
   async function sendPending() {
     if (!scopeReady || !pending || operation || operationRef.current || pending.status === "conflict") return;
     const exactPending = pending;
@@ -191,7 +214,7 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
         setKitchenRecords(null);
         setFoodDraft(emptyFoodDraft());
         setNotice(`Kitchen record confirmed at version ${committed.itemVersion}. Reference ${committed.requestId}.`);
-      } else {
+      } else if (exactPending.kind === "shopping") {
         const response = await canonicalRequest("shopping", token, householdId, { method: "POST", body: exactPending.command, signal: controller.signal });
         if (!isCurrent(controller, currentScope)) return;
         const committed = parseShoppingSaveResult(response, exactPending.command);
@@ -199,6 +222,14 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
         setShoppingRecords(null);
         setShoppingDraft(emptyShoppingDraft());
         setNotice(`Shopping entry saved at version ${committed.entryVersion}. Reference ${committed.requestId}.`);
+      } else {
+        const response = await canonicalRequest("shopping-archive", token, householdId, { method: "PATCH", recordId: exactPending.command.entry_id, body: exactPending.command, signal: controller.signal });
+        if (!isCurrent(controller, currentScope)) return;
+        const committed = parseShoppingArchiveResult(response, exactPending.command);
+        setPending(null);
+        setShoppingRecords(null);
+        setShoppingDraft(emptyShoppingDraft());
+        setNotice(`${exactPending.itemName} was removed from the active list at version ${committed.entryVersion}. Kitchen stock was not changed. Reference ${committed.requestId}.`);
       }
       try {
         onCommitted();
@@ -253,7 +284,7 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
     {!enabled && <Card role="status" className="border border-line bg-surface-muted p-4 text-sm leading-relaxed text-muted">Household changes are not enabled for this app yet.</Card>}
     {enabled && !/^[A-Za-z0-9_-]{1,128}$/.test(householdId) && <Card role="status" className="border border-line bg-surface-muted p-4 text-sm leading-relaxed text-muted">Choose a valid household in the account section before loading or changing household records.</Card>}
 
-    <Card className="space-y-4 border border-line p-5 sm:p-6">
+    {showKitchen && <Card className="space-y-4 border border-line p-5 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><Heading as="h3">Kitchen fact</Heading><p className="mt-1 text-sm leading-relaxed text-muted">Create a new observation or edit a record read from this household. Known dates are labeled as user provided, and unknown dates stay unknown.</p></div><Button size="sm" variant="secondary" onClick={() => void loadRecords("kitchen")} disabled={!scopeReady || operation !== null || (pending !== null && pending.status !== "conflict")} aria-busy={operation === "load-kitchen"}>{operation === "load-kitchen" ? "Loading…" : "Load current kitchen"}</Button></div>
       {kitchenRecords && <p role="status" className="text-xs text-muted">{kitchenRecords.length === 0 ? "No current kitchen records." : `${kitchenRecords.length} current ${kitchenRecords.length === 1 ? "record" : "records"} loaded.`} Read again before editing after a conflict.</p>}
       <form onSubmit={reviewFood} className="space-y-4">
@@ -267,11 +298,12 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
         </fieldset>
         <Button type="submit" variant="secondary" disabled={locked}>Review kitchen confirmation</Button>
       </form>
-    </Card>
+    </Card>}
 
     <Card className="space-y-4 border border-line p-5 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><Heading as="h3">Shopping entry</Heading><p className="mt-1 text-sm leading-relaxed text-muted">Create or edit an entry in this household’s household shopping list. Saving a list entry does not imply a purchase or change kitchen stock.</p></div><Button size="sm" variant="secondary" onClick={() => void loadRecords("shopping")} disabled={!scopeReady || operation !== null || (pending !== null && pending.status !== "conflict")} aria-busy={operation === "load-shopping"}>{operation === "load-shopping" ? "Loading…" : "Load current shopping"}</Button></div>
       {shoppingRecords && <p role="status" className="text-xs text-muted">{shoppingRecords.length === 0 ? "No current shopping entries." : `${shoppingRecords.length} current ${shoppingRecords.length === 1 ? "entry" : "entries"} loaded.`} Read again before editing after a conflict.</p>}
+      {shoppingRecords && shoppingRecords.length > 0 && <ul aria-label="Remove shopping entries" className="space-y-2 rounded-2xl bg-surface-muted p-3">{shoppingRecords.map((record) => <li key={record.entry_id} className="flex flex-wrap items-center justify-between gap-2"><span className="min-w-0 text-sm"><span className="font-semibold">{record.item_name}</span><span className="ml-2 text-xs text-muted">version {record.version}</span></span><Button type="button" size="sm" variant="danger" disabled={locked} onClick={() => reviewShoppingArchive(record)} aria-label={`Review removal of ${record.item_name}`}>Remove from list</Button></li>)}</ul>}
       <form onSubmit={reviewShopping} className="space-y-4">
         <fieldset disabled={locked} className="space-y-4 disabled:opacity-70">
           {shoppingRecords && shoppingRecords.length > 0 && <div className="space-y-2"><label htmlFor="canonical-shopping-record" className="block text-sm font-semibold text-foreground">Entry to edit</label><select id="canonical-shopping-record" className="min-h-12 w-full rounded-control border border-line bg-white px-4 text-ink focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15" value={shoppingDraft.entryId} onChange={(event) => changeShoppingSelection(event.target.value)}><option value="">Create a new shopping entry</option>{shoppingRecords.map((record) => <option key={record.entry_id} value={record.entry_id}>{record.item_name} · version {record.version}</option>)}</select></div>}
@@ -287,23 +319,29 @@ export function CanonicalCommandControls({ getIdToken, householdId, enabled, onC
     {writeError && <Card role="alert" className="border border-danger/25 bg-danger-soft/40 p-4"><p className="text-sm font-semibold text-danger">{writeError.message}</p>{writeError.requestId && <p className="mt-1 text-xs text-muted">Request reference: {writeError.requestId}</p>}</Card>}
     {notice && <Card role="status" className="border border-primary/15 bg-primary-soft p-4 text-sm leading-relaxed text-primary">{notice}</Card>}
 
-    {pending && <PendingReview pending={pending} sending={operation === "write-kitchen" || operation === "write-shopping"} onConfirm={() => void sendPending()} onRetry={() => void sendPending()} onDiscardAndReload={() => void loadRecords(pending.kind, true)} canRetrySame={canRetrySame} />}
+    {pending && <PendingReview pending={pending} sending={operation === "write-kitchen" || operation === "write-shopping"} onConfirm={() => void sendPending()} onRetry={() => void sendPending()} onDiscardAndReload={() => void loadRecords(pending.kind === "kitchen" ? "kitchen" : "shopping", true)} canRetrySame={canRetrySame} />}
   </section>;
 }
 
 function PendingReview({ pending, sending, onConfirm, onRetry, onDiscardAndReload, canRetrySame }: { pending: PendingCommand; sending: boolean; onConfirm: () => void; onRetry: () => void; onDiscardAndReload: () => void; canRetrySame: boolean }) {
   const isFood = pending.kind === "kitchen";
+  const isArchive = pending.kind === "shopping-archive";
+  const retryKey = pending.command.idempotency_key;
   return <Card className="space-y-4 border-2 border-primary/20 p-5 sm:p-6">
-    <div><Badge tone={pending.status === "conflict" ? "amber" : "green"} className="mb-3">{pending.status === "conflict" ? "REVIEW REQUIRED" : "PENDING COMMAND"}</Badge><Heading as="h3">{pending.status === "conflict" ? "Records changed" : "Review before sending"}</Heading><p className="mt-1 text-sm leading-relaxed text-muted">{pending.status === "conflict" ? "This command was rejected because the household record changed. Reload the latest record, review it, and create a new command." : "The exact fields below will be sent once you confirm. This action writes to the selected household."}</p></div>
-    {isFood ? <FoodPreview command={(pending as Extract<PendingCommand, { kind: "kitchen" }>).command} /> : <ShoppingPreview command={(pending as Extract<PendingCommand, { kind: "shopping" }>).command} />}
-    <p className="break-all text-xs text-muted">Retry key: {isFood ? (pending as Extract<PendingCommand, { kind: "kitchen" }>).command.idempotency_key : (pending as Extract<PendingCommand, { kind: "shopping" }>).command.idempotency_key}</p>
+    <div><Badge tone={pending.status === "conflict" ? "amber" : isArchive ? "amber" : "green"} className="mb-3">{pending.status === "conflict" ? "REVIEW REQUIRED" : isArchive ? "REMOVE FROM ACTIVE LIST" : "PENDING COMMAND"}</Badge><Heading as="h3">{pending.status === "conflict" ? "Records changed" : isArchive ? "Review list removal" : "Review before sending"}</Heading><p className="mt-1 text-sm leading-relaxed text-muted">{pending.status === "conflict" ? "This command was rejected because the household record changed. Reload the latest record, review it, and create a new command." : isArchive ? "This removes the selected entry from the active shopping list. It does not change Kitchen stock or record a purchase." : "The exact fields below will be sent once you confirm. This action writes to the selected household."}</p></div>
+    {isFood ? <FoodPreview command={(pending as Extract<PendingCommand, { kind: "kitchen" }>).command} /> : isArchive ? <ShoppingArchivePreview pending={pending as Extract<PendingCommand, { kind: "shopping-archive" }>} /> : <ShoppingPreview command={(pending as Extract<PendingCommand, { kind: "shopping" }>).command} />}
+    <p className="break-all text-xs text-muted">Retry key: {retryKey}</p>
     {(pending.status === "ambiguous" || pending.status === "ready") && <p role="status" className="text-sm text-muted">If the connection failed before the response arrived, retrying uses this same payload and key. The app will not retry automatically.</p>}
     <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-      {pending.status === "ready" && <Button onClick={onConfirm} disabled={sending} aria-busy={sending}>{sending ? "Sending command…" : "Confirm and send"}</Button>}
+      {pending.status === "ready" && <Button variant={isArchive ? "danger" : "primary"} onClick={onConfirm} disabled={sending} aria-busy={sending}>{sending ? "Sending command…" : isArchive ? "Confirm removal" : "Confirm and send"}</Button>}
       {canRetrySame && pending.status !== "ready" && <Button onClick={onRetry} disabled={sending} aria-busy={sending}>Retry this exact command</Button>}
       <Button variant="secondary" onClick={onDiscardAndReload} disabled={sending}>{pending.status === "conflict" ? "Reload latest and review again" : "Discard command and reload before editing"}</Button>
     </div>
   </Card>;
+}
+
+function ShoppingArchivePreview({ pending }: { pending: Extract<PendingCommand, { kind: "shopping-archive" }> }) {
+  return <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2"><PreviewRow label="Entry" value={pending.itemName} /><PreviewRow label="Entry ID" value={pending.command.entry_id} /><PreviewRow label="Base version" value={String(pending.command.base_version)} /><PreviewRow label="Effect" value="Hidden from the active list; the archived record remains stored. No Kitchen stock or purchase record is changed." /></dl>;
 }
 
 function FoodPreview({ command }: { command: FoodObservationCommand }) {

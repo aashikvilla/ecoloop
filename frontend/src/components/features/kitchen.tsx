@@ -35,10 +35,6 @@ export function KitchenInventory() {
   </div>;
 }
 
-function UnavailableKitchenFlow({ title, details }: { title: string; details: string }) {
-  return <div className="mx-auto max-w-3xl space-y-4 px-4 pb-12 pt-6 sm:px-6 lg:pt-10"><PageIntro eyebrow="Kitchen · unavailable" title={title} description={details} /><Notice tone="warn">Photo capture, item details, and draft review are unavailable. Account contains manual fact, outcome, shopping, and owner-reported private-sharing controls; changes remain disabled pending live identity and database acceptance.</Notice><Panel><h2 className="text-lg font-semibold">Continue with supported controls</h2><p className="mt-2 text-sm leading-relaxed text-muted">Account controls require a signed-in owner, an explicit household, and enabled command configuration. They confirm each supported change and check current versions.</p><div className="mt-4 flex flex-wrap gap-2"><QuietLink href="/account">Open Account controls</QuietLink><QuietLink href="/kitchen">Back to Kitchen</QuietLink></div></Panel></div>;
-}
-
 type IntakeMode = "MANUAL" | "TEXT";
 
 function makeEntries(mode: IntakeMode, values: { name: string; amount: string; unit: string; date: string; dateType: string; storage: string; text: string }): IntakeEntry[] {
@@ -431,10 +427,10 @@ function KitchenItemDetail({ itemId }: { itemId: string }) {
       </Panel>
       <Panel className="space-y-3">
         <h2 className="text-lg font-semibold">Record what happened</h2>
-        <p className="text-sm leading-relaxed text-muted">Outcome and private sharing commands are available in Account. Select this item there and review each change before confirming it.</p>
-        <div className="flex flex-col gap-2 sm:flex-row"><Link href="/account#outcome-controls-title" className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Record an outcome in Account</Link><Link href="/account#share-controls-heading" className="inline-flex min-h-11 items-center justify-center rounded-full border border-line px-5 text-sm font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Open private sharing in Account</Link></div>
+        <p className="text-sm leading-relaxed text-muted">Record an outcome you observed, or prepare a private owner-reported share offer for this item. Each action reads current versions and asks you to review before sending.</p>
+        <div className="flex flex-col gap-2 sm:flex-row"><Link href={`/kitchen/items/${encodeURIComponent(item.item_id)}/outcome`} className="inline-flex min-h-11 items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Record an outcome</Link><Link href={`/kitchen/items/${encodeURIComponent(item.item_id)}/share`} className="inline-flex min-h-11 items-center justify-center rounded-full border border-line px-5 text-sm font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">Prepare private share offer</Link></div>
       </Panel>
     </>}
   </div>;
 }
-export function ShareItem({ itemId }: { itemId: string }) { return <UnavailableKitchenFlow title="Private sharing controls" details={`Private sharing commands for item ${itemId} are not connected. Account can show owner-private sharing history, but it cannot prepare or record a new share here.`} />; }
+export { ShareItem, OutcomeItem } from "./contextual-item-actions";

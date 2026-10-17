@@ -48,6 +48,14 @@ export type ShoppingCommand = {
   };
 };
 
+export type ShoppingArchiveCommand = {
+  schema_version: 1;
+  idempotency_key: string;
+  entry_id: string;
+  base_version: number;
+  archived: true;
+};
+
 export class CommandValidationError extends Error {
   constructor(message: string, readonly field?: string) {
     super(message);
@@ -143,6 +151,13 @@ export function buildShoppingCommand(draft: ShoppingDraft, idempotencyKey: strin
   };
 }
 
+export function buildShoppingArchiveCommand(entryId: string, baseVersion: number, idempotencyKey: string): ShoppingArchiveCommand {
+  const cleanId = validateId(entryId, "Shopping entry ID");
+  if (!Number.isSafeInteger(baseVersion) || baseVersion < 1) throw new CommandValidationError("Reload the current shopping entry before removing it.", "baseVersion");
+  if (!idempotencyPattern.test(idempotencyKey)) throw new CommandValidationError("The command key is invalid.");
+  return { schema_version: 1, idempotency_key: idempotencyKey, entry_id: cleanId, base_version: baseVersion, archived: true };
+}
+
 function asObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -186,6 +201,15 @@ export function parseShoppingSaveResult(value: unknown, command: ShoppingCommand
   const saved = envelope.result;
   if (saved.entry_id !== command.entry.entry_id || saved.version !== command.entry.base_version + 1 || !positiveVersion(saved.version)) {
     throw new CommandValidationError("The API response did not match the submitted shopping entry. Reload records before trying another command.");
+  }
+  return { requestId: envelope.requestId, entryVersion: saved.version };
+}
+
+export function parseShoppingArchiveResult(value: unknown, command: ShoppingArchiveCommand): { requestId: string; entryVersion: number } {
+  const envelope = parseApiResult(value, "shopping archive");
+  const saved = envelope.result;
+  if (saved.entry_id !== command.entry_id || saved.version !== command.base_version + 1 || saved.archived !== true || !positiveVersion(saved.version)) {
+    throw new CommandValidationError("The API response did not match this removal command. Its status is unknown; reload records before trying another command.");
   }
   return { requestId: envelope.requestId, entryVersion: saved.version };
 }

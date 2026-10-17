@@ -252,6 +252,12 @@ def save_shopping_entry(principal: Principal, command: ShoppingCommand) -> dict[
 def list_shopping_entries(principal: Principal) -> list[dict[str, Any]]:
     try:
         query = _household(principal).collection("shopping_entries").order_by("updated_at", direction=firestore.Query.DESCENDING).limit(200)
-        return [snapshot.to_dict() | {"entry_id": snapshot.id} for snapshot in query.stream()]
+        entries = []
+        for snapshot in query.stream():
+            data = snapshot.to_dict() or {}
+            if data.get("archived") is True:
+                continue
+            entries.append(data | {"entry_id": snapshot.id})
+        return entries
     except Exception as exc:
         raise DomainError("DATA_UNAVAILABLE", "The shopping list is unavailable.", 503, True) from exc
