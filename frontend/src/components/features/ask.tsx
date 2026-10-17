@@ -15,6 +15,10 @@ import { AssistantCards } from "./assistant-cards";
 
 type Message = { id: string; role: "user" | "assistant"; text: string };
 function readError(error: unknown) { return error instanceof CanonicalApiError ? error.message : "The household assistant could not be reached. Try again."; }
+const askIntents: Record<string, string> = {
+  meal: "What can I make with my confirmed kitchen records?",
+  "buy-check": "Check whether I should buy something against my current confirmed kitchen records. Ask me which item if you need one.",
+};
 
 export function AskAssistant() {
   const { user, householdId, auth } = useLiveHousehold();
@@ -24,6 +28,7 @@ export function AskAssistant() {
 function ScopedAskAssistant() {
   const { user, householdId, auth } = useLiveHousehold();
   const params = useSearchParams();
+  const intent = params.get("intent");
   const itemId = params.get("item");
   const [messages, setMessages] = useState<Message[]>([{ id: "welcome", role: "assistant", text: "Ask about your household food records. Review suggestions before taking any action." }]);
   const [prompt, setPrompt] = useState("");
@@ -43,6 +48,10 @@ function ScopedAskAssistant() {
   const actionKeys = useRef<Record<string, string>>({});
   const historyController = useRef<AbortController | null>(null);
   const requestController = useRef<AbortController | null>(null);
+  const readyToAsk = auth === "signed-in" && Boolean(user) && Boolean(householdId);
+  useEffect(() => {
+    if (intent && askIntents[intent]) setPrompt(askIntents[intent]);
+  }, [intent]);
   useEffect(() => {
     const controller = new AbortController();
     historyController.current = controller;
@@ -187,8 +196,9 @@ function ScopedAskAssistant() {
     <header><p className="text-xs font-bold uppercase tracking-wide text-muted">Ask</p><Heading as="h1" className="mt-1">Cook thoughtfully</Heading><p className="mt-2 text-sm leading-relaxed text-muted">Ask for suggestions based on your household records. Review every proposal before taking action.</p></header>
     <LiveDestinationNotice />
     <Card className="space-y-4 border border-line p-4 sm:p-5"><div><Heading as="h2">Conversation</Heading><p className="mt-1 text-sm text-muted">Requests and proposals are saved privately for your account. Review a suggestion before taking action.</p></div>{auth === "signed-in" && historyPhase === "loading" && <p role="status" className="text-sm text-muted">Loading recent conversation…</p>}{historyPhase === "error" && <p role="status" className="text-sm text-muted">Recent conversation could not be loaded. You can still ask a new question.</p>}<div aria-live="polite" className="space-y-3">{messages.slice(-8).map((entry) => <div key={entry.id} className={`max-w-[90%] rounded-2xl px-4 py-3 text-sm leading-5 ${entry.role === "user" ? "ml-auto bg-primary text-white" : "bg-surface-muted text-foreground"}`}><p>{entry.text}</p></div>)}</div>
-      <div className="flex flex-wrap gap-2">{["What can I make tonight?", "Should I buy tomatoes?", "Use what I have for lunch"].map((value) => <button type="button" key={value} onClick={() => void send(value)} disabled={busy || actionBusy !== null} className="min-h-11 rounded-full bg-surface-muted px-4 text-sm text-primary disabled:opacity-50">{value}</button>)}</div>
-      <form className="flex flex-col gap-2 sm:flex-row" onSubmit={submit}><label htmlFor="ask-prompt" className="sr-only">Ask a question</label><Input id="ask-prompt" className="flex-1" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask about a meal or what to buy" maxLength={8000} /><Button type="submit" disabled={busy || actionBusy !== null || !prompt.trim()} aria-busy={busy}>{busy ? "Asking…" : "Send"}</Button></form>
+      <div className="flex flex-wrap gap-2">{["What can I make tonight?", "Should I buy tomatoes?", "Use what I have for lunch"].map((value) => <button type="button" key={value} onClick={() => void send(value)} disabled={!readyToAsk || busy || actionBusy !== null} className="min-h-11 rounded-full bg-surface-muted px-4 text-sm text-primary disabled:opacity-50">{value}</button>)}</div>
+      <form className="flex flex-col gap-2 sm:flex-row" onSubmit={submit}><label htmlFor="ask-prompt" className="sr-only">Ask a question</label><Input id="ask-prompt" className="flex-1" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ask about a meal or what to buy" maxLength={8000} disabled={!readyToAsk || busy} /><Button type="submit" disabled={!readyToAsk || busy || actionBusy !== null || !prompt.trim()} aria-busy={busy}>{busy ? "Asking…" : "Send"}</Button></form>
+      {auth === "signed-in" && !householdId && <p className="text-sm text-muted">Choose an active household above to ask about its confirmed records.</p>}
       {error && <p role="alert" className="text-sm text-danger">{error}</p>}{notice && <p role="status" className="text-sm text-muted">{notice}</p>}
     </Card>
     {auth === "signed-in" && preferenceLoadState === "loading" && <p role="status" className="text-sm text-muted">Checking private saved preferences…</p>}
