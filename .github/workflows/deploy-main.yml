@@ -82,9 +82,12 @@ jobs:
           cat > "$RUNNER_TEMP/ecoloop-api-env.yaml" <<EOF
           FIREBASE_PROJECT_ID: "${PROJECT_ID}"
           GOOGLE_CLOUD_PROJECT: "${PROJECT_ID}"
-          AGENT_ENABLED: "false"
-          AGENT_PROVIDER: "gemini_api"
+          AGENT_ENABLED: "true"
+          AGENT_PROVIDER: "vertex"
           AGENT_MODEL: "gemini-3.1-flash-lite"
+          PHOTO_MODEL: "gemini-3.1-flash-lite"
+          AGENT_VERTEX_PROJECT_ID: "${PROJECT_ID}"
+          AGENT_VERTEX_LOCATION: "global"
           AGENT_SESSION_STORE: "in_memory"
           AGENT_SESSION_IDLE_TTL_SECONDS: "86400"
           AGENT_MEMORY_BANK_ENABLED: "false"
@@ -131,8 +134,11 @@ jobs:
           health = json.load(open(sys.argv[1], encoding="utf-8"))
           if health.get("status") not in ("ok", "healthy"):
               raise SystemExit("API health response is not healthy")
-          if health.get("assistant", {}).get("enabled") is not False:
-              raise SystemExit("Unexpected assistant state; review provider and cost gates before promotion")
+          assistant = health.get("assistant", {})
+          if assistant.get("enabled") is not True or assistant.get("configured") is not True:
+              raise SystemExit("Vertex assistant configuration is unavailable")
+          if assistant.get("provider") != "vertex_ai":
+              raise SystemExit("The assistant did not select Vertex AI")
           PY
           status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$API_CANDIDATE_URL/api/v1/households")
           test "$status" = "401"
