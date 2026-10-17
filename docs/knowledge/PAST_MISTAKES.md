@@ -19,6 +19,12 @@ Observation: updating `Session.state` on a session returned by `InMemorySessionS
 Observation: household history endpoints are paginated. A count or quantity from the first page can look like a complete household total if its coverage is not stated. Share offers also describe a different state from completed handovers.
 Pattern: summarize only fetched records, label the loaded-page scope and expose continuation when another page exists. Keep offers separate from outcome events, and add quantities only when their recorded measurement basis and units support the same total.
 
+## 2026-10-17 — Deploy configuration only with a validator-compatible image
+
+Observation: the serving image rejected `AI_DAILY_REQUEST_LIMIT=300` at startup because its Pydantic validator still capped values at 100. Updating only Cloud Run environment configuration created an unhealthy revision, though production traffic stayed on the prior healthy revision.
+
+Pattern: deploy a configuration change with an image that accepts and validates it. Smoke-check the tagged revision and its effective configuration before moving traffic; keep the previous traffic target available for rollback.
+
 ## 2026-10-17 — Pin the target architecture, not an arbitrary multi-arch image digest
 
 The frontend Cloud Build requested `linux/amd64`, but its pinned Node digest was the `linux/arm/v7` child manifest. Local builds passed while the remote container failed at `COPY` with an architecture mismatch. When a build pins a multi-platform image, use the verified target-platform child digest or the index digest with explicit platform resolution; check Cloud Build's resolved OS/architecture before attributing failure to app code.
