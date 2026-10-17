@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import math
 import os
 import re
@@ -47,6 +48,12 @@ _SESSION_LOCK = asyncio.Lock()
 _runner: Runner | None = None
 _session_service: BaseSessionService | None = None
 _active_sessions: OrderedDict[tuple[str, str], float] = OrderedDict()
+_LOGGER = logging.getLogger(__name__)
+_OBSERVABLE_TOOL_NAMES = frozenset({
+    "read_confirmed_pantry",
+    "read_active_shopping_list",
+    "read_active_meal_plans",
+})
 
 
 class AgentOutput(BaseModel):
@@ -303,6 +310,39 @@ def _current_household_meal_plans(principal: Principal) -> list[dict[str, Any]]:
         raise
     except Exception as exc:
         raise DomainError("DATA_UNAVAILABLE", "Saved meal plans could not be read.", 503, True) from exc
+
+
+def _emit_turn_timing(
+    request_id: str,
+    *,
+    result: str,
+    phases_ms: dict[str, int],
+    total_ms: int,
+    kitchen_items: int = 0,
+    saved_plans: int = 0,
+    preferences: int = 0,
+    payload_chars: int = 0,
+    event_count: int = 0,
+    first_event_ms: int | None = None,
+    tool_calls: set[str] | None = None,
+    timeout_phase: str | None = None,
+) -> None:
+    """Emit bounded timings only; never log prompts, user IDs, or record values."""
+    _LOGGER.info(json.dumps({
+        "event": "assistant_turn_timing",
+        "request_id": request_id,
+        "result": result,
+        "timeout_phase": timeout_phase,
+        "total_ms": total_ms,
+        "phases_ms": phases_ms,
+        "kitchen_item_count": kitchen_items,
+        "saved_plan_count": saved_plans,
+        "approved_preference_count": preferences,
+        "payload_chars": payload_chars,
+        "adk_event_count": event_count,
+        "first_adk_event_ms": first_event_ms,
+        "tool_calls": sorted(tool_calls or set()),
+    }, separators=(",", ":")))
 
 
 def read_active_meal_plans(tool_context: ToolContext) -> dict[str, Any]:
@@ -710,21 +750,31 @@ async def generate_household_turn(
     request: AssistantTurnRequest,
     request_id: str,
 ) -> AssistantEnvelope:
+    turn_started = monotonic()
+    phases_ms: dict[str, int] = {}
+    phase_started = monotonic()
     try:
         kitchen = await asyncio.to_thread(_kitchen_query, principal, request.context_item_ids)
+        phases_ms["kitchen_read"] = round((monotonic() - phase_started) * 1_000)
+        phase_started = monotonic()
         preferences = await asyncio.to_thread(list_preferences, principal.uid)
+        phases_ms["preference_read"] = round((monotonic() - phase_started) * 1_000)
         if settings.AGENT_MEMORY_BANK_ENABLED:
+            phase_started = monotonic()
             try:
                 remembered = await asyncio.to_thread(retrieve_approved_preferences, principal.uid, limit=20)
             except Exception:
                 # Canonical Firestore preferences remain available as the fallback;
                 # an optional derived index must not block an assistant turn.
                 remembered = []
+            phases_ms["memory_bank_read"] = round((monotonic() - phase_started) * 1_000)
             if remembered:
                 # Memory Bank is an index only. The adapter validates each result
                 # against the current canonical consented Firestore record.
                 preferences = remembered
+        phase_started = monotonic()
         saved_plans = await asyncio.to_thread(_current_household_meal_plans, principal)
+        phases_ms["saved_plan_read"] = round((monotonic() - phase_started) * 1_000)
     except DomainError:
         raise
     except Exception as exc:
@@ -759,22 +809,63 @@ async def generate_household_turn(
     scope_value = json.dumps([principal.uid, principal.household_id], separators=(",", ":"))
     user_scope = hashlib.sha256(scope_value.encode("utf-8")).hexdigest()
     user_id = f"household:{user_scope}"
+    events: list[Any] = []
+    tool_calls: set[str] = set()
+    first_event_ms: int | None = None
+    active_phase = "runner_setup"
+    kitchen_count = len(kitchen)
+    plan_count = len(saved_plans)
+    preference_count = len(preferences)
+    payload_chars = len(user_payload)
     try:
+        phase_started = monotonic()
         runner, sessions = await _get_runner()
+        phases_ms["runner_setup"] = round((monotonic() - phase_started) * 1_000)
         if isinstance(sessions, VertexAiSessionService) and not re.fullmatch(r"[A-Za-z0-9_-]+", session_id):
             managed_session_id = "s-" + hashlib.sha256(session_id.encode("utf-8")).hexdigest()
+        active_phase = "session_prepare"
+        phase_started = monotonic()
         await _prepare_session(sessions, user_id=user_id, session_id=managed_session_id, principal=principal)
+        phases_ms["session_prepare"] = round((monotonic() - phase_started) * 1_000)
+        active_phase = "usage_claim"
+        phase_started = monotonic()
         await asyncio.to_thread(claim_daily_ai_request, principal.uid)
+        phases_ms["usage_claim"] = round((monotonic() - phase_started) * 1_000)
+        run_started = monotonic()
+        active_phase = "adk_run"
         async with asyncio.timeout(settings.AGENT_REQUEST_TIMEOUT_SECONDS):
-            events = [
-                event
-                async for event in runner.run_async(
-                    user_id=user_id,
-                    session_id=managed_session_id,
-                    new_message=types.Content(role="user", parts=[types.Part(text=user_payload)]),
-                )
-            ]
+            async for event in runner.run_async(
+                user_id=user_id,
+                session_id=managed_session_id,
+                new_message=types.Content(role="user", parts=[types.Part(text=user_payload)]),
+            ):
+                if first_event_ms is None:
+                    first_event_ms = round((monotonic() - run_started) * 1_000)
+                events.append(event)
+                content = getattr(event, "content", None)
+                for part in getattr(content, "parts", None) or []:
+                    function_call = getattr(part, "function_call", None)
+                    name = getattr(function_call, "name", None)
+                    if name in _OBSERVABLE_TOOL_NAMES:
+                        tool_calls.add(name)
+        phases_ms["adk_run"] = round((monotonic() - run_started) * 1_000)
     except TimeoutError as exc:
+        if active_phase == "adk_run":
+            phases_ms["adk_run"] = round((monotonic() - run_started) * 1_000)
+        _emit_turn_timing(
+            request_id,
+            result="timeout",
+            phases_ms=phases_ms,
+            total_ms=round((monotonic() - turn_started) * 1_000),
+            kitchen_items=kitchen_count,
+            saved_plans=plan_count,
+            preferences=preference_count,
+            payload_chars=payload_chars,
+            event_count=len(events),
+            first_event_ms=first_event_ms,
+            tool_calls=tool_calls,
+            timeout_phase=active_phase,
+        )
         raise DomainError("AGENT_TIMEOUT", "The assistant took too long to respond. Please retry.", 504, True) from exc
     except DomainError:
         raise
@@ -782,6 +873,7 @@ async def generate_household_turn(
         # Keep provider diagnostics out of user-visible errors and logs.
         raise DomainError("AGENT_UNAVAILABLE", "The assistant is temporarily unavailable.", 503, True) from exc
 
+    phase_started = monotonic()
     output = _output_from_events(events)
     validated_cards = _validate_cards(output.cards)
     context_ids = {item["item_id"] for item in kitchen}
@@ -802,11 +894,26 @@ async def generate_household_turn(
         if any(reference not in context_ids for reference in references):
             raise DomainError("AGENT_INVALID_RESPONSE", "The assistant referenced kitchen data that was not provided.", 502, True)
     try:
-        return AssistantEnvelope(
+        envelope = AssistantEnvelope(
             request_id=request_id,
             session_id=session_id,
             message=output.message,
             cards=validated_cards,
         )
+        phases_ms["response_validation"] = round((monotonic() - phase_started) * 1_000)
+        _emit_turn_timing(
+            request_id,
+            result="success",
+            phases_ms=phases_ms,
+            total_ms=round((monotonic() - turn_started) * 1_000),
+            kitchen_items=kitchen_count,
+            saved_plans=plan_count,
+            preferences=preference_count,
+            payload_chars=payload_chars,
+            event_count=len(events),
+            first_event_ms=first_event_ms,
+            tool_calls=tool_calls,
+        )
+        return envelope
     except Exception as exc:
         raise DomainError("AGENT_INVALID_RESPONSE", "The assistant returned an invalid response. Please retry.", 502, True) from exc
