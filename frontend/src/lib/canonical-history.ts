@@ -38,6 +38,7 @@ export type PrivateShareLog = {
 export type PrivateActivityEvent = {
   event_id: string;
   item_id: string;
+  plan_id: string | null;
   type: HistoryOutcomeType;
   occurred_at: string;
   recorded_at: string;
@@ -114,7 +115,7 @@ const shareFields = [
   "eligibility_time_zone", "eligibility_checked_at", "id",
 ] as const;
 const historyFields = ["state", "occurred_at", "actor_uid", "owner_reported"] as const;
-const activityFields = ["event_id", "item_id", "type", "occurred_at", "recorded_at", "amount", "unit", "measurement_basis", "source"] as const;
+const activityFields = ["event_id", "item_id", "plan_id", "type", "occurred_at", "recorded_at", "amount", "unit", "measurement_basis", "source"] as const;
 
 function validHistoryEvent(value: unknown, ownerUid: string): value is ShareHistoryEvent {
   return object(value) && exactKeys(value, historyFields) && validState(value.state) && timestamp(value.occurred_at) && value.actor_uid === ownerUid && value.owner_reported === true;
@@ -150,7 +151,7 @@ function validShare(value: unknown, householdId: string, ownerUid: string): valu
 
 function validActivity(value: unknown): value is PrivateActivityEvent {
   return object(value) && exactKeys(value, activityFields) && typeof value.event_id === "string" && idPattern.test(value.event_id) &&
-    typeof value.item_id === "string" && idPattern.test(value.item_id) && typeof value.type === "string" && outcomeTypes.has(value.type) &&
+    typeof value.item_id === "string" && idPattern.test(value.item_id) && (value.plan_id === null || (typeof value.plan_id === "string" && idPattern.test(value.plan_id))) && typeof value.type === "string" && outcomeTypes.has(value.type) &&
     timestamp(value.occurred_at) && timestamp(value.recorded_at) && quantity(value.amount, value.unit, value.measurement_basis) &&
     typeof value.source === "string" && sources.has(value.source);
 }

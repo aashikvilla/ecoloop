@@ -220,6 +220,7 @@ function ActivityHistory({ householdId, getIdToken, ownerUid }: { householdId: s
     {page.records.length > 0 && <Card className="min-w-0 border border-line p-4 sm:p-5"><ul className="divide-y divide-line">{page.records.map((event) => <li key={event.event_id} className="min-w-0 space-y-1 py-3 first:pt-0 last:pb-0">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2"><p className="font-semibold text-primary">{outcomeLabels[event.type]}</p><Badge>{event.measurement_basis === "UNKNOWN" ? "Amount unknown" : event.measurement_basis === "MEASURED" ? "Measured" : "User estimated"}</Badge></div>
       <p className="break-words text-sm text-muted [overflow-wrap:anywhere]">Item ID: {event.item_id}</p>
+      {event.plan_id && <p className="break-words text-sm text-muted [overflow-wrap:anywhere]">Saved plan reference: {event.plan_id}</p>}
       <p className="text-sm text-muted">Occurred: {formatDate(event.occurred_at)} · Recorded: {formatDate(event.recorded_at)}</p>
       <p className="text-sm text-muted">Amount: {event.amount === null ? "Unknown" : `${event.amount} ${event.unit}`}</p>
       <p className="text-xs text-muted">{event.source === "OWNER_SHARE_LOG" ? "Owner-recorded share handover" : "Owner-recorded outcome"}</p>

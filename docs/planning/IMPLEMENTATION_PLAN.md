@@ -186,7 +186,7 @@ Indicative effort: 2–3 engineering days. Entry: M3 reviewed exit gate. Exit: M
 - [ ] **M4.02.02 — Connect Home and Ask to outcome follow-up**
   - Owner: Frontend. Prerequisites: M4.01.03, M4.02.01.
   - Acceptance: Plan acceptance differs from actual use; user can return and record/correct outcome without losing context.
-  - Local implementation note (17 October 2026): Authenticated paginated reads of saved plans and a Home summary now preserve plan title, serving count, approval-time stage, ingredient uncertainty/quantity basis, and links to validated linked Kitchen items. Home explicitly distinguishes a saved plan from preparation/consumption and stock changes. Outcome is still recorded on an item, not associated back to a plan, and no end-to-end acceptance was run; keep this task open.
+  - Local implementation note (17 October 2026): Home links a saved plan to an explicit outcome flow for its linked Kitchen items, or to a current-item selector when no ingredient is linked. The user sees that saving/approving a plan does not mean it was prepared or eaten. Outcome commands carry an optional plan ID; the backend verifies that ID exists in the same active household before committing under the existing item-version, actor-bound idempotency, and membership transaction. The plan reference is retained on the outcome and owner-private Activity records. Core-flow TypeScript, changed-file ESLint, and backend compile checks pass; the final Activity-history TypeScript rerun and browser acceptance remain open, so keep the task open.
 
 - [ ] **M4.02.03 — Review M4 exit evidence**
   - Owner: Reviewer. Prerequisites: M4.01.03, M4.02.02.

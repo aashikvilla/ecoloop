@@ -18,6 +18,7 @@ export type RecordOutcomeCommand = {
   idempotency_key: string;
   outcome_id: string;
   item_id: string;
+  plan_id: string | null;
   base_version: number;
   outcome_type: CanonicalOutcomeType;
   amount: number | null;
@@ -71,6 +72,7 @@ export function buildRecordOutcomeCommand(
   draft: OutcomeDraft,
   idempotencyKey: string,
   latestObservation: { amount: number | null; unit: string | null; observed_at: string },
+  planId?: string,
   nowMs = Date.now(),
 ): RecordOutcomeCommand {
   const outcomeId = draft.outcomeId.trim();
@@ -78,6 +80,7 @@ export function buildRecordOutcomeCommand(
   if (!idPattern.test(outcomeId) || !idPattern.test(itemId)) throw new OutcomeValidationError("The selected record or outcome ID is invalid.");
   if (!Number.isSafeInteger(draft.baseVersion) || draft.baseVersion < 1) throw new OutcomeValidationError("Reload this kitchen record before recording an outcome.");
   if (!idempotencyPattern.test(idempotencyKey)) throw new OutcomeValidationError("The command key is invalid.");
+  if (planId !== undefined && !idPattern.test(planId)) throw new OutcomeValidationError("The saved plan reference is invalid.");
   if (!outcomeTypes.has(draft.outcomeType)) throw new OutcomeValidationError("Choose a supported outcome type.", "outcomeType");
   if (!bases.has(draft.measurementBasis)) throw new OutcomeValidationError("Choose how the amount was measured.", "measurementBasis");
 
@@ -119,6 +122,7 @@ export function buildRecordOutcomeCommand(
     idempotency_key: idempotencyKey,
     outcome_id: outcomeId,
     item_id: itemId,
+    plan_id: planId ?? null,
     base_version: draft.baseVersion,
     outcome_type: draft.outcomeType,
     amount,
