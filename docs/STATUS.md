@@ -1,6 +1,14 @@
 # EcoLoop implementation status
 
-Updated 17 October 2026, 03:56 UTC. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+Updated 17 October 2026, 05:30 UTC. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+
+## Latest local auth, AI and preview acceptance — 17 October 2026
+
+- The synthetic Firebase account `judge-demo@ecoloop.example` was given a newly generated password at the owner's request. Username/password are stored only in ignored `backend/.env`; no credential is committed. Firebase does not reveal the previous plaintext password.
+- Signed in through Firebase Identity Toolkit with that account, read two active household memberships from the authenticated API, selected `judge-demo-household`, and read all ten synthetic kitchen records through local FastAPI/Firestore.
+- Started an isolated local API on port 8002 with `AGENT_ENABLED=true` for one bounded request. Durable `POST /api/v1/assistant/proposals/turns` returned HTTP 200 and one validated `MealSuggestion`; a private history GET read back the turn. This exercised Gemini Developer API, scoped confirmed pantry context and Firestore persistence. No proposal was approved and no stock/list mutation followed. Health still reports unmanaged in-process sessions; managed Sessions/Memory are false.
+- A clean preview worktree at pushed commit `70e511f` runs the frontend at `http://127.0.0.1:3001`, configured to use the isolated API on port 8002. Twelve app routes returned HTTP 200, and Next.js diagnostics showed no config/session errors. Browser automation timed out opening the page, so visual sign-in/click-through in this preview remains unverified. Existing port 3000 still runs its original process configuration against the disabled API on 8001; use the 3001 preview for the just-verified AI configuration.
+- No unit tests were run. No Cloud APIs, billing links, IAM, indexes, hosting, or deployments were changed. Cloud Run remains blocked: billing/linkage and cost controls are unverified, required APIs are disabled, and no dedicated runtime service account or image digest exists. See the current Cloud Run gate review in this session journal.
 
 ## Local application
 

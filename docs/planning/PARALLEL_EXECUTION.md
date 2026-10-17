@@ -191,3 +191,15 @@ The item correction form is now prepared behind the existing default-off flag. I
 - [ ] Release gates: billing/linkage and linked-project review, budget/cost controls, required APIs, dedicated least-privilege runtime/deploy identities, image build, Cloud Run/App Hosting deployment, HTTPS health, deployed identity/denial checks, declared indexes and whole-flow E2E remain open. PR #1 remains draft; no phase exit or `main` merge is supported.
 
 Full route map, local evidence distinction, CLI errors and owner setup sequence: [readiness audit session](../knowledge/sessions/2026-10-17-e2e-readiness-audit.md). The live MVPTasks Sheet was last modified 16 October and its statuses/evidence need reconciliation with 17 October checkpoints; do not infer phase completion from this local snapshot.
+
+## Twelfth wave — judge credentials, durable local AI and deployment gate
+
+17 October: root provisioned the already-seeded synthetic judge identity at the owner's request by setting a fresh Firebase password. Credentials are held only in ignored `backend/.env`; the old password could not be retrieved from Firebase. Authenticated reads found two household memberships and ten records in the synthetic judge kitchen.
+
+- [x] One bounded local Gemini Developer API request through durable `/api/v1/assistant/proposals/turns` returned HTTP 200 with one strict `MealSuggestion`; authenticated private-history readback succeeded. It used only the synthetic judge household's confirmed Tomatoes and Spinach. No card approval or canonical mutation followed.
+- [x] Previewed the current pushed integration commit in an isolated managed worktree on `http://127.0.0.1:3001` → local API `http://127.0.0.1:8002`. Twelve routes returned HTTP 200; Next.js diagnostics reported no config/session errors. Browser automation timed out before visual sign-in/click-through, so browser acceptance is still open.
+- [ ] Current port 3000 process still targets API port 8001 with assistant disabled; use the isolated 3001/8002 preview for local AI until the running process is deliberately restarted with the desired configuration. Do not stop the existing user server automatically.
+- [ ] Cloud Run deployment remains blocked by unverified billing linkage/cost controls, missing Run/Build/Artifact Registry/Secret Manager APIs, no dedicated runtime service identity, no immutable image digest, and no verified HTTPS frontend origin. Read-only review found EcoLoop is unlinked from billing; the known closed billing account is linked to `My First Project`. Do not reopen/link it until its owner reviews account-wide project usage and approves a safe billing arrangement.
+- [ ] Managed ADK Sessions/Memory, managed Runtime, photo intake/media retention, and full browser-screen/command acceptance remain incomplete. No live MVPTasks statuses or phase gates were advanced; PR #1 remains draft and `main` is not eligible for merge.
+
+Evidence and the owner billing gate are recorded in [the 17 October local auth/AI/deploy session](../knowledge/sessions/2026-10-17-local-auth-ai-deploy.md). No unit tests, reset credits, billing changes, cloud provisioning, or deployment occurred.

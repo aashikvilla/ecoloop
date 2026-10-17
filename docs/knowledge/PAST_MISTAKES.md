@@ -8,6 +8,10 @@ Observation: outcome recording can legitimately reduce a known balance to zero, 
 
 Observation: after rebuilding and restarting the local Next production server, an already-open browser tab still displayed its prior scripted page, while a new tab on the same port loaded the API-only build. A later check also found separate local servers on ports 3002 and 3003, with the browser still on the scripted 3002 app and the integrated routes served from 3003. Prevention: verify the intended port and route after replacing or starting a server; do not use an old tab's DOM as proof that the current build loaded.
 
+## 2026-10-17 — Running frontend processes keep inherited configuration
+
+Observation: updating ignored `.env.local` did not replace `NEXT_PUBLIC_ECOLOOP_API_ORIGIN` already inherited by the running Next.js process; a second dev server in the same checkout also hit the single-instance lock. Prevention: inspect the process/compiled client, not just the env file; restart with the intended process environment or use an isolated checkout and port without stopping a user-owned server.
+
 ## 2026-10-17 — Cross-worktree dependency junctions can mutate the source checkout
 
 Observation: pointing an isolated worktree's `node_modules` junction at the primary checkout let `npm ci` traverse into and attempt to remove source dependencies; Turbopack also rejected the external junction. Prevention: install from the lockfile inside the target worktree. Never run dependency-cleaning commands through a junction to another checkout.
