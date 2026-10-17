@@ -47,6 +47,7 @@ Indicative effort: 1–2 engineering days. Entry: current source/design packet. 
 - [ ] **M0.02.01 — Validate managed runtime, Sessions, Memory Bank and Gemini access**
   - Owner: Technical lead. Prerequisites: None.
   - Acceptance: Recorded project/region/IAM/quota and actual service response; explicit blocker ADR if fallback needed.
+  - Local implementation note (17 October 2026): Agents CLI v1.10.0 is installed and its ADK skills are added to the workspace. The backend now has opt-in Agent Engine Sessions and direct Memory Bank adapter code, but no managed resource call or actual provider response was made. Project access, runtime identity, region/quota, and managed-service acceptance remain unverified; keep this task open.
 
 - [ ] **M0.02.02 — Set privacy, consent, retention and cost boundaries**
   - Owner: Technical + product. Prerequisites: M0.01.03, M0.02.01.
@@ -132,10 +133,12 @@ Indicative effort: 3–4 engineering days. Entry: M2 reviewed exit gate. Exit: M
 - [ ] **M3.01.01 — Connect one real ADK orchestrator and scoped managed Sessions**
   - Owner: Backend. Prerequisites: M2.02.03.
   - Acceptance: Recorded actual Gemini/ADK tool trace with owned managed session IDs; foreign session lookup denied.
+  - Local implementation note (17 October 2026): ADK selects `VertexAiSessionService` only when explicitly configured with an Agent Engine ID; new managed sessions receive the configured idle TTL. Health distinguishes configured from verified, and unsafe caller session IDs are deterministically mapped to provider-safe IDs. Default remains in-memory. No managed request, cross-user isolation run, or actual expiry observation occurred; keep this task open.
 
 - [ ] **M3.01.02 — Implement approved-preference memory write and controls**
   - Owner: Backend. Prerequisites: M3.01.01.
   - Acceptance: Only consented preference event reaches managed Memory Bank; view/edit/revoke/delete states exposed without raw transcripts.
+  - Local implementation note (17 October 2026): Added the Agent Platform SDK and a default-off direct Memory Bank adapter. Firestore remains canonical; only explicitly consented preference facts are eligible, using owner-scoped stable IDs. Versioned sync state, retry and deletion tombstones preserve revocation failures; retrieval returns only fresh canonical records matching provider candidates. Settings surfaces configuration/unverified state and explicit retry. No live provider calls or two-session recall/deletion proof occurred; keep this task open.
 
 - [ ] **M3.01.03 — Prove recall across two sessions and memory isolation**
   - Owner: Technical lead. Prerequisites: M3.01.02.

@@ -12,6 +12,48 @@
       "sourceType": "github",
       "skillPath": "skills/firebase-ai-logic-basics/SKILL.md",
       "computedHash": "6f29d33071169ad5b178bfa184569a016518f40691eacccbf655f753041d725b"
+    },
+    "google-agents-cli-adk-code": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "skillPath": "skills/google-agents-cli-adk-code/SKILL.md",
+      "computedHash": "a07681f86f9ebe540434c4a263586830daa3192ede4b47cab66636262ba933d8"
+    },
+    "google-agents-cli-deploy": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "skillPath": "skills/google-agents-cli-deploy/SKILL.md",
+      "computedHash": "4f91d43267d4d96e17c4790cf1ce0d545f419f57c9ba4429dc20c841d7e7813c"
+    },
+    "google-agents-cli-eval": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "skillPath": "skills/google-agents-cli-eval/SKILL.md",
+      "computedHash": "49645885628f2f70b49daa5906694f5e15070a0abb740e387ff5b5ca4315be69"
+    },
+    "google-agents-cli-observability": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "skillPath": "skills/google-agents-cli-observability/SKILL.md",
+      "computedHash": "4ae40344e046f2444437950c5ebefcf2c1192bf17f4df733c2a6c87ab45e930f"
+    },
+    "google-agents-cli-publish": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "skillPath": "skills/google-agents-cli-publish/SKILL.md",
+      "computedHash": "9dd407862329d02c0cc29a820d5b701ee8f8f6b6a8979c2103bcd3b5772ec30a"
+    },
+    "google-agents-cli-scaffold": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "skillPath": "skills/google-agents-cli-scaffold/SKILL.md",
+      "computedHash": "51460ef7116ac2661ad67daf59b9ce877a453e4d27ab4085a4260af4155f30bc"
+    },
+    "google-agents-cli-workflow": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "skillPath": "skills/google-agents-cli-workflow/SKILL.md",
+      "computedHash": "bad6bfadcc47632d804ed7db8ecf0a434ac9561bc49e751b69965f9e5b74f93a"
     }
   }
 }

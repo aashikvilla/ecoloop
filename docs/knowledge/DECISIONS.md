@@ -28,7 +28,7 @@ The broad platform archive and consolidated build pack were removed from the act
 
 Current user decisions: shared accessible UI primitives under `frontend/src/components/ui/`; shared navigation/layout under `frontend/src/components/layout/`; one central Tailwind v4 `@theme` token source in `frontend/src/app/globals.css`; mobile-first responsive development; Google Cloud/Gemini services for approved product integrations; no frontend/backend unit tests or dependencies. See [MVP-D15–16](../planning/DECISIONS.md).
 
-## Single hackathon environment (2026-10-16)
+## Single hackathon environment — historical billing snapshot (2026-10-16)
 
 Use one named Google Cloud/Firebase project and one environment for the hackathon by default; do not add staging/production separation unless the owner explicitly asks. Current project ID is `ecoloop-staging-20261015` (immutable); display name is “EcoLoop Hackathon.” Existing billing is off. The only listed billing account is closed and still linked to another active project, so inspect account-wide impact before reopening. The credits page failed to load; balance is unknown. See MVP-D17–18 and the current cloud setup session.
 
@@ -43,3 +43,11 @@ Shop removal is a versioned soft archive, scoped to the active household and aut
 ## Forward photo bytes to Gemini without EcoLoop media persistence (2026-10-17)
 
 The bounded household photo intake sends validated JPEG, PNG, or WebP bytes directly from the authenticated API request to the configured Gemini Developer API. EcoLoop stores only strictly validated candidate fields in the existing creator-private intake record; it does not write image bytes to disk or Cloud Storage, and no provider retention duration is claimed. Photo processing stays unavailable unless `AGENT_ENABLED=true` and a Developer API key are configured. The browser command flag remains default-off. See the photo-intake session for local verification and cloud acceptance gaps.
+
+## Billing observations superseded (2026-10-17)
+
+The 16 October note below records the state observed before the owner enabled billing; it is historical and must not be used as the current cloud state. On 17 October, read-only CLI and Console checks confirmed billing enabled for `ecoloop-staging-20261015`, linked to the open “Hackathon billing Account”; EcoLoop was the only project returned for that account. A ₹2,000 monthly budget is filtered to Gemini API, with 50/80/100% alerts and a Gemini API spend cap. The billing console reported ₹0 for 1–17 October, subject to reporting delay. Credits remain unverified. This does not cap other services or establish paid-service readiness. See [Agent Platform integration plan](../planning/AGENT_PLATFORM_PLAN.md).
+
+## Agent Platform local adapter boundary (2026-10-17)
+
+Keep Google managed Sessions and Memory Bank opt-in and disabled by default. The existing ADK orchestrator may use `VertexAiSessionService` only with a configured existing Agent Engine resource; health must label it configured-but-unverified until a real managed request and isolation check succeed. Firestore remains the source of truth. Memory Bank receives only explicitly consented saved preference facts and may supply assistant context only after each candidate is matched to the current owner-scoped Firestore record. Retain deletion tombstones until managed cleanup is confirmed; show unavailable/reconciliation state and allow explicit retry. No transcript ingestion or provider probe from health/GET. See [implementation session](sessions/2026-10-17-agent-platform-local-implementation.md).

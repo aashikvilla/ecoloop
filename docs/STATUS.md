@@ -1,6 +1,11 @@
 # EcoLoop implementation status
 
-Updated 17 October 2026 after local coding consolidation. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+Updated 17 October 2026 after local Agent Platform integration work. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+
+## Latest local coding checkpoint — 17 October 2026
+
+- Google Agents CLI v1.10.0 and its ADK workspace skills are installed. Backend code now has default-off Agent Engine Sessions and owner-consented Memory Bank adapters, explicit sync status/retry, and canonical Firestore validation on recall. Frontend Settings reports configured/unverified states. No managed service was provisioned or called; no managed-session, memory-recall, cross-user, or deletion acceptance is claimed.
+- The billing/cost gate and M0/M3 acceptance remain open. Billing enabled by the owner is not evidence of a total-project spend ceiling, credits, API/IAM readiness, or managed resource access. See [Agent Platform local implementation](knowledge/sessions/2026-10-17-agent-platform-local-implementation.md) and [platform plan](planning/AGENT_PLATFORM_PLAN.md).
 
 ## Historical local auth, AI and preview acceptance — 17 October 2026
 ## Latest local coding consolidation and regression — 17 October 2026

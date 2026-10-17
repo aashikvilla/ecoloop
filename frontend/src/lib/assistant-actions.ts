@@ -3,7 +3,8 @@ import { canonicalRequest, CanonicalApiError } from "@/lib/canonical-transport";
 
 export type ProposalResolution = { proposal_id: string; status: "APPROVED" | "DISMISSED"; version: number; action: "ADD" | "APPROVE" | "EDIT" | "DISMISS"; entry_id?: string; plan_id?: string; plan_version?: number; servings?: number; preparation_guidance?: "MAKE_A_SMALLER_BATCH" | "CONSIDER_STORAGE_OR_SHARING" | "PORTION_AND_CONSIDER_STORAGE_OR_SHARING" | "CONFIRM_PREPARATION_STAGE"; stock_changed?: false };
 export type PreparationStage = "NOT_STARTED" | "PARTLY_PREPARED" | "ALREADY_COOKED" | "UNKNOWN";
-export type SavedPreference = { preference_id: string; text: string; status: "ACTIVE"; version: number; updated_at: string; consent: true };
+export type PreferenceMemorySync = { status: "pending" | "syncing" | "synced" | "not_configured" | "reconciliation_required"; version: number };
+export type SavedPreference = { preference_id: string; text: string; status: "ACTIVE"; version: number; updated_at: string; consent: true; memory_bank_sync: PreferenceMemorySync };
 export type SavedAssistantTurn = { turn_id: string; created_at: string; user_text: string; envelope: AssistantEnvelope; resolutions: Record<string, ProposalResolution> };
 
 const idPattern = /^[A-Za-z0-9._:-]{1,128}$/;
@@ -21,11 +22,11 @@ export async function readSavedPreferences(token: string, signal: AbortSignal): 
     throw new CanonicalApiError("invalid_response", "The preference service returned an unexpected response.");
   }
   const body = result(payload);
-  if (body.memory_bank !== "not_connected" || !Array.isArray(body.preferences) || body.preferences.length > 50) {
+  if (!object(body.memory_bank) || !["not_configured", "configured_unverified", "unavailable"].includes(String(body.memory_bank.status)) || body.memory_bank.provider !== "google_agent_platform" || !Array.isArray(body.preferences) || body.preferences.length > 50) {
     throw new CanonicalApiError("invalid_response", "The preference service returned invalid saved preferences.");
   }
   const preferences = body.preferences.map((value): SavedPreference => {
-    if (!object(value) || typeof value.preference_id !== "string" || !preferenceIdPattern.test(value.preference_id) || typeof value.text !== "string" || value.text.length < 1 || value.text.length > 200 || value.status !== "ACTIVE" || value.consent !== true || !Number.isSafeInteger(value.version) || (value.version as number) < 1 || typeof value.updated_at !== "string" || value.updated_at.length > 40 || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value.updated_at) || !Number.isFinite(Date.parse(value.updated_at))) {
+    if (!object(value) || typeof value.preference_id !== "string" || !preferenceIdPattern.test(value.preference_id) || typeof value.text !== "string" || value.text.length < 1 || value.text.length > 200 || value.status !== "ACTIVE" || value.consent !== true || !Number.isSafeInteger(value.version) || (value.version as number) < 1 || typeof value.updated_at !== "string" || value.updated_at.length > 40 || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(value.updated_at) || !Number.isFinite(Date.parse(value.updated_at)) || !object(value.memory_bank_sync) || !["pending", "syncing", "synced", "not_configured", "reconciliation_required"].includes(String(value.memory_bank_sync.status)) || value.memory_bank_sync.version !== value.version) {
       throw new CanonicalApiError("invalid_response", "The preference service returned invalid saved preferences.");
     }
     return value as SavedPreference;
@@ -131,8 +132,8 @@ export async function saveProposedPreference(token: string, preferenceId: string
     throw new CanonicalApiError("invalid_response", "The preference service returned an unexpected response.");
   }
   const saved = result(payload);
-  if (saved.preference_id !== preferenceId || saved.text !== clean || saved.status !== "ACTIVE" || saved.consent !== true || saved.version !== 1 || typeof saved.updated_at !== "string" || saved.updated_at.length > 40 || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(saved.updated_at) || !Number.isFinite(Date.parse(saved.updated_at))) {
+  if (saved.preference_id !== preferenceId || saved.text !== clean || saved.status !== "ACTIVE" || saved.consent !== true || saved.version !== 1 || typeof saved.updated_at !== "string" || saved.updated_at.length > 40 || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(saved.updated_at) || !Number.isFinite(Date.parse(saved.updated_at)) || !object(saved.memory_bank_sync) || !["pending", "syncing", "synced", "not_configured", "reconciliation_required"].includes(String(saved.memory_bank_sync.status)) || saved.memory_bank_sync.version !== saved.version) {
     throw new CanonicalApiError("invalid_response", "The preference service could not confirm this change.");
   }
-  return { preference_id: preferenceId, text: clean, status: "ACTIVE", version: 1, updated_at: saved.updated_at, consent: true };
+  return { preference_id: preferenceId, text: clean, status: "ACTIVE", version: 1, updated_at: saved.updated_at, consent: true, memory_bank_sync: saved.memory_bank_sync as SavedPreference["memory_bank_sync"] };
 }

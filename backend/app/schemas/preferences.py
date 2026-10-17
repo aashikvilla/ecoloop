@@ -31,3 +31,8 @@ class DeletePreferenceCommand(BaseModel):
     schema_version: Literal[1] = 1
     idempotency_key: RetryKey
     base_version: Annotated[StrictInt, Field(ge=1)]
+
+
+class PreferenceMemorySyncCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    schema_version: Literal[1] = 1

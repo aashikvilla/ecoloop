@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     AGENT_MODEL: str = "gemini-3.1-flash-lite"
     AGENT_VERTEX_PROJECT_ID: str | None = None
     AGENT_VERTEX_LOCATION: str = "us-central1"
+    AGENT_SESSION_STORE: Literal["in_memory", "vertex_ai"] = "in_memory"
+    AGENT_VERTEX_ENGINE_ID: str | None = None
+    AGENT_SESSION_IDLE_TTL_SECONDS: int = 86_400
+    AGENT_MEMORY_BANK_ENABLED: bool = False
     AGENT_REQUEST_TIMEOUT_SECONDS: int = 20
     AGENT_MAX_OUTPUT_TOKENS: int = 4_096
 
@@ -65,6 +69,13 @@ class Settings(BaseSettings):
     def validate_agent_timeout(cls, seconds: int) -> int:
         if not 1 <= seconds <= 60:
             raise ValueError("AGENT_REQUEST_TIMEOUT_SECONDS must be between 1 and 60")
+        return seconds
+
+    @field_validator("AGENT_SESSION_IDLE_TTL_SECONDS")
+    @classmethod
+    def validate_agent_session_idle_ttl(cls, seconds: int) -> int:
+        if not 3_600 <= seconds <= 2_592_000:
+            raise ValueError("AGENT_SESSION_IDLE_TTL_SECONDS must be between 1 hour and 30 days")
         return seconds
 
     @field_validator("AGENT_MAX_OUTPUT_TOKENS")

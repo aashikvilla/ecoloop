@@ -14,7 +14,7 @@ from typing import Any, Annotated
 
 from google.adk.agents import LlmAgent
 from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
+from google.adk.sessions import BaseSessionService, InMemorySessionService, VertexAiSessionService
 from google.adk.tools import ToolContext
 from google.genai import types
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
@@ -23,6 +23,7 @@ from app.core.config import settings
 from app.core.errors import DomainError
 from app.core.firestore import get_firestore
 from app.core.identity import Principal
+from app.agents.memory_bank import memory_bank_status, retrieve_approved_preferences
 from app.domain.preferences import list_preferences
 from app.domain.repository import list_shopping_entries
 from app.schemas.household import AssistantEnvelope, AssistantTurnRequest, DateType, ProposalCard
@@ -43,7 +44,7 @@ TOOL_SCOPE_ROLE_KEY = "ecoloop_tool_role"
 _PROVIDER_LOCK = asyncio.Lock()
 _SESSION_LOCK = asyncio.Lock()
 _runner: Runner | None = None
-_session_service: InMemorySessionService | None = None
+_session_service: BaseSessionService | None = None
 _active_sessions: OrderedDict[tuple[str, str], float] = OrderedDict()
 
 
@@ -322,10 +323,31 @@ def _provider_configuration() -> tuple[str, str, str | None] | None:
     return None
 
 
+def _managed_session_configuration() -> tuple[str, str, str] | None:
+    """Return complete explicit Agent Engine settings for Vertex managed Sessions."""
+    if settings.AGENT_SESSION_STORE != "vertex_ai":
+        return None
+    project = settings.AGENT_VERTEX_PROJECT_ID or settings.FIREBASE_PROJECT_ID or settings.GOOGLE_CLOUD_PROJECT
+    location = settings.AGENT_VERTEX_LOCATION.strip()
+    engine_id = settings.AGENT_VERTEX_ENGINE_ID.strip() if settings.AGENT_VERTEX_ENGINE_ID else ""
+    if not project or not location or not engine_id:
+        return None
+    return project, location, engine_id
+
+
 def get_agent_provider_status() -> dict[str, str | bool]:
     """Describe configured provider selection without validating credentials or calling it."""
     configuration = _provider_configuration()
     provider = configuration[0] if configuration else None
+    managed_sessions = _managed_session_configuration() is not None
+    memory_status = memory_bank_status()["status"]
+    session_store = (
+        "vertex_ai_configured_unverified"
+        if managed_sessions
+        else "vertex_ai_unavailable"
+        if settings.AGENT_SESSION_STORE == "vertex_ai"
+        else "in_memory_unmanaged"
+    )
     return {
         "provider": {
             "gemini_api": "gemini_developer_api",
@@ -339,8 +361,11 @@ def get_agent_provider_status() -> dict[str, str | bool]:
             else "configured" if settings.AGENT_ENABLED else "disabled"
         ),
         "runtime_check": "not_performed",
-        "session_store": "in_memory_unmanaged",
+        "session_store": session_store,
+        "managed_sessions_configured": managed_sessions,
         "managed_sessions": False,
+        "memory_bank": memory_status,
+        "managed_memory_configured": memory_status == "configured_unverified",
         "managed_memory": False,
     }
 
@@ -360,7 +385,7 @@ def _provider() -> tuple[str, str, str | None]:
     return configuration
 
 
-async def _get_runner() -> tuple[Runner, InMemorySessionService]:
+async def _get_runner() -> tuple[Runner, BaseSessionService]:
     global _runner, _session_service
     if _runner is not None and _session_service is not None:
         return _runner, _session_service
@@ -368,6 +393,14 @@ async def _get_runner() -> tuple[Runner, InMemorySessionService]:
         if _runner is not None and _session_service is not None:
             return _runner, _session_service
         provider, credential, location = _provider()
+        managed_session_config = _managed_session_configuration()
+        if settings.AGENT_SESSION_STORE == "vertex_ai" and managed_session_config is None:
+            raise DomainError(
+                "AGENT_UNAVAILABLE",
+                "Managed assistant sessions need a Vertex AI project, location, and Agent Engine ID.",
+                503,
+                True,
+            )
         if provider == "gemini_api":
             # ADK's Google GenAI model reads these standard settings when creating its client.
             os.environ["GOOGLE_API_KEY"] = credential
@@ -397,27 +430,39 @@ async def _get_runner() -> tuple[Runner, InMemorySessionService]:
             ),
             tools=[read_confirmed_pantry, read_active_shopping_list, read_active_meal_plans],
         )
-        sessions = InMemorySessionService()
+        if managed_session_config is not None:
+            project, session_location, engine_id = managed_session_config
+            # VertexAiSessionService stores session state and history in the existing
+            # Agent Engine resource; no new runtime is provisioned by this code path.
+            sessions: BaseSessionService = VertexAiSessionService(
+                project=project,
+                location=session_location,
+                agent_engine_id=engine_id,
+            )
+        else:
+            sessions = InMemorySessionService()
         _runner = Runner(agent=agent, app_name=APP_NAME, session_service=sessions)
         _session_service = sessions
         return _runner, sessions
 
 
 async def _prepare_session(
-    sessions: InMemorySessionService,
+    sessions: BaseSessionService,
     *,
     user_id: str,
     session_id: str,
     principal: Principal,
 ) -> None:
-    """Keep the temporary in-process transcript store bounded and short-lived."""
+    """Create a scoped session and bound in-memory sessions and history."""
     now = monotonic()
     key = (user_id, session_id)
     async with _SESSION_LOCK:
-        for old_key, last_seen in list(_active_sessions.items()):
-            if now - last_seen > SESSION_TTL_SECONDS:
-                await sessions.delete_session(app_name=APP_NAME, user_id=old_key[0], session_id=old_key[1])
-                _active_sessions.pop(old_key, None)
+        is_managed = isinstance(sessions, VertexAiSessionService)
+        if not is_managed:
+            for old_key, last_seen in list(_active_sessions.items()):
+                if now - last_seen > SESSION_TTL_SECONDS:
+                    await sessions.delete_session(app_name=APP_NAME, user_id=old_key[0], session_id=old_key[1])
+                    _active_sessions.pop(old_key, None)
 
         current = await sessions.get_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
         session_state = {
@@ -425,19 +470,25 @@ async def _prepare_session(
             TOOL_SCOPE_HOUSEHOLD_KEY: principal.household_id,
             TOOL_SCOPE_ROLE_KEY: principal.role,
         }
+
+        async def create_scoped_session() -> None:
+            create_kwargs: dict[str, Any] = {
+                "app_name": APP_NAME,
+                "user_id": user_id,
+                "session_id": session_id,
+                "state": session_state,
+            }
+            if is_managed:
+                create_kwargs["ttl"] = f"{settings.AGENT_SESSION_IDLE_TTL_SECONDS}s"
+            await sessions.create_session(**create_kwargs)
+
         if current is not None and any(current.state.get(key) != value for key, value in session_state.items()):
-            # InMemorySessionService returns copies of existing sessions. Recreate
-            # legacy sessions with trusted scope rather than mutating a local copy.
-            await sessions.delete_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
-            current = None
+            # Never silently rebind or delete a session whose persisted scope differs.
+            # The caller can start a fresh session ID; tool reads still recheck membership.
+            raise DomainError("FORBIDDEN", "The assistant session belongs to a different household scope.", 403)
         if current is None:
             try:
-                await sessions.create_session(
-                    app_name=APP_NAME,
-                    user_id=user_id,
-                    session_id=session_id,
-                    state=session_state,
-                )
+                await create_scoped_session()
             except Exception:
                 current = await sessions.get_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
                 if current is None:
@@ -445,18 +496,14 @@ async def _prepare_session(
         elif len(current.events) >= 40:
             # Start a fresh short conversation instead of retaining an unbounded transcript.
             await sessions.delete_session(app_name=APP_NAME, user_id=user_id, session_id=session_id)
-            await sessions.create_session(
-                app_name=APP_NAME,
-                user_id=user_id,
-                session_id=session_id,
-                state=session_state,
-            )
+            await create_scoped_session()
 
-        _active_sessions.pop(key, None)
-        _active_sessions[key] = now
-        while len(_active_sessions) > MAX_IN_MEMORY_SESSIONS:
-            evicted, _ = _active_sessions.popitem(last=False)
-            await sessions.delete_session(app_name=APP_NAME, user_id=evicted[0], session_id=evicted[1])
+        if not is_managed:
+            _active_sessions.pop(key, None)
+            _active_sessions[key] = now
+            while len(_active_sessions) > MAX_IN_MEMORY_SESSIONS:
+                evicted, _ = _active_sessions.popitem(last=False)
+                await sessions.delete_session(app_name=APP_NAME, user_id=evicted[0], session_id=evicted[1])
 
 
 def _iso(value: Any) -> str | None:
@@ -648,6 +695,17 @@ async def generate_household_turn(
     try:
         kitchen = await asyncio.to_thread(_kitchen_query, principal, request.context_item_ids)
         preferences = await asyncio.to_thread(list_preferences, principal.uid)
+        if settings.AGENT_MEMORY_BANK_ENABLED:
+            try:
+                remembered = await asyncio.to_thread(retrieve_approved_preferences, principal.uid, limit=20)
+            except Exception:
+                # Canonical Firestore preferences remain available as the fallback;
+                # an optional derived index must not block an assistant turn.
+                remembered = []
+            if remembered:
+                # Memory Bank is an index only. The adapter validates each result
+                # against the current canonical consented Firestore record.
+                preferences = remembered
         saved_plans = await asyncio.to_thread(_current_household_meal_plans, principal)
     except DomainError:
         raise
@@ -677,6 +735,7 @@ async def generate_household_turn(
         f"<USER_APPROVED_PREFERENCES_JSON>{preference_context}</USER_APPROVED_PREFERENCES_JSON>"
     )
     session_id = request.session_id or str(uuid.uuid4())
+    managed_session_id = session_id
     # ADK namespaces sessions by user_id; include household scope so a principal
     # switching households cannot reuse an earlier transcript via a chosen session_id.
     scope_value = json.dumps([principal.uid, principal.household_id], separators=(",", ":"))
@@ -684,13 +743,15 @@ async def generate_household_turn(
     user_id = f"household:{user_scope}"
     try:
         runner, sessions = await _get_runner()
-        await _prepare_session(sessions, user_id=user_id, session_id=session_id, principal=principal)
+        if isinstance(sessions, VertexAiSessionService) and not re.fullmatch(r"[A-Za-z0-9_-]+", session_id):
+            managed_session_id = "s-" + hashlib.sha256(session_id.encode("utf-8")).hexdigest()
+        await _prepare_session(sessions, user_id=user_id, session_id=managed_session_id, principal=principal)
         async with asyncio.timeout(settings.AGENT_REQUEST_TIMEOUT_SECONDS):
             events = [
                 event
                 async for event in runner.run_async(
                     user_id=user_id,
-                    session_id=session_id,
+                    session_id=managed_session_id,
                     new_message=types.Content(role="user", parts=[types.Part(text=user_payload)]),
                 )
             ]

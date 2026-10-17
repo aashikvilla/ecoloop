@@ -7,10 +7,10 @@ export class CanonicalApiError extends Error {
   }
 }
 
-export type CanonicalResource = "households" | "kitchen" | "shopping" | "shopping-archive" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "meal-plans" | "assistant-turns" | "preferences" | "proposal-turns" | "proposal-actions" | "proposal-meal-actions" | "proposal-history";
+export type CanonicalResource = "households" | "kitchen" | "shopping" | "shopping-archive" | "facts/confirm" | "outcomes" | "share-logs" | "share-transition" | "activity" | "meal-plans" | "assistant-turns" | "preferences" | "preference-memory-sync" | "proposal-turns" | "proposal-actions" | "proposal-meal-actions" | "proposal-history";
 export type CanonicalRequestOptions = { method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE"; recordId?: string; body?: unknown; signal?: AbortSignal; query?: { limit?: number; cursor?: string } };
 const methods: Record<CanonicalResource, readonly string[]> = {
-  households: ["GET", "POST"], kitchen: ["GET"], shopping: ["GET", "POST"], "shopping-archive": ["PATCH"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "meal-plans": ["GET"], "assistant-turns": ["POST"], preferences: ["GET", "PUT", "DELETE"], "proposal-turns": ["POST"], "proposal-actions": ["POST"], "proposal-meal-actions": ["POST"], "proposal-history": ["GET"],
+  households: ["GET", "POST"], kitchen: ["GET"], shopping: ["GET", "POST"], "shopping-archive": ["PATCH"], "facts/confirm": ["POST"], outcomes: ["POST"], "share-logs": ["GET", "POST"], "share-transition": ["PATCH"], activity: ["GET"], "meal-plans": ["GET"], "assistant-turns": ["POST"], preferences: ["GET", "PUT", "DELETE"], "preference-memory-sync": ["POST"], "proposal-turns": ["POST"], "proposal-actions": ["POST"], "proposal-meal-actions": ["POST"], "proposal-history": ["GET"],
 };
 const RESPONSE_BYTES = 512_000;
 
@@ -67,7 +67,7 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   if (!idToken || idToken.length > 8192 || /[\r\n]/.test(idToken)) throw new CanonicalApiError("unauthenticated", "Sign in before accessing household records.");
   const householdCreation = resource === "households" && method === "POST";
   const householdDiscovery = resource === "households" && method === "GET";
-  const userPrivate = resource === "preferences";
+  const userPrivate = resource === "preferences" || resource === "preference-memory-sync";
   const assistantTurn = resource === "assistant-turns" || resource === "proposal-turns";
   if (householdCreation || householdDiscovery || userPrivate ? householdId !== null : !householdId || !/^[A-Za-z0-9_-]{1,128}$/.test(householdId)) throw new CanonicalApiError("validation", "This household request has an invalid scope.");
   const writing = method !== "GET" && !assistantTurn;
@@ -86,6 +86,9 @@ export async function canonicalRequest(resource: CanonicalResource, idToken: str
   } else if (resource === "proposal-meal-actions") {
     if (typeof options.recordId !== "string" || !/^[A-Za-z0-9._:-]{1,128}$/.test(options.recordId)) throw new CanonicalApiError("validation", "This proposal reference is invalid.");
     path = `/api/v1/assistant/proposals/${encodeURIComponent(options.recordId)}/meal-actions`;
+  } else if (resource === "preference-memory-sync") {
+    if (typeof options.recordId !== "string" || !/^[A-Za-z0-9_-]{16,64}$/.test(options.recordId)) throw new CanonicalApiError("validation", "This preference reference is invalid.");
+    path = `/api/v1/preferences/${encodeURIComponent(options.recordId)}/memory-sync`;
   } else if (userPrivate && options.recordId !== undefined) {
     if (!/^[A-Za-z0-9_-]{16,64}$/.test(options.recordId)) throw new CanonicalApiError("validation", "This preference reference is invalid.");
     path = `/api/v1/preferences/${encodeURIComponent(options.recordId)}`;
