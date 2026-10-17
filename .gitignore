@@ -27,6 +27,7 @@ __pycache__/
 .env.test.local
 .env.production.local
 *.local
+gha-creds-*.json
 
 # Debug logs
 npm-debug.log*

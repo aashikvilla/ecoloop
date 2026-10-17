@@ -18,5 +18,5 @@ images:
 options:
   logging: CLOUD_LOGGING_ONLY
 substitutions:
-  _ENABLE_COMMANDS: "false"
-  _ENABLE_HOUSEHOLD_CREATE: "false"
+  _ENABLE_COMMANDS: "true"
+  _ENABLE_HOUSEHOLD_CREATE: "true"

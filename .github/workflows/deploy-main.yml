@@ -1,0 +1,149 @@
+name: Deploy EcoLoop to Cloud Run
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - "backend/**"
+      - "deploy/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ecoloop-cloud-run-main
+  cancel-in-progress: false
+
+jobs:
+  build-smoke-promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PROJECT_ID: ecoloop-staging-20261015
+      REGION: asia-south1
+      REPOSITORY: ecoloop
+      API_ORIGIN: https://ecoloop-api-4wlelpcnca-el.a.run.app
+      WEB_ORIGIN: https://ecoloop-web-4wlelpcnca-el.a.run.app
+      WEB_RUNTIME_SERVICE_ACCOUNT: ecoloop-web-runtime@ecoloop-staging-20261015.iam.gserviceaccount.com
+      API_RUNTIME_SERVICE_ACCOUNT: ecoloop-api-runtime@ecoloop-staging-20261015.iam.gserviceaccount.com
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ecoloop-staging-20261015
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+        with:
+          project_id: ecoloop-staging-20261015
+
+      - name: Configure Artifact Registry
+        run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Build and publish immutable images
+        env:
+          FIREBASE_API_KEY: ${{ vars.FIREBASE_WEB_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ vars.FIREBASE_WEB_AUTH_DOMAIN }}
+          FIREBASE_APP_ID: ${{ vars.FIREBASE_WEB_APP_ID }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_SHA::12}"
+          web_image="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/frontend:${tag}"
+          api_image="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/backend:${tag}"
+          test -n "$FIREBASE_API_KEY"
+          test -n "$FIREBASE_AUTH_DOMAIN"
+          test -n "$FIREBASE_APP_ID"
+          docker build --platform linux/amd64 \
+            --build-arg "NEXT_PUBLIC_FIREBASE_API_KEY=${FIREBASE_API_KEY}" \
+            --build-arg "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN}" \
+            --build-arg "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${PROJECT_ID}" \
+            --build-arg "NEXT_PUBLIC_FIREBASE_APP_ID=${FIREBASE_APP_ID}" \
+            --build-arg "NEXT_PUBLIC_ECOLOOP_API_ORIGIN=${API_ORIGIN}" \
+            --build-arg NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS=true \
+            --build-arg NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE=true \
+            --tag "$web_image" frontend
+          docker build --platform linux/amd64 --tag "$api_image" backend
+          docker push "$web_image"
+          docker push "$api_image"
+          echo "WEB_IMAGE=$web_image" >> "$GITHUB_ENV"
+          echo "API_IMAGE=$api_image" >> "$GITHUB_ENV"
+          echo "REVISION_TAG=rel-${tag}" >> "$GITHUB_ENV"
+
+      - name: Deploy candidate revisions
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/ecoloop-api-env.yaml" <<EOF
+          FIREBASE_PROJECT_ID: "${PROJECT_ID}"
+          GOOGLE_CLOUD_PROJECT: "${PROJECT_ID}"
+          AGENT_ENABLED: "false"
+          AGENT_PROVIDER: "gemini_api"
+          AGENT_MODEL: "gemini-3.1-flash-lite"
+          AGENT_SESSION_STORE: "in_memory"
+          AGENT_SESSION_IDLE_TTL_SECONDS: "86400"
+          AGENT_MEMORY_BANK_ENABLED: "false"
+          AGENT_REQUEST_TIMEOUT_SECONDS: "20"
+          AGENT_MAX_OUTPUT_TOKENS: "4096"
+          AI_DAILY_REQUEST_LIMIT: "12"
+          MAX_REQUEST_BYTES: "256000"
+          MAX_PHOTO_BYTES: "2000000"
+          BACKEND_CORS_ORIGINS: '["${WEB_ORIGIN}"]'
+          EOF
+          gcloud run deploy ecoloop-api \
+            --project="$PROJECT_ID" --region="$REGION" --platform=managed \
+            --image="$API_IMAGE" --service-account="$API_RUNTIME_SERVICE_ACCOUNT" \
+            --port=8080 --cpu=1 --memory=512Mi --concurrency=20 \
+            --timeout=60s --min=0 --max=1 --no-traffic --tag="$REVISION_TAG" \
+            --allow-unauthenticated --env-vars-file="$RUNNER_TEMP/ecoloop-api-env.yaml" --quiet
+          gcloud run deploy ecoloop-web \
+            --project="$PROJECT_ID" --region="$REGION" --platform=managed \
+            --image="$WEB_IMAGE" --service-account="$WEB_RUNTIME_SERVICE_ACCOUNT" \
+            --port=8080 --cpu=1 --memory=512Mi --concurrency=20 \
+            --timeout=60s --min=0 --max=1 --no-traffic --tag="$REVISION_TAG" \
+            --allow-unauthenticated --quiet
+
+      - name: Smoke check candidates before routing traffic
+        run: |
+          set -euo pipefail
+          gcloud run services describe ecoloop-api --project="$PROJECT_ID" --region="$REGION" --format=json > "$RUNNER_TEMP/api.json"
+          gcloud run services describe ecoloop-web --project="$PROJECT_ID" --region="$REGION" --format=json > "$RUNNER_TEMP/web.json"
+          python - "$RUNNER_TEMP/api.json" "$RUNNER_TEMP/web.json" "$REVISION_TAG" <<'PY' > "$RUNNER_TEMP/candidate-urls.env"
+          import json, sys
+          for label, path, tag in (("API", sys.argv[1], sys.argv[3]), ("WEB", sys.argv[2], sys.argv[3])):
+              state = json.load(open(path, encoding="utf-8"))
+              match = next((row for row in state["status"].get("traffic", []) if row.get("tag") == tag), None)
+              if not match or not match.get("url"):
+                  raise SystemExit(f"Missing {label} candidate URL")
+              print(f"{label}_CANDIDATE_URL={match['url']}")
+              print(f"{label}_REVISION={state['status']['latestReadyRevisionName']}")
+          PY
+          source "$RUNNER_TEMP/candidate-urls.env"
+          curl --fail --silent --show-error "$WEB_CANDIDATE_URL/account" -o /dev/null
+          curl --fail --silent --show-error "$API_CANDIDATE_URL/api/v1/health" -o "$RUNNER_TEMP/health.json"
+          python - "$RUNNER_TEMP/health.json" <<'PY'
+          import json, sys
+          health = json.load(open(sys.argv[1], encoding="utf-8"))
+          if health.get("status") not in ("ok", "healthy"):
+              raise SystemExit("API health response is not healthy")
+          if health.get("assistant", {}).get("enabled") is not False:
+              raise SystemExit("Unexpected assistant state; review provider and cost gates before promotion")
+          PY
+          status=$(curl --silent --output /dev/null --write-out '%{http_code}' "$API_CANDIDATE_URL/api/v1/households")
+          test "$status" = "401"
+          cors=$(curl --silent --output /dev/null --write-out '%{http_code}' -X OPTIONS \
+            -H "Origin: ${WEB_ORIGIN}" -H 'Access-Control-Request-Method: GET' \
+            "$API_CANDIDATE_URL/api/v1/households")
+          test "$cors" = "200"
+
+      - name: Promote both verified revisions
+        run: |
+          set -euo pipefail
+          source "$RUNNER_TEMP/candidate-urls.env"
+          gcloud run services update-traffic ecoloop-api --project="$PROJECT_ID" --region="$REGION" --to-revisions="${API_REVISION}=100" --quiet
+          gcloud run services update-traffic ecoloop-web --project="$PROJECT_ID" --region="$REGION" --to-revisions="${WEB_REVISION}=100" --quiet
