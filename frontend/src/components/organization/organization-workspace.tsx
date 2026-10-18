@@ -79,7 +79,8 @@ function ProfileSetup({
 		<div className="grid gap-4 sm:grid-cols-2">
 			<label className="space-y-1.5 text-sm font-semibold text-primary">Organization name<Input value={draft.name} maxLength={120} onChange={(event) => update("name", event.target.value)} autoComplete="organization" /></label>
 			<label className="space-y-1.5 text-sm font-semibold text-primary">What you support<Input value={draft.category} maxLength={80} onChange={(event) => update("category", event.target.value)} placeholder="Community food support" /></label>
-			<div className="space-y-1.5 sm:col-span-2"><LocationAutocomplete label="Organization pickup base area" defaultValue={draft.approximate_area} onLocationSelected={(location) => setDraft({ ...draft, approximate_area: location.address.slice(0, 160), latitude: location.lat === undefined ? "" : String(location.lat), longitude: location.lng === undefined ? "" : String(location.lng) })} /><p className="text-xs text-muted">Choose a suggested place to fill coordinates automatically, or enter latitude and longitude below.</p></div>
+			<div className="space-y-1.5 sm:col-span-2"><LocationAutocomplete label="Search for your pickup base (optional)" defaultValue={draft.approximate_area} onLocationSelected={(location) => setDraft({ ...draft, approximate_area: location.address.slice(0, 160), latitude: location.lat === undefined ? "" : String(location.lat), longitude: location.lng === undefined ? "" : String(location.lng) })} /><p className="text-xs text-muted">Choose a place to fill the area and coordinates, or enter the area name and coordinates below.</p></div>
+			<label className="space-y-1.5 text-sm font-semibold text-primary sm:col-span-2">Pickup area name<Input value={draft.approximate_area} maxLength={160} onChange={(event) => setDraft({ ...draft, approximate_area: event.target.value })} placeholder="e.g. Central Bengaluru" autoComplete="address-level2" /></label>
 			<label className="space-y-1.5 text-sm font-semibold text-primary">Latitude<Input inputMode="decimal" type="number" min={-90} max={90} step="any" value={draft.latitude} onChange={(event) => update("latitude", event.target.value)} placeholder="e.g. 51.5072" /></label>
 			<label className="space-y-1.5 text-sm font-semibold text-primary">Longitude<Input inputMode="decimal" type="number" min={-180} max={180} step="any" value={draft.longitude} onChange={(event) => update("longitude", event.target.value)} placeholder="e.g. -0.1276" /></label>
 			<label className="space-y-1.5 text-sm font-semibold text-primary sm:col-span-2">Search radius<Input inputMode="numeric" type="number" min={1} max={20} step={1} value={draft.service_radius_km} onChange={(event) => update("service_radius_km", event.target.value)} /><span className="block text-xs font-normal text-muted">Choose 1–20 km. You can change this later.</span></label>
@@ -126,7 +127,9 @@ function OfferCard({
 	</Card>;
 }
 
-export function OrganizationWorkspace() {
+export type OrganizationView = "offers" | "plans" | "impact" | "profile";
+
+export function OrganizationWorkspace({ view }: { view: OrganizationView }) {
 	const { user, auth } = useLiveHousehold();
 	const [phase, setPhase] = useState<PagePhase>("loading");
 	const [error, setError] = useState("");
@@ -134,7 +137,6 @@ export function OrganizationWorkspace() {
 	const [orgId, setOrgId] = useState("");
 	const [draft, setDraft] = useState<ProfileDraft>(emptyDraft);
 	const [profileSaving, setProfileSaving] = useState(false);
-	const [editingProfile, setEditingProfile] = useState(false);
 	const [offers, setOffers] = useState<DiscoveredOffer[]>([]);
 	const [offersCapped, setOffersCapped] = useState(false);
 	const [offerView, setOfferView] = useState<"list" | "map">("list");
@@ -245,6 +247,11 @@ export function OrganizationWorkspace() {
 		totals[key] = (totals[key] ?? 0) + record.received_quantity_minor;
 		return totals;
 	}, {}), [impact]);
+	const workspaceDescription = view === "offers"
+		? "Find nearby food offers and choose what fits your organization."
+		: view === "plans"
+			? "Review quantity coverage, reserve pickups, and track each handover."
+			: "View quantities your organization has confirmed receiving.";
 
 	const saveProfile = async () => {
 		if (!user) return;
@@ -266,7 +273,7 @@ export function OrganizationWorkspace() {
 			} else if (profile) {
 				const updated = await updateRecipientProfile(token, orgId, { ...profile, name: draft.name.trim(), category: draft.category.trim(), pickup_base, service_radius_km: radiusValue });
 				setProfile(updated); setDraft({ name: updated.name, category: updated.category, approximate_area: updated.pickup_base?.approximate_area ?? "", latitude: updated.pickup_base ? String(updated.pickup_base.latitude) : "", longitude: updated.pickup_base ? String(updated.pickup_base.longitude) : "", service_radius_km: String(updated.service_radius_km) });
-				setEditingProfile(false); setPhase("ready"); setNotice("Pickup area updated.");
+				setPhase("ready"); setNotice("Pickup area updated.");
 			}
 			if (!profile) setReloading((value) => value + 1);
 		} catch (cause) {
@@ -380,24 +387,22 @@ export function OrganizationWorkspace() {
 
 	if (phase === "loading") return <div className="mx-auto max-w-5xl"><Card role="status" className="p-5 text-sm text-muted">Loading your organization workspace…</Card></div>;
 	if (phase === "error") return <div className="mx-auto max-w-2xl"><Card role="alert" className="space-y-4 p-5"><Heading as="h1">Organization workspace unavailable</Heading><p className="text-sm leading-6 text-danger">{error}</p><Button variant="secondary" onClick={() => setReloading((value) => value + 1)}>Try again</Button></Card></div>;
-	if (phase === "profile" || editingProfile) return <div className="mx-auto max-w-2xl space-y-4">
+	if (phase === "profile" || view === "profile") return <div className="mx-auto max-w-2xl space-y-4">
 		{phase === "profile" && <header><p className="text-xs font-extrabold uppercase tracking-[.15em] text-secondary">Recipient workspace</p><Heading as="h1" className="mt-2 text-3xl">Start collecting nearby food</Heading></header>}
-		<ProfileSetup draft={draft} setDraft={setDraft} saving={profileSaving} error={error} onSave={() => void saveProfile()} editMode={editingProfile} />
-		{editingProfile && <Button variant="ghost" fullWidth onClick={() => { setEditingProfile(false); setError(""); }}>Cancel profile edit</Button>}
+		{view === "profile" && profile && <header><p className="text-xs font-extrabold uppercase tracking-[.15em] text-secondary">Organization settings</p><Heading as="h1" className="mt-2 text-3xl">Pickup profile</Heading><p className="mt-2 text-sm leading-6 text-muted">Update your organization’s collection base and service area.</p></header>}
+		<ProfileSetup draft={draft} setDraft={setDraft} saving={profileSaving} error={error} onSave={() => void saveProfile()} editMode={Boolean(profile)} />
 	</div>;
 
 	return <div className="mx-auto max-w-5xl space-y-8">
-		<header className="space-y-4">
+		<header>
 			<div className="flex flex-wrap items-start justify-between gap-4">
-				<div><p className="text-xs font-extrabold uppercase tracking-[.15em] text-secondary">Recipient workspace</p><Heading as="h1" className="mt-2 text-3xl sm:text-4xl">{profile?.name ?? "Organization"}</Heading><p className="mt-2 text-sm leading-6 text-muted">Find nearby food, plan a collection, and record what your organization actually received.</p></div>
-				<Button variant="secondary" onClick={() => setEditingProfile(true)}>Edit pickup area</Button>
+				<div><p className="text-xs font-extrabold uppercase tracking-[.15em] text-secondary">Recipient workspace</p><Heading as="h1" className="mt-2 text-3xl sm:text-4xl">{profile?.name ?? "Organization"}</Heading><p className="mt-2 text-sm leading-6 text-muted">{workspaceDescription}</p></div>
 			</div>
-			<nav aria-label="Organization workspace sections" className="flex gap-2 overflow-x-auto pb-1 text-sm font-bold text-primary"><a className="min-h-11 shrink-0 rounded-full bg-primary-soft px-4 py-3" href="#nearby-offers">Nearby offers</a><a className="min-h-11 shrink-0 rounded-full bg-primary-soft px-4 py-3" href="#collection-plan">Collection plan</a><a className="min-h-11 shrink-0 rounded-full bg-primary-soft px-4 py-3" href="#impact">Received impact</a></nav>
 		</header>
 		{notice && <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm text-primary"><span>{notice}</span><button className="min-h-11 px-2 font-bold" aria-label="Dismiss message" onClick={() => setNotice("")}>Dismiss</button></div>}
-		<section id="nearby-offers" className="scroll-mt-24 space-y-4">
+		{view === "offers" && <section id="nearby-offers" className="space-y-4">
 			<div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.13em] text-secondary">Discovery</p><Heading as="h2" className="mt-1">Nearby offers</Heading><p className="mt-1 text-sm text-muted">Approximate locations and donor-declared details. Confirm conditions at handover.</p></div>{profile?.pickup_base && <a href={mapsSearch(profile.pickup_base.latitude, profile.pickup_base.longitude)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-full border border-line bg-white px-4 text-sm font-bold text-primary">Open search area in Maps</a>}</div>
-			<Card className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_180px_140px_150px_auto] sm:items-end">
+			<Card className="grid gap-3 p-4 sm:grid-cols-2 sm:items-end xl:grid-cols-[minmax(0,1fr)_150px_120px_140px_auto]">
 				<label className="space-y-1 text-xs font-semibold text-primary">Search offers or categories<Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Bread, produce, pantry…" /></label>
 				<label className="space-y-1 text-xs font-semibold text-primary">Category<Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="Any category" /></label>
 				<label className="space-y-1 text-xs font-semibold text-primary">Within km<Input type="number" min={1} max={20} step={1} value={radius || String(profile!.service_radius_km)} onChange={(event) => setRadius(event.target.value)} /></label>
@@ -408,8 +413,8 @@ export function OrganizationWorkspace() {
 			{offersCapped && <p role="status" className="rounded-xl border border-tertiary/30 bg-tertiary-soft px-4 py-3 text-sm text-primary">Results are limited to a recent set of offers. There may be other matching offers outside the results shown.</p>}
 			{offerView === "map" && profile?.pickup_base && <RecipientOfferMap offers={offers} pickupBase={profile.pickup_base} onUnavailable={handleMapUnavailable} />}
 			{offers.length === 0 ? <Card className="p-5 text-sm leading-6 text-muted">No nearby offers are shown for these filters. Try a wider search radius or a shorter search term; some results may also be outside the limited set.</Card> : offerView === "list" && <div className="grid gap-4 lg:grid-cols-2">{offers.map((offer) => <OfferCard key={offer.offer_id} offer={offer} selected={selected[offer.offer_id]} onToggle={() => toggleOffer(offer)} onQuantity={(value) => setSelected((current) => ({ ...current, [offer.offer_id]: { ...current[offer.offer_id], quantity: value } }))} />)}</div>}
-		</section>
-		<section id="collection-plan" className="scroll-mt-24 space-y-4">
+		</section>}
+		{view === "plans" && <section id="collection-plan" className="space-y-4">
 			<div><p className="text-xs font-bold uppercase tracking-[.13em] text-secondary">Plan together</p><Heading as="h2" className="mt-1">Build a collection plan</Heading><p className="mt-1 text-sm text-muted">Select up to five offers, adjust quantities, then review coverage before saving.</p></div>
 			{selectedEntries.length > 0 && <Card className="space-y-4 p-4 sm:p-5">
 				<div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-bold text-primary">Proposed collection · {selectedEntries.length}/5 stops</h3>{selectedEntries.length >= 5 && <span className="text-xs text-muted">Maximum stops reached</span>}</div>
@@ -421,8 +426,8 @@ export function OrganizationWorkspace() {
 			</Card>}
 			{plans.length > 0 && <div className="space-y-3"><h3 className="font-bold text-primary">Saved collection plans</h3><div className="grid gap-3 lg:grid-cols-2">{plans.map((plan) => <CollectionPlanCard key={`${plan.plan_id}-${plan.version}`} plan={plan} claims={claims} route={routes[plan.plan_id]} busy={savingPlan} onReserve={(record, stop) => void reserveStop(record, stop)} onRoute={(record, ids) => void generateRoute(record, ids)} onCancel={(claim) => void cancelReservation(claim)} onCollect={(claim, amount, reason) => void recordClaimQuantity(claim, "collect", amount, reason)} onReceive={(claim, amount, reason) => void recordClaimQuantity(claim, "receive", amount, reason)} onSaveEdit={(record, stops) => void savePlanEdits(record, stops)} />)}</div></div>}
 			{plans.length === 0 && selectedEntries.length === 0 && <Card className="p-5 text-sm text-muted">Your saved collection plans will appear here.</Card>}
-		</section>
-		<section id="impact" className="scroll-mt-24 space-y-4">
+		</section>}
+		{view === "impact" && <section id="impact" className="space-y-4">
 			<div><p className="text-xs font-bold uppercase tracking-[.13em] text-secondary">Confirmed outcomes</p><Heading as="h2" className="mt-1">What your organization received</Heading><p className="mt-1 text-sm text-muted">Only quantities confirmed as received are included. Food units stay separate; no people-served or environmental savings are inferred.</p></div>
 			<Card className="space-y-4 p-5">
 				{impact.length === 0 ? <p className="text-sm text-muted">No receipts have been confirmed yet. After a collection, record what arrived to show your organization’s confirmed total.</p> : <>
@@ -431,6 +436,6 @@ export function OrganizationWorkspace() {
 					<div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm"><thead className="text-xs uppercase tracking-wide text-muted"><tr><th className="py-2 pr-3">Offer</th><th className="py-2 pr-3">Donor</th><th className="py-2 pr-3">Offered</th><th className="py-2 pr-3">Collected</th><th className="py-2">Received</th></tr></thead><tbody>{impact.map((record) => <tr key={`${record.claim_id}-${record.recorded_at}`} className="border-t border-line"><td className="py-3 pr-3 text-primary">{record.offer_id}</td><td className="py-3 pr-3 capitalize text-muted">{record.donor_kind}</td><td className="py-3 pr-3 text-muted">{quantity(record.offered_quantity_minor, record.unit)}</td><td className="py-3 pr-3 text-muted">{quantity(record.collected_quantity_minor, record.unit)}</td><td className="py-3 font-semibold text-primary">{quantity(record.received_quantity_minor, record.unit)}</td></tr>)}</tbody></table></div>
 				</>}
 			</Card>
-		</section>
+		</section>}
 	</div>;
 }
