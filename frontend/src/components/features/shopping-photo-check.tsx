@@ -20,6 +20,13 @@ function normalizedName(value: string) {
   return value.normalize("NFKC").trim().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 }
 
+function equivalentPantryName(pantryName: string, productName: string) {
+  const pantry = normalizedName(pantryName);
+  const product = normalizedName(productName);
+  if (!pantry || !product) return false;
+  return pantry === product || ` ${pantry} `.includes(` ${product} `) || ` ${product} `.includes(` ${pantry} `);
+}
+
 function message(error: unknown) {
   return error instanceof CanonicalApiError ? error.message : "The product check could not be completed. Try again.";
 }
@@ -87,12 +94,12 @@ export function ShoppingPhotoCheck() {
       const pantry = await readCanonicalRecords("kitchen", token, household.householdId, request.signal);
       if (request.signal.aborted) return;
       if (pantry.kind !== "kitchen") throw new CanonicalApiError("invalid_response", "The household service returned the wrong record type.");
-      const exactMatches = pantry.records.filter((item) => normalizedName(item.name) === normalizedName(reviewedName));
-      if (exactMatches.length !== 1) {
-        setResult(exactMatches.length === 0 ? { kind: "none" } : null);
-        if (exactMatches.length > 1) setError("More than one exact record matched. Review Kitchen directly; this check will not guess between records.");
+      const equivalentMatches = pantry.records.filter((item) => equivalentPantryName(item.name, reviewedName));
+      if (equivalentMatches.length !== 1) {
+        setResult(equivalentMatches.length === 0 ? { kind: "none" } : null);
+        if (equivalentMatches.length > 1) setError("More than one Kitchen item could match this product. Review Kitchen directly; this check will not guess between records.");
       } else {
-        const item = exactMatches[0];
+        const item = equivalentMatches[0];
         setResult(item.amount === 0 ? { kind: "zero", item } : item.amount !== null ? { kind: "matched", item } : null);
         if (item.amount === null) setError("A matching record exists, but its quantity is unknown. EcoLoop cannot recommend skipping a purchase from this evidence.");
       }
