@@ -1,5 +1,9 @@
 # Decision knowledge
 
+## Shared Google Maps loader — 2026-10-18
+
+Keep Google Maps script loading in `frontend/src/lib/google-maps-loader.ts`, shared by address autocomplete and the recipient offer map. UI components should consume the loader instead of importing each other to obtain script-loading behavior. This preserves the existing readiness callback and auth-failure handling while allowing autocomplete to use accessible Places suggestions. See [upstream Maps fix session](sessions/2026-10-18-upstream-maps-autocomplete.md).
+
 ## Simplified recipient pickup scope — 2026-10-18
 
 Owner direction supersedes manual recipient approval and coordinator/collector role workflows for the current implementation plan. Completing an organization profile is sufficient for operation through one organization sign-in. Server identity, active membership and revocation checks remain mandatory. Implement eligibility independently of verification status; never mark a self-completed profile as independently verified. Keep business donor policy separate.

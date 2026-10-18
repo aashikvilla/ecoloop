@@ -1,5 +1,10 @@
 # EcoLoop implementation status
 
+## Upstream Maps autocomplete fix — local `main`
+
+- Cherry-picked upstream code commit `0a44a5d` as `1c56006`, replacing the embedded Maps widget with accessible Places suggestions in the shared household/organization location input. Kept the existing Google Maps loading behavior by extracting it to `frontend/src/lib/google-maps-loader.ts` and updating the recipient map import.
+- Frontend `pnpm exec tsc --noEmit` and `pnpm lint` pass. The patch is local only: it has not been pushed or deployed. See [upstream Maps fix session](knowledge/sessions/2026-10-18-upstream-maps-autocomplete.md) and [shared loader decision](knowledge/DECISIONS.md#shared-google-maps-loader--2026-10-18).
+
 ## Main deployment and household creation follow-up — 18 October 2026
 
 - GitHub Actions run [39121041553](https://github.com/aashikvilla/ecoloop/actions/runs/39121041553) built, smoke-checked and promoted the `main` revision at `4e08b04` to the existing Cloud Run services. `ecoloop-api-00034-vam` and `ecoloop-web-00018-ful` each receive 100% of traffic. Live `/api/v1/health` and `/account` checks returned HTTP 200.
