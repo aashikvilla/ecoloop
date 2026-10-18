@@ -88,6 +88,15 @@ export type OfferAnalyzeResult = {
   ai_provider: string | null;
 };
 
+export type DonorReceiptImpactRecord = {
+  claim_id: string;
+  offer_id: string;
+  donor_kind: DonorActorKind;
+  donor_owner_id: string;
+  received_quantity_minor: number;
+  unit: OfferUnit;
+};
+
 function getApiOrigin(): string {
   const configured = process.env.NEXT_PUBLIC_ECOLOOP_API_ORIGIN?.trim();
   if (!configured) return "http://127.0.0.1:8000";
@@ -112,6 +121,7 @@ async function apiFetch<T>(
     idempotencyKey?: string;
     isBinary?: boolean;
     contentType?: string;
+    signal?: AbortSignal;
   } = {},
 ): Promise<T> {
   const origin = getApiOrigin();
@@ -145,6 +155,8 @@ async function apiFetch<T>(
     method: options.method ?? "GET",
     headers,
     body: bodyData,
+    cache: "no-store",
+    signal: options.signal,
   });
 
   if (!response.ok) {
@@ -211,6 +223,40 @@ export async function fetchOffer(
   offerId: string,
 ): Promise<SurplusOffer> {
   return await apiFetch<SurplusOffer>(`/api/v1/offers/${encodeURIComponent(offerId)}`, token, actor);
+}
+
+export async function fetchOfferReceiptImpact(
+  token: string,
+  actor: { kind: DonorActorKind; id: string },
+  offerId: string,
+  signal?: AbortSignal,
+): Promise<{ records: DonorReceiptImpactRecord[]; complete: boolean }> {
+  const records: DonorReceiptImpactRecord[] = [];
+  const seenCursors = new Set<string>();
+  let cursor: string | null = null;
+  const maxPages = 20;
+
+  for (let page = 0; page < maxPages; page += 1) {
+    const params = new URLSearchParams({ limit: "100" });
+    if (cursor) params.set("cursor", cursor);
+    const result = await apiFetch<{
+      records: DonorReceiptImpactRecord[];
+      cursor: string | null;
+      coverage: "all_records" | "loaded_page";
+    }>(`/api/v1/impact/me?${params.toString()}`, token, actor, { signal });
+    if (!Array.isArray(result.records)) throw new CanonicalApiError("invalid_response", "The receipt service returned invalid records.");
+    records.push(...result.records.filter((record) =>
+      record.offer_id === offerId &&
+      record.donor_kind === actor.kind &&
+      record.donor_owner_id === actor.id,
+    ));
+    if (!result.cursor) return { records, complete: true };
+    if (seenCursors.has(result.cursor)) throw new CanonicalApiError("invalid_response", "The receipt service returned a repeated page cursor.");
+    seenCursors.add(result.cursor);
+    cursor = result.cursor;
+  }
+
+  return { records, complete: false };
 }
 
 export async function createOfferDraft(

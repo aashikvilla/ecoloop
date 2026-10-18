@@ -165,8 +165,14 @@ async def current_actor(
         ):
             raise DomainError("DATA_UNAVAILABLE", "Organization membership data is invalid.", 503, True)
         status = organization.get("verification_status")
-        if actor_kind == "recipient_org" and status != "APPROVED":
-            raise HTTPException(status_code=403)
+        if actor_kind == "recipient_org":
+            # Recipient access is tied to a complete self-reported profile and active
+            # membership. Approval remains a separate verification fact and is not
+            # inferred from profile completion.
+            from app.domain.recipient_access import RECIPIENT_OPERATOR_PERMISSIONS, validate_recipient_membership
+
+            validate_recipient_membership(organization, membership, uid, actor_id, version)
+            permissions = list(RECIPIENT_OPERATOR_PERMISSIONS)
         return ActorContext(
             uid=uid,
             actor_kind=actor_kind,

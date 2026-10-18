@@ -1,5 +1,5 @@
-import { OrganizationPlaceholder } from "@/components/organization/organization-placeholder";
+import { OrganizationWorkspace } from "@/components/organization/organization-workspace";
 
 export default function OrganizationPage() {
-	return <OrganizationPlaceholder/>;
+	return <OrganizationWorkspace />;
 }

@@ -40,11 +40,15 @@ class OrganizationCreate(StrictModel):
     name: Annotated[StrictStr, Field(min_length=2, max_length=120)]
     category: Annotated[StrictStr, Field(min_length=2, max_length=80)] | None = None
     pickup_base: PickupBase | None = None
+    service_radius_km: Annotated[StrictFloat, Field(ge=1, le=20)] | None = 5.0
 
     @model_validator(mode="after")
     def recipient_needs_category(self) -> "OrganizationCreate":
-        if self.type == "recipient_org" and not self.category:
-            raise ValueError("recipient organizations require a category")
+        if self.type == "recipient_org":
+            if not self.category:
+                raise ValueError("recipient organizations require a category")
+            if not self.pickup_base:
+                raise ValueError("recipient organizations require a pickup base")
         return self
 
 
@@ -66,6 +70,8 @@ class OrganizationRecord(StrictModel):
     category: str | None = None
     verification_status: Literal["PENDING", "APPROVED", "REVOKED"]
     pickup_base: PickupBase | None = None
+    profile_status: Literal["COMPLETE"] | None = None
+    service_radius_km: Annotated[StrictFloat, Field(ge=1, le=20)] | None = None
     version: Annotated[StrictInt, Field(ge=1)]
     created_at: datetime
     updated_at: datetime

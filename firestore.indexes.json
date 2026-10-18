@@ -45,6 +45,15 @@
       "collectionGroup": "surplus_offers",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "visibility", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "geohash", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "surplus_offers",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "donor.kind", "order": "ASCENDING" },
         { "fieldPath": "donor.owner_id", "order": "ASCENDING" },
         { "fieldPath": "created_at", "order": "DESCENDING" }
@@ -65,6 +74,31 @@
       "fields": [
         { "fieldPath": "offer_id", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "offer_claims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recipient_org_id", "order": "ASCENDING" },
+        { "fieldPath": "reserved_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "offer_claims",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "donor_kind", "order": "ASCENDING" },
+        { "fieldPath": "donor_owner_id", "order": "ASCENDING" },
+        { "fieldPath": "reserved_at", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "recovery_plans",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "org_id", "order": "ASCENDING" },
+        { "fieldPath": "updated_at", "order": "DESCENDING" }
       ]
     },
     {

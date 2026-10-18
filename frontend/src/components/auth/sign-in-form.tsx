@@ -74,6 +74,6 @@ export function SignInForm({ mode }: { mode: LoginMode }) {
 			<Button fullWidth type="submit" disabled={busy} aria-busy={busy}>{busy ? "Connecting…" : emailMode === "create" ? "Create account" : "Sign in with email"}</Button>
 		</form>
 		{error && <p role="alert" className="text-sm font-semibold text-danger">{error}</p>}
-		<p className="text-xs leading-relaxed text-muted">{mode === "organization" ? "Organization access is checked against your approved EcoLoop membership after sign-in." : "Your household records are available only to signed-in household members."}</p>
+		<p className="text-xs leading-relaxed text-muted">{mode === "organization" ? "Organization access is checked against your active EcoLoop membership after sign-in." : "Your household records are available only to signed-in household members."}</p>
 	</div>;
 }

@@ -19,6 +19,7 @@ from app.core.errors import DomainError
 from app.core.firestore import get_firestore
 from app.core.identity import ActorContext, organization_membership_document_id
 from app.domain.private_media import validate_media
+from app.domain.recipient_access import RECIPIENT_OPERATOR_PERMISSIONS, assert_recipient_actor
 from app.schemas.social_impact import (
     ClaimCreate,
     OfferAnalyzeRequest,
@@ -48,6 +49,33 @@ def _hash(value: Any) -> str:
 def _stable_document_id(prefix: str, *parts: str) -> str:
     digest = hashlib.sha256("\0".join(parts).encode("utf-8")).hexdigest()
     return f"{prefix}_{digest}"
+
+
+def _offer_geohash(latitude: float, longitude: float, precision: int = 9) -> str:
+    """Index a donor-confirmed offer coordinate for bounded nearby discovery."""
+    alphabet = "0123456789bcdefghjkmnpqrstuvwxyz"
+    lat_range = [-90.0, 90.0]
+    lon_range = [-180.0, 180.0]
+    bits = (16, 8, 4, 2, 1)
+    result: list[str] = []
+    even = True
+    bit_index = char_index = 0
+    while len(result) < precision:
+        current_range = lon_range if even else lat_range
+        value = longitude if even else latitude
+        midpoint = (current_range[0] + current_range[1]) / 2
+        if value >= midpoint:
+            char_index |= bits[bit_index]
+            current_range[0] = midpoint
+        else:
+            current_range[1] = midpoint
+        even = not even
+        if bit_index < 4:
+            bit_index += 1
+        else:
+            result.append(alphabet[char_index])
+            bit_index = char_index = 0
+    return "".join(result)
 
 
 def _key_ref(db: Any, actor_uid: str, key: str) -> Any:
@@ -96,7 +124,9 @@ def _assert_actor(transaction: Any, db: Any, actor: ActorContext, required_permi
     member_snapshot = member_ref.get(transaction=transaction)
     organization = org_snapshot.to_dict() if org_snapshot.exists else None
     member = member_snapshot.to_dict() if member_snapshot.exists else None
-    expected_type = "business_donor" if actor.actor_kind == "business" else "recipient_org"
+    if actor.actor_kind == "recipient_org":
+        return assert_recipient_actor(transaction, db, actor, required_permission)
+    expected_type = "business_donor"
     if (
         not organization or organization.get("org_id") != actor.actor_id
         or organization.get("type") != expected_type or not member
@@ -106,8 +136,6 @@ def _assert_actor(transaction: Any, db: Any, actor: ActorContext, required_permi
         or member.get("version") < 1 or member.get("version") != actor.membership_version
     ):
         raise DomainError("FORBIDDEN", "The requested organization membership is not available.", 403)
-    if actor.actor_kind == "recipient_org" and organization.get("verification_status") != "APPROVED":
-        raise DomainError("FORBIDDEN", "The recipient organization is not approved.", 403)
     permissions = member.get("permissions")
     if not isinstance(permissions, list) or any(not isinstance(item, str) for item in permissions):
         raise DomainError("DATA_UNAVAILABLE", "Organization permissions are invalid.", 503, True)
@@ -124,7 +152,7 @@ def create_organization(uid: str, command: OrganizationCreate, idempotency_key: 
     idem_ref = _key_ref(db, uid, f"organization:{idempotency_key}")
     payload_hash = _hash(command.model_dump(mode="json"))
     verification = "PENDING"
-    member_permissions = ["offer:create", "offer:edit", "offer:read", "offer:publish"] if command.type == "business_donor" else ["offer:search", "offer:claim"]
+    member_permissions = ["offer:create", "offer:edit", "offer:read", "offer:publish"] if command.type == "business_donor" else list(RECIPIENT_OPERATOR_PERMISSIONS)
 
     @firestore.transactional
     def commit(transaction: Any) -> dict[str, Any]:
@@ -141,6 +169,8 @@ def create_organization(uid: str, command: OrganizationCreate, idempotency_key: 
             "category": command.category.strip() if command.category else None,
             "verification_status": verification,
             "pickup_base": command.pickup_base.model_dump(mode="json") if command.pickup_base else None,
+            "profile_status": "COMPLETE" if command.type == "recipient_org" else None,
+            "service_radius_km": command.service_radius_km if command.type == "recipient_org" else None,
             "version": 1,
             "created_at": firestore.SERVER_TIMESTAMP,
             "updated_at": firestore.SERVER_TIMESTAMP,
@@ -193,7 +223,12 @@ def list_my_organizations(uid: str) -> dict[str, Any]:
                 "org_id": org_id,
                 "type": organization.get("type"),
                 "name": organization.get("name"),
+                "category": organization.get("category"),
                 "verification_status": organization.get("verification_status"),
+                "profile_status": organization.get("profile_status", "INCOMPLETE"),
+                "pickup_base": organization.get("pickup_base"),
+                "service_radius_km": organization.get("service_radius_km", 5.0),
+                "version": organization.get("version", 1),
                 "role": membership.get("role"),
                 "permissions": membership.get("permissions", []),
                 "membership_version": membership.get("version"),
@@ -300,6 +335,9 @@ def edit_offer(actor: ActorContext, offer_id: str, command: OfferEdit, idempoten
             raise DomainError("OFFER_VERSION_CONFLICT", "The offer changed. Reload it before editing.", 409)
         patch = command.model_dump(exclude={"expected_version"})
         updated = {**offer, **patch, "quantity_available_minor": command.quantity_total_minor, "version": command.expected_version + 1, "updated_at": firestore.SERVER_TIMESTAMP}
+        latitude, longitude = patch.get("latitude"), patch.get("longitude")
+        if isinstance(latitude, (int, float)) and not isinstance(latitude, bool) and isinstance(longitude, (int, float)) and not isinstance(longitude, bool):
+            updated["geohash"] = _offer_geohash(float(latitude), float(longitude))
         result = {"offer_id": offer_id, "status": status, "version": command.expected_version + 1}
         transaction.set(ref, updated)
         transaction.create(idem_ref, {"actor_uid": actor.uid, "payload_hash": payload_hash, "result": result, "created_at": firestore.SERVER_TIMESTAMP})
@@ -355,7 +393,13 @@ def publish_offer(actor: ActorContext, offer_id: str, expected_version: int, ide
         if isinstance(total, bool) or not isinstance(total, int) or total <= 0:
             raise DomainError("INVALID_QUANTITY", "A positive integer offer quantity is required.", 422)
         result = {"offer_id": offer_id, "status": "OPEN", "version": expected_version + 1}
-        transaction.update(ref, {"visibility": "PUBLIC", "status": "OPEN", "version": expected_version + 1, "updated_at": firestore.SERVER_TIMESTAMP})
+        transaction.update(ref, {
+            "visibility": "PUBLIC",
+            "status": "OPEN",
+            "geohash": _offer_geohash(float(offer["latitude"]), float(offer["longitude"])),
+            "version": expected_version + 1,
+            "updated_at": firestore.SERVER_TIMESTAMP,
+        })
         transaction.create(idem_ref, {"actor_uid": actor.uid, "payload_hash": payload_hash, "result": result, "created_at": firestore.SERVER_TIMESTAMP})
         return result
 
@@ -407,6 +451,11 @@ def cancel_offer(actor: ActorContext, offer_id: str, command: OfferCancel, idemp
             raise DomainError("OFFER_STATUS_CONFLICT", "The offer is already closed or cancelled.", 409)
         if (offer.get("quantity_collected_minor") or 0) > 0:
             raise DomainError("OFFER_STATUS_CONFLICT", "Cannot cancel an offer after items have been collected.", 409)
+        reserved = offer.get("quantity_reserved_minor", 0)
+        if isinstance(reserved, bool) or not isinstance(reserved, int) or reserved < 0:
+            raise DomainError("DATA_UNAVAILABLE", "The offer reservation ledger is invalid.", 503, True)
+        if reserved > 0:
+            raise DomainError("OFFER_HAS_ACTIVE_CLAIMS", "Resolve active recipient reservations before cancelling this offer.", 409)
         if _version(offer) != command.expected_version:
             raise DomainError("OFFER_VERSION_CONFLICT", "The offer changed. Reload it before cancelling.", 409)
 
@@ -522,7 +571,7 @@ def read_offer_media(actor: ActorContext, offer_id: str, media_id: str) -> tuple
         claim_ref = db.collection("offer_claims").document(_stable_document_id("claim", offer_id, actor.actor_id))
         claim_snapshot = claim_ref.get()
         claim = claim_snapshot.to_dict() if claim_snapshot.exists else None
-        active_claim = claim and claim.get("status") in {"RESERVED", "PICKUP_IN_PROGRESS", "COLLECTED"}
+        active_claim = claim and claim.get("status") in {"RESERVED", "PICKUP_IN_PROGRESS"}
         if not active_claim:
             raise DomainError("FORBIDDEN", "Private offer media is only available to an approved claimant or donor.", 403)
     else:
@@ -682,12 +731,14 @@ def _assert_actor_read(db: Any, actor: ActorContext, required_permission: str | 
     member_snapshot = db.collection("organization_members").document(organization_membership_document_id(actor.actor_id, actor.uid)).get()
     organization = org_snapshot.to_dict() if org_snapshot.exists else None
     member = member_snapshot.to_dict() if member_snapshot.exists else None
-    expected_type = "business_donor" if actor.actor_kind == "business" else "recipient_org"
+    if actor.actor_kind == "recipient_org":
+        from app.domain.recipient_access import validate_recipient_membership
+
+        return validate_recipient_membership(organization, member, actor.uid, actor.actor_id, actor.membership_version)[0]
+    expected_type = "business_donor"
     member_version = (member or {}).get("version")
     if not organization or organization.get("org_id") != actor.actor_id or organization.get("type") != expected_type or not member or member.get("org_id") != actor.actor_id or member.get("uid") != actor.uid or member.get("status") != "ACTIVE" or member.get("role") != actor.role or isinstance(member_version, bool) or not isinstance(member_version, int) or member_version < 1 or member_version != actor.membership_version:
         raise DomainError("FORBIDDEN", "The requested organization membership is not available.", 403)
-    if actor.actor_kind == "recipient_org" and organization.get("verification_status") != "APPROVED":
-        raise DomainError("FORBIDDEN", "The recipient organization is not approved.", 403)
     permissions = member.get("permissions")
     if not isinstance(permissions, list) or any(not isinstance(item, str) for item in permissions):
         raise DomainError("DATA_UNAVAILABLE", "Organization permissions are invalid.", 503, True)
@@ -707,7 +758,7 @@ def _sanitize_offer(offer: dict[str, Any], include_private: bool = False) -> dic
 
 def list_public_offers(actor: ActorContext) -> dict[str, Any]:
     if actor.actor_kind != "recipient_org":
-        raise DomainError("FORBIDDEN", "Only approved recipient organizations can search offers.", 403)
+        raise DomainError("FORBIDDEN", "Only complete recipient organizations can search offers.", 403)
     db = get_firestore()
     try:
         # Authorization and approval are rechecked before the query; no coordinates or private fields enter this response.
@@ -765,114 +816,9 @@ def read_offer(actor: ActorContext, offer_id: str) -> dict[str, Any]:
 
 
 def create_claim(actor: ActorContext, offer_id: str, command: ClaimCreate, idempotency_key: str) -> dict[str, Any]:
-    if actor.actor_kind != "recipient_org":
-        raise DomainError("FORBIDDEN", "Only approved recipient organizations can reserve offers.", 403)
-    db = get_firestore()
-    offer_ref = _offer_ref(db, offer_id)
-    claim_ref = db.collection("offer_claims").document(_stable_document_id("claim", offer_id, actor.actor_id))
-    event_ref = db.collection("pickup_events").document(_stable_document_id("event", offer_id, actor.actor_id, "reserved"))
-    idem_ref = _key_ref(db, actor.uid, f"claim:{idempotency_key}")
-    payload_hash = _hash({"offer_id": offer_id, **command.model_dump(mode="json"), "actor_id": actor.actor_id})
-    now = datetime.now(timezone.utc)
-
-    @firestore.transactional
-    def commit(transaction: Any) -> dict[str, Any]:
-        _assert_actor(transaction, db, actor, "offer:claim")
-        previous = _prior(idem_ref.get(transaction=transaction), payload_hash, actor.uid)
-        if previous is not None:
-            return previous
-        offer_snapshot = offer_ref.get(transaction=transaction)
-        existing_claim_snapshot = claim_ref.get(transaction=transaction)
-        offer = offer_snapshot.to_dict() if offer_snapshot.exists else None
-        if not offer or offer.get("visibility") != "PUBLIC":
-            raise DomainError("NOT_FOUND", "The offer was not found.", 404)
-        if existing_claim_snapshot.exists:
-            raise DomainError("CLAIM_CONFLICT", "This organization already has a claim for the offer.", 409)
-        if offer.get("status") not in {"OPEN", "PARTIALLY_RESERVED"}:
-            raise DomainError("OFFER_STATUS_CONFLICT", "The offer is not available for reservation.", 409)
-        if _version(offer) != command.expected_offer_version:
-            raise DomainError("OFFER_VERSION_CONFLICT", "The offer changed. Refresh before reserving.", 409)
-        if offer.get("unit") != command.unit:
-            raise DomainError("UNIT_CONFLICT", "The requested unit must exactly match the offer unit.", 409)
-        available = offer.get("quantity_available_minor")
-        reserved = offer.get("quantity_reserved_minor")
-        collected = offer.get("quantity_collected_minor", 0)
-        received = offer.get("quantity_received_minor", 0)
-        total = offer.get("quantity_total_minor")
-        balances = (available, reserved, collected, received, total)
-        if any(isinstance(value, bool) or not isinstance(value, int) or value < 0 for value in balances) or total == 0:
-            raise DomainError("DATA_UNAVAILABLE", "The offer quantity ledger is invalid.", 503, True)
-        if available < command.quantity_minor:
-            raise DomainError("QUANTITY_CONFLICT", "The requested amount exceeds the available offer quantity.", 409)
-        if received > collected or available + reserved + collected > total:
-            raise DomainError("DATA_UNAVAILABLE", "The offer quantity ledger is inconsistent.", 503, True)
-        new_available = available - command.quantity_minor
-        new_reserved = reserved + command.quantity_minor
-        status = "FULLY_RESERVED" if new_available == 0 else "PARTIALLY_RESERVED"
-        claim_id = claim_ref.id
-        result = {"claim_id": claim_id, "offer_id": offer_id, "org_id": actor.actor_id, "quantity_minor": command.quantity_minor, "unit": command.unit, "status": "RESERVED", "offer_version": command.expected_offer_version + 1}
-        claim = {
-            **result,
-            "recipient_org_id": actor.actor_id,
-            "reserved_by": actor.uid,
-            "collected_quantity_minor": 0,
-            "received_quantity_minor": 0,
-            "reserved_at": firestore.SERVER_TIMESTAMP,
-            "idempotency_key": idempotency_key,
-            "pickup_window_start": offer.get("pickup_window_start"),
-            "pickup_window_end": offer.get("pickup_window_end"),
-            "version": 1,
-        }
-        event = {
-            "event_id": event_ref.id,
-            "claim_id": claim_id,
-            "offer_id": offer_id,
-            "event_type": "RESERVED",
-            "actor_kind": "recipient_org",
-            "actor_id": actor.actor_id,
-            "actor_uid": actor.uid,
-            "quantity_minor": command.quantity_minor,
-            "unit": command.unit,
-            "occurred_at": firestore.SERVER_TIMESTAMP,
-            "idempotency_key": idempotency_key,
-        }
-        transaction.update(offer_ref, {
-            "quantity_available_minor": new_available,
-            "quantity_reserved_minor": new_reserved,
-            "status": status,
-            "version": command.expected_offer_version + 1,
-            "updated_at": firestore.SERVER_TIMESTAMP,
-        })
-        transaction.create(claim_ref, claim)
-        transaction.create(event_ref, event)
-        transaction.create(idem_ref, {"actor_uid": actor.uid, "payload_hash": payload_hash, "result": result, "created_at": firestore.SERVER_TIMESTAMP})
-        return result
-
-    transient_errors = (
-        google_exceptions.Aborted,
-        google_exceptions.DeadlineExceeded,
-        google_exceptions.InternalServerError,
-        google_exceptions.ResourceExhausted,
-        google_exceptions.ServiceUnavailable,
+    """Retire standalone reservations; all recipient claims require a collection plan."""
+    raise DomainError(
+        "COLLECTION_PLAN_REQUIRED",
+        "Create or update a collection plan and reserve its stop from the recovery flow.",
+        410,
     )
-    for attempt in range(3):
-        try:
-            return commit(db.transaction())
-        except DomainError:
-            raise
-        except transient_errors as exc:
-            if attempt < 2:
-                time.sleep(0.05 * (2**attempt))
-                continue
-            try:
-                # A lost commit response is safe to reconcile through its idempotency record.
-                previous = _prior(idem_ref.get(), payload_hash, actor.uid)
-                if previous is not None:
-                    return previous
-            except DomainError:
-                raise
-            except Exception:
-                pass
-            raise DomainError("DATA_UNAVAILABLE", "The reservation could not be created.", 503, True) from exc
-        except Exception as exc:
-            raise DomainError("DATA_UNAVAILABLE", "The reservation could not be created.", 503, True) from exc

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,16 +12,27 @@ import { useLiveHousehold } from "@/lib/live-household";
 import {
   cancelOffer,
   fetchOffer,
+  fetchOfferReceiptImpact,
   type DonorActorKind,
+  type DonorReceiptImpactRecord,
   type SurplusOffer,
 } from "@/lib/canonical-offers";
 
-export function OfferDetail({ offerId }: { offerId: string }) {
+export function OfferDetail({ offerId, actorKind, actorId }: { offerId: string; actorKind?: DonorActorKind; actorId?: string }) {
   const household = useLiveHousehold();
+  const selectedActor = useMemo(() => actorKind && actorId
+    ? { kind: actorKind, id: actorId }
+    : { kind: "household" as const, id: household.householdId || "" }, [actorKind, actorId, household.householdId]);
+  const actorQuery = new URLSearchParams({ actorKind: selectedActor.kind, actorId: selectedActor.id });
+  const offersHref = `/offers?${actorQuery.toString()}`;
 
   const [offer, setOffer] = useState<SurplusOffer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [receiptRecords, setReceiptRecords] = useState<DonorReceiptImpactRecord[]>([]);
+  const [receiptState, setReceiptState] = useState<"loading" | "ready" | "error">("loading");
+  const [receiptError, setReceiptError] = useState<string | null>(null);
+  const [receiptComplete, setReceiptComplete] = useState(true);
 
   // Cancellation modal
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -35,15 +46,38 @@ export function OfferDetail({ offerId }: { offerId: string }) {
     setError(null);
     try {
       const token = (await household.user?.getIdToken()) || "";
-      // Try household actor first
-      const actorKind: DonorActorKind = "household";
-      const actorId = household.householdId || "";
-      const data = await fetchOffer(token, { kind: actorKind, id: actorId }, offerId);
+      const data = await fetchOffer(token, selectedActor, offerId);
       setOffer(data);
+      try {
+        const receipts = await fetchOfferReceiptImpact(token, selectedActor, offerId);
+        setReceiptRecords(receipts.records);
+        setReceiptComplete(receipts.complete);
+        setReceiptState("ready");
+        setReceiptError(null);
+      } catch (impactErr: unknown) {
+        setReceiptError(impactErr instanceof Error ? impactErr.message : "Recipient receipt records could not be loaded.");
+        setReceiptState("error");
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load offer details.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshReceiptImpact = async () => {
+    if (household.auth !== "signed-in" || !offer) return;
+    setReceiptState("loading");
+    setReceiptError(null);
+    try {
+      const token = (await household.user?.getIdToken()) || "";
+      const result = await fetchOfferReceiptImpact(token, selectedActor, offer.offer_id);
+      setReceiptRecords(result.records);
+      setReceiptComplete(result.complete);
+      setReceiptState("ready");
+    } catch (err: unknown) {
+      setReceiptError(err instanceof Error ? err.message : "Recipient receipt records could not be loaded.");
+      setReceiptState("error");
     }
   };
 
@@ -54,12 +88,28 @@ export function OfferDetail({ offerId }: { offerId: string }) {
     void (async () => {
       try {
         const token = (await household.user?.getIdToken()) || "";
-        const actorKind: DonorActorKind = "household";
-        const actorId = household.householdId || "";
-        const data = await fetchOffer(token, { kind: actorKind, id: actorId }, offerId);
+        if (active) {
+          setLoading(true);
+          setReceiptState("loading");
+        }
+        const data = await fetchOffer(token, selectedActor, offerId);
         if (active) {
           setOffer(data);
           setError(null);
+        }
+        try {
+          const receipts = await fetchOfferReceiptImpact(token, selectedActor, offerId);
+          if (active) {
+            setReceiptRecords(receipts.records);
+            setReceiptComplete(receipts.complete);
+            setReceiptState("ready");
+            setReceiptError(null);
+          }
+        } catch (err: unknown) {
+          if (active) {
+            setReceiptError(err instanceof Error ? err.message : "Recipient receipt records could not be loaded.");
+            setReceiptState("error");
+          }
         }
       } catch (err: unknown) {
         if (active) {
@@ -73,7 +123,7 @@ export function OfferDetail({ offerId }: { offerId: string }) {
     return () => {
       active = false;
     };
-  }, [household.auth, household.householdId, household.user, offerId]);
+  }, [household.auth, household.user, offerId, selectedActor]);
 
   const handleCancel = async () => {
     if (!offer || household.auth !== "signed-in") return;
@@ -81,11 +131,9 @@ export function OfferDetail({ offerId }: { offerId: string }) {
     setCancelError(null);
     try {
       const token = (await household.user?.getIdToken()) || "";
-      const donorKind = offer.donor?.kind || "household";
-      const ownerId = offer.donor?.owner_id || household.householdId || "";
       await cancelOffer(
         token,
-        { kind: donorKind, id: ownerId },
+        selectedActor,
         offer.offer_id,
         offer.version,
         cancelReason,
@@ -127,7 +175,7 @@ export function OfferDetail({ offerId }: { offerId: string }) {
               Retry
             </Button>
             <Link
-              href="/offers"
+              href={offersHref}
               className="inline-flex min-h-11 items-center px-4 text-xs font-bold text-muted hover:text-ink"
             >
               Back to Offerings
@@ -141,13 +189,18 @@ export function OfferDetail({ offerId }: { offerId: string }) {
   const isOpen = offer.status === "OPEN";
   const isDraft = offer.status === "DRAFT";
   const isCancelled = offer.status === "CANCELLED";
+  const receivedByUnit = new Map<string, number>();
+  for (const record of receiptRecords) {
+    if (!Number.isSafeInteger(record.received_quantity_minor) || record.received_quantity_minor < 0) continue;
+    receivedByUnit.set(record.unit, (receivedByUnit.get(record.unit) ?? 0) + record.received_quantity_minor);
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-16">
       {/* Return Context */}
       <div className="flex items-center justify-between">
         <Link
-          href="/offers"
+          href={offersHref}
           className="inline-flex items-center gap-1.5 text-xs font-bold text-muted hover:text-primary transition-colors py-1.5"
         >
           <Icon name="arrow" size={16} className="rotate-180" />
@@ -214,6 +267,26 @@ export function OfferDetail({ offerId }: { offerId: string }) {
             </div>
           </div>
         </div>
+
+        <section aria-labelledby="recipient-receipt-title" className="rounded-2xl border border-line bg-white p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 id="recipient-receipt-title" className="text-xs font-bold uppercase tracking-wider text-ink">Recipient-confirmed received</h2>
+              <p className="mt-1 text-xs leading-5 text-muted">Source: recipient organization receipt records. Only the quantity recorded as received is shown.</p>
+            </div>
+            {receiptState === "error" && <Button variant="secondary" size="sm" className="min-h-11" onClick={() => void refreshReceiptImpact()}>Retry</Button>}
+          </div>
+          {receiptState === "loading" && <p className="mt-3 text-sm text-muted" role="status">Loading receipt records…</p>}
+          {receiptState === "error" && <p className="mt-3 text-sm text-danger" role="alert">{receiptError || "Recipient receipt records are unavailable."}</p>}
+          {receiptState === "ready" && receiptRecords.length === 0 && <p className="mt-3 text-sm font-semibold text-primary">No recipient-confirmed received quantity is recorded for this offer.</p>}
+          {receiptState === "ready" && receivedByUnit.size > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[...receivedByUnit.entries()].map(([unit, amount]) => <span key={unit} className="rounded-xl bg-primary-soft px-3 py-2 text-sm font-bold text-primary">{amount.toLocaleString()} {unit}</span>)}
+            </div>
+          )}
+          {receiptState === "ready" && !receiptComplete && <p className="mt-2 text-xs text-muted">This amount covers the loaded claim records only; more records remain.</p>}
+          {receiptState === "ready" && <p className="mt-2 text-xs text-muted">These are recipient-reported receipts, not an independent audit or a measure of people served.</p>}
+        </section>
 
         {/* Declarations Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -293,14 +366,14 @@ export function OfferDetail({ offerId }: { offerId: string }) {
         {/* Actions */}
         <div className="flex items-center justify-between border-t border-line/70 pt-4">
           <Link
-            href="/offers"
+            href={offersHref}
             className="inline-flex min-h-11 items-center text-xs font-bold text-muted hover:text-ink"
           >
             ← Back to all offerings
           </Link>
 
           {(isOpen || isDraft) && <div className="flex gap-2">
-            {(isDraft || isOpen && (offer.quantity_reserved_minor ?? 0) === 0 && (offer.quantity_collected_minor ?? 0) === 0) && <Link href={`/offers/${encodeURIComponent(offer.offer_id)}/edit`} className="inline-flex min-h-11 items-center rounded-full border border-line px-4 text-xs font-bold text-primary">Edit offer</Link>}
+            {(isDraft || isOpen && (offer.quantity_reserved_minor ?? 0) === 0 && (offer.quantity_collected_minor ?? 0) === 0) && <Link href={`/offers/${encodeURIComponent(offer.offer_id)}/edit?${actorQuery.toString()}`} className="inline-flex min-h-11 items-center rounded-full border border-line px-4 text-xs font-bold text-primary">Edit offer</Link>}
             <Button variant="danger" size="sm" onClick={() => { setShowCancelModal(true); setCancelError(null); }}>Cancel this offering</Button>
           </div>}
         </div>

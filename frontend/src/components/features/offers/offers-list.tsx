@@ -18,7 +18,14 @@ import {
   type SurplusOffer,
 } from "@/lib/canonical-offers";
 
-export function OffersList() {
+function offerDetailHref(offerId: string, actor: DonorActor | null): string {
+  const path = `/offers/${encodeURIComponent(offerId)}`;
+  if (!actor) return path;
+  const params = new URLSearchParams({ actorKind: actor.kind, actorId: actor.id });
+  return `${path}?${params.toString()}`;
+}
+
+export function OffersList({ requestedActorKind, requestedActorId }: { requestedActorKind?: "household" | "business"; requestedActorId?: string }) {
   const household = useLiveHousehold();
 
   // Actor selection: Household or Business Organization
@@ -73,7 +80,12 @@ export function OffersList() {
 
         if (active) {
           setActors(actorList);
-          setSelectedActor((prev) => prev ?? (actorList.length > 0 ? actorList[0] : null));
+          setSelectedActor((prev) => {
+            const requested = requestedActorKind && requestedActorId
+              ? actorList.find((actor) => actor.kind === requestedActorKind && actor.id === requestedActorId)
+              : undefined;
+            return requested ?? prev ?? (actorList.length > 0 ? actorList[0] : null);
+          });
         }
       } catch (err: unknown) {
         console.error("Failed to load donor actors:", err);
@@ -81,7 +93,7 @@ export function OffersList() {
     }
     void loadActors();
     return () => { active = false; };
-  }, [household.auth, household.householdId, household.user]);
+  }, [household.auth, household.householdId, household.user, requestedActorKind, requestedActorId]);
 
   // Load offers for selected actor
   const refreshOffers = useCallback(async () => {
@@ -206,7 +218,7 @@ export function OffersList() {
           </Link>
         </div>
         <p className="text-sm leading-relaxed text-muted">
-          Publish surplus household and business food for approved non-profit recipients to collect. Exact addresses and instructions remain protected until an authorized organization reserves an item.
+          Publish surplus household and business food for recipient organizations to collect. Exact addresses and instructions remain protected until an active organization reserves an item.
         </p>
       </header>
 
@@ -229,7 +241,11 @@ export function OffersList() {
                 onChange={(e) => {
                   const [kind, id] = e.target.value.split(":");
                   const found = actors.find((a) => a.kind === kind && a.id === id);
-                  if (found) setSelectedActor(found);
+                  if (found) {
+                    setOffers([]);
+                    setLoading(true);
+                    setSelectedActor(found);
+                  }
                 }}
               >
                 {actors.map((actor) => (
@@ -261,7 +277,7 @@ export function OffersList() {
         <Card className="p-4">
           <p className="text-xs font-bold uppercase tracking-wider text-secondary">Currently Available</p>
           <p className="mt-1 text-2xl font-black text-secondary sm:text-3xl">{totalAvailable}</p>
-          <p className="mt-1 text-xs text-muted">Awaiting approved recipient reservation</p>
+          <p className="mt-1 text-xs text-muted">Awaiting recipient organization reservation</p>
         </Card>
       </div>
 
@@ -350,7 +366,7 @@ export function OffersList() {
 
                   <div>
                     <h3 className="text-base font-bold text-ink hover:text-primary transition-colors">
-                      <Link href={`/offers/${encodeURIComponent(offer.offer_id)}`}>
+                      <Link href={offerDetailHref(offer.offer_id, selectedActor)}>
                         {offer.title}
                       </Link>
                     </h3>
@@ -393,7 +409,7 @@ export function OffersList() {
 
                 <div className="flex items-center justify-between border-t border-line/70 pt-3">
                   <Link
-                    href={`/offers/${encodeURIComponent(offer.offer_id)}`}
+                    href={offerDetailHref(offer.offer_id, selectedActor)}
                     className="inline-flex min-h-11 items-center text-xs font-bold text-primary underline"
                   >
                     View details

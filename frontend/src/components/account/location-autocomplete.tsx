@@ -14,6 +14,7 @@ interface LocationAutocompleteProps {
   onLocationSelected: (location: SelectedLocation) => void;
   defaultValue?: string;
   disabled?: boolean;
+  label?: string;
 }
 
 interface MapsLatLng {
@@ -47,8 +48,9 @@ interface PlacesLibrary {
   PlaceAutocompleteElement: new () => PlaceAutocompleteElement;
 }
 
-interface GoogleMapsNamespace {
-  importLibrary: (library: "places") => Promise<PlacesLibrary>;
+export interface GoogleMapsNamespace {
+  importLibrary(library: "places"): Promise<PlacesLibrary>;
+	importLibrary(library: "maps" | "marker" | "core"): Promise<unknown>;
 }
 
 type MapsStatus = "loading" | "ready" | "unavailable";
@@ -58,7 +60,7 @@ const MAPS_SCRIPT_ID = "google-maps-places-script";
 const MAPS_READY_CALLBACK = "__ecoloopGoogleMapsReady";
 let mapsLoaderPromise: Promise<GoogleMapsNamespace> | null = null;
 
-function loadGoogleMaps(apiKey: string): Promise<GoogleMapsNamespace> {
+export function loadGoogleMaps(apiKey: string): Promise<GoogleMapsNamespace> {
   if (window.google?.maps?.importLibrary) {
     return Promise.resolve(window.google.maps);
   }
@@ -105,6 +107,7 @@ export function LocationAutocomplete({
   onLocationSelected,
   defaultValue = "",
   disabled = false,
+  label = "Household address / location",
 }: LocationAutocompleteProps) {
   const widgetHostRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<PlaceAutocompleteElement | null>(null);
@@ -232,7 +235,7 @@ export function LocationAutocomplete({
         htmlFor={mapsStatus === "ready" ? "household-location-autocomplete" : "household-location-input"}
         className="block text-xs font-semibold text-primary"
       >
-        Household address / location
+        {label}
       </label>
       <div ref={widgetHostRef} hidden={mapsStatus !== "ready"} />
       {mapsStatus !== "ready" && (

@@ -1,5 +1,7 @@
 # Household MVP — phase-wise implementation checklist
 
+18 October addition: [Organization pickup implementation plan](ORGANIZATION_PICKUP_IMPLEMENTATION_PLAN.md) defines the owner's simplified recipient feature and O2-00–O2-13 tasks. Its scope replaces older recipient approval/team-role requirements. The M0–M5 checklist below remains the household baseline; this link does not advance any live task status.
+
 15 October 2026 · Planning baseline · 6 phases, 12 tasks, 36 granular units including 6 review gates.
 
 This replaces the 156-unit platform plan. Every box starts unchecked: documentation is not implementation. The live MVPTasks Sheet is the status authority; this file is a baseline snapshot. Each unit has an owner, prerequisite and observable acceptance condition. A review gate counts once as a unit, not once per parent task.

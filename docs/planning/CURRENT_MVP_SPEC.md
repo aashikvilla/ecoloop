@@ -2,6 +2,8 @@
 
 Version 1.1 · 16 October 2026 · Status: current product contract; local demo and backend foundation implemented, managed cloud integration pending.
 
+18 October recipient scope update: [Organization pickup implementation plan](ORGANIZATION_PICKUP_IMPLEMENTATION_PLAN.md) governs this addition: complete profile without manual approval, one operator, nearby discovery, grouped offers, routes, collection and recipient-confirmed receipt. Local implementation is present on `feature/organization-pickup`; end-to-end acceptance, live provider/index verification and deployment remain open. It supersedes recipient deferrals below only for this scoped feature; the remaining household boundaries continue to apply.
+
 Implementation evidence: [demo acceptance record](../evidence/demo-2026-10-16/README.md) and [parallel execution](PARALLEL_EXECUTION.md). Browser demo data is synthetic and isolated; scripted Ask responses are not Gemini. The requirements below still govern the complete cloud product.
 
 This document replaces the broad sustainability platform blueprint for the current release. It brings product, user journeys, screen behavior, architecture and low-level contracts into one coding-agent entrypoint. The companion [implementation plan](IMPLEMENTATION_PLAN.md) owns decomposition; the live Sheet owns execution status. No cloud, partner, safety or performance capability is claimed as implemented.

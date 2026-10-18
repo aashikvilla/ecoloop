@@ -115,6 +115,8 @@ Choose donor profile -> `Create offering` -> photograph (optional/manual fallbac
 
 ## Phase 2 — Recipient organization side (NGO pickup)
 
+**Superseded scope, 18 October 2026:** [Organization pickup implementation plan](ORGANIZATION_PICKUP_IMPLEMENTATION_PLAN.md) replaces the manual-approval, coordinator/collector-assignment and mandatory staged-handover requirements below with profile completion and one organization operator. It owns the revised task breakdown and acceptance gate. The earlier Phase 2 text remains historical context; G0/G1 evidence remains separately scoped. The revised access policy requires fresh acceptance, without claiming old pending-organization denial criteria still apply unchanged.
+
 ### Journey
 Org creates profile -> admin-approved recipient status (seeded/manual for hackathon) -> coordinator grants roles -> sees nearby offer map/list -> optional natural-language need `food for 30 vegetarian people` -> Gemini extracts constraints, missing portion conversion explicitly highlighted -> backend gets eligible offers / ranks by factual constraints -> coordinator chooses offers -> Routes API computes route (or unavailable fallback) -> coordinator reserves amounts -> assigned collector sees pickup instructions -> donor confirms handover -> collector confirms collected quantity -> authorized NGO coordinator confirms received quantity -> deduplicated impact event becomes visible to donor and NGO.
 

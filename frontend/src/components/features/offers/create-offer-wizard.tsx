@@ -34,6 +34,8 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
   const searchParams = useSearchParams();
   const household = useLiveHousehold();
   const kitchenItemId = editOfferId ? null : searchParams.get("item");
+  const routeActorKind = searchParams.get("actorKind");
+  const routeActorId = searchParams.get("actorId");
 
   // Step state (1: Donor profile, 2: Photo/AI, 3: Details & Declarations, 4: Pickup & Location, 5: Privacy Preview & Publish)
   const [step, setStep] = useState<number>(1);
@@ -166,15 +168,26 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
 
   useEffect(() => {
     let active = true;
-    if (!editOfferId || household.auth !== "signed-in" || !household.householdId) return;
+    if (!editOfferId || household.auth !== "signed-in") return;
     void (async () => {
       try {
         const token = (await household.user?.getIdToken()) || "";
-        const offer: SurplusOffer = await fetchOffer(token, { kind: "household", id: household.householdId! }, editOfferId);
+        const actorKind: "household" | "business" = routeActorKind === "business" && routeActorId ? "business" : "household";
+        const actorId = actorKind === "business" ? routeActorId! : household.householdId || "";
+        const actor = { kind: actorKind, id: actorId };
+        let actorName = "My Household";
+        if (actorKind === "business") {
+          const organizations = await fetchMyOrganizations(token);
+          const organization = organizations.find((item) => item.type === "business_donor" && item.org_id === actorId);
+          if (!organization) throw new Error("That business donor profile is not available to this account.");
+          actorName = organization.name;
+        }
+        const offer: SurplusOffer = await fetchOffer(token, actor, editOfferId);
+        if (!offer.donor || offer.donor.kind !== actorKind || offer.donor.owner_id !== actorId) throw new Error("This offering does not belong to the selected donor profile.");
         if (!active) return;
         setDraftId(offer.offer_id);
         setDraftVersion(offer.version);
-        setSelectedActor({ kind: "household", id: household.householdId!, name: "My Household" });
+        setSelectedActor({ kind: actorKind, id: actorId, name: actorName });
         setTitle(offer.title);
         setCategory(offer.category);
         setTagsInput((offer.tags || []).join(", "));
@@ -201,7 +214,7 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
       }
     })();
     return () => { active = false; };
-  }, [editOfferId, household.auth, household.householdId, household.user]);
+  }, [editOfferId, household.auth, household.householdId, household.user, routeActorKind, routeActorId]);
 
   // Handle Geolocation with permission check and graceful fallback
   const handleRequestLocation = () => {
@@ -420,7 +433,8 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
         savedDraft.version,
       );
 
-      router.push(`/offers/${encodeURIComponent(currentDraftId)}`);
+      const actorQuery = new URLSearchParams({ actorKind: selectedActor.kind, actorId: selectedActor.id });
+      router.push(`/offers/${encodeURIComponent(currentDraftId)}?${actorQuery.toString()}`);
     } catch (err: unknown) {
       setPublishError(err instanceof Error ? err.message : "Failed to publish offering.");
     } finally {
@@ -871,7 +885,7 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
               4. Pickup Window & Protected Location
             </Heading>
             <p className="text-xs text-muted">
-              Declare when recipients can collect. Your exact address is never published publicly; it is shared only with the approved non-profit after an active reservation.
+              Declare when recipients can collect. Your exact address is never published publicly; it is shared only with the organization after an active reservation.
             </p>
           </div>
 

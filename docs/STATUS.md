@@ -1,6 +1,15 @@
 # EcoLoop implementation status
 
-Updated 18 October 2026 after Phase 1 donor-side browser validation. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+## Organization pickup Phase 2 — local implementation on `feature/organization-pickup`
+
+- Implemented the one-operator recipient journey: complete profile, nearby offer list/map and basic filters, editable multi-offer plans with unit-aware coverage, per-stop reservation, active-claim route, collection, recipient-confirmed receipt, and donor/organization receipt quantities. Exact pickup details are gated to active reservations. Donor-entered area text is not returned in public discovery; legacy standalone claim creation is retired so it cannot bypass the plan-linked receipt lifecycle.
+- Backend verification: `backend/.venv/Scripts/python.exe -m compileall -q app` passed; FastAPI OpenAPI import passed and all 7 key recipient paths are present; recipient domain imports passed; `firestore.indexes.json` parsed; all 13 deployed composite indexes are `READY`; authenticated API readback confirms one completed plan, two received claims, and two receipt records totaling 14 portions.
+- Frontend verification: `pnpm lint` and `pnpm exec tsc --noEmit` passed after the live browser fixes; no unit tests were created or run. The map uses Google's `core` library for `LatLngBounds`; the browser showed both nearby markers. The map failure fallback now remains visible instead of silently changing views.
+- Authenticated local browser acceptance completed against Firebase project `ecoloop-staging-20261015`: recipient profile, discovery/map, two-stop coverage and gap, save, both reservations, ordered route fallback, collection and partial receipts; donor offering detail independently showed 9 offered, 8 collected and 7 received for produce. Second offer also reconciled to 8/8/7. Route timing is unavailable because no Routes key is configured. Demo accounts and synthetic records were used; credentials are in ignored local `backend/.env`, never in tracked skills/docs.
+- No application deployment or task-sheet update occurred. The Firebase profile, synthetic consumer household, two demo offers, one collection plan, two claims and receipt records are live in the configured project and intentionally left for development/demo access. See [scope and acceptance contract](planning/ORGANIZATION_PICKUP_IMPLEMENTATION_PLAN.md), [local implementation journal](knowledge/sessions/2026-10-18-organization-pickup-implementation.md), [live acceptance journal](knowledge/sessions/2026-10-18-organization-pickup-live-acceptance.md), [architecture](knowledge/ARCHITECTURE.md) and [decision](knowledge/DECISIONS.md#simplified-recipient-pickup-scope--2026-10-18).
+- Before release, inspect for pre-existing standalone claims; they are not migrated to collection plans and are not routable through the new flow.
+
+Updated 18 October 2026 after recipient live acceptance. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
 
 ## Social impact Phase 1 donor side — local fixes applied; G1 open
 

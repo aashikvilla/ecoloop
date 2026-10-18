@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     MAX_PHOTO_BYTES: int = 2_000_000
     GEMINI_API_KEY: SecretStr | None = None
     GOOGLE_API_KEY: SecretStr | None = None
+    GOOGLE_MAPS_ROUTES_API_KEY: SecretStr | None = None
     AGENT_ENABLED: bool = False
     AGENT_PROVIDER: Literal["auto", "gemini_api", "vertex"] = "auto"
     AGENT_MODEL: str = "gemini-3.1-flash-lite"

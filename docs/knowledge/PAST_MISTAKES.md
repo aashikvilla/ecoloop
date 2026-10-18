@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-18 — Import Google Maps constructors from their owning library
+
+Observation: the recipient map requested `LatLngBounds` from the `maps` library, so choosing Map immediately failed and silently returned to List. The provider exposes that constructor from `core`. Prevention: check each Maps JS constructor against the library that owns it, test the rendered map with real markers, and keep a visible error with an explicit List fallback when initialization fails.
+
 ## 2026-10-18 — Match embedded Places widgets to the page color scheme
 
 Observation: Google Places autocomplete rendered its prediction list in dark mode on EcoLoop's light page because the custom element has its own color-scheme behavior. Prevention: set `color-scheme: light` on the Places custom element and verify the open suggestions in a real browser; checking only the closed input misses the contrast failure.
@@ -159,3 +163,7 @@ Pattern: summarize only fetched records, label the loaded-page scope and expose 
 ## 2026-10-18 — Wrap client route hooks in Suspense for static builds
 
 Observation: after adding a protected App Router boundary that reads `usePathname`, Next.js compiled and typechecked but failed during static prerender because the hook was outside a Suspense boundary. Keep the boundary inside Suspense and run the production build after route-group changes; route moves can also leave stale `.next/dev/types` route validators, so regenerate route types before interpreting type errors.
+
+## 2026-10-18 — Retire old mutation paths when introducing a new ledger lifecycle
+
+Observation: the legacy standalone recipient-claim API could reserve inventory without the new collection-plan link. The new collection and receipt lifecycle then could not release or complete that reservation, while the stable offer/organization claim ID blocked a retry. Prevention: when a new state machine becomes authoritative, inventory every old mutation path and either bridge it into the same ledger or fail it closed; do not leave a parallel endpoint that can create unprocessable records. A donor-entered “approximate” label is also not a privacy boundary; public projections must derive coarse data or replace it with a neutral label.

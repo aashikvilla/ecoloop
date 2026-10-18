@@ -1,5 +1,7 @@
 # Demo execution — 16 October 2026
 
+Current recipient implementation (18 October): [Organization pickup plan, parallel ownership and waves](ORGANIZATION_PICKUP_IMPLEMENTATION_PLAN.md#7-parallel-execution-and-file-ownership) and [implementation evidence](../knowledge/sessions/2026-10-18-organization-pickup-implementation.md). The `feature/organization-pickup` lane has local code; the demo branches and authorizations below are historical and do not authorize commits, pushes or deployment for this implementation.
+
 User authorized implementation, parallel GPT-6 Luna/high agents, separate branches, frequent commits and pushes. Billing remains deferred. All cloud AI/session/memory and deployment claims remain unverified until actual service proof. No frontend/backend unit tests.
 
 ## First wave and ownership
