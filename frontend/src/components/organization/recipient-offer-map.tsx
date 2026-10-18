@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { loadGoogleMaps } from "@/components/account/location-autocomplete";
+import { loadGoogleMaps } from "@/lib/google-maps-loader";
 import type { DiscoveredOffer, PickupBase } from "@/lib/canonical-recipient";
 
 const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
