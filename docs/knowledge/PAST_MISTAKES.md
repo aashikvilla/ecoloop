@@ -181,3 +181,7 @@ Observation: the legacy standalone recipient-claim API could reserve inventory w
 ## 2026-10-18 — Configured AI health is not an AI turn acceptance
 
 Observation: Cloud Run health and auth smoke checks passed, and a managed ADK Session was created, but the first authenticated production-candidate recipe turn returned `AGENT_INVALID_RESPONSE` during card-policy validation. Prevention: verify a real authenticated model turn against the tagged candidate before promotion; keep lifecycle metadata and allowed actions server-normalized after strict card parsing so provider variation in policy fields cannot break an otherwise valid proposal. Key creation responses can include the raw key even when a name-only gcloud format is requested; create keys asynchronously and suppress output, and revoke/replace immediately if a key string is exposed.
+
+## 2026-10-18 — Match descriptive photo labels to pantry names conservatively
+
+Observation: Gemini identified a tomato pack as “vine tomatoes,” while Kitchen had the confirmed record “Tomatoes”; strict whole-string equality missed the duplicate-purchase match. Prevention: compare normalized whole-name phrases in either direction, and block the recommendation if more than one pantry record matches. Do not use image-derived guesses for quantity, freshness or suitability.
