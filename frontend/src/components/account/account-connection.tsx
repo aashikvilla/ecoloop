@@ -8,12 +8,15 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Heading } from "@/components/ui/heading";
 import { Input } from "@/components/ui/input";
 import { getFirebaseClient } from "@/lib/firebase-client";
+import { authMessage } from "@/lib/auth-errors";
+import { safeWorkspaceReturnPath } from "@/lib/workspace-routing";
 import { useLiveHousehold } from "@/lib/live-household";
 import {
   CanonicalApiError,
@@ -40,6 +43,7 @@ type AuthState =
 type PendingHouseholdCreation = { uid: string; idempotencyKey: string; name: string };
 
 export function AccountConnection() {
+	const router = useRouter();
   const liveHousehold = useLiveHousehold();
   const setLiveHouseholdId = liveHousehold.setHouseholdId;
   const [authState, setAuthState] = useState<AuthState>("loading");
@@ -166,6 +170,7 @@ export function AccountConnection() {
 
   useEffect(() => {
     if (!user || authState !== "signed-in") return;
+    const restoredHouseholdId = liveHousehold.householdId;
     const controller = new AbortController();
     void Promise.resolve().then(() => {
       if (controller.signal.aborted) return [];
@@ -176,16 +181,18 @@ export function AccountConnection() {
       if (controller.signal.aborted) return;
       setMemberships(rows);
       setCreateHouseholdOpen(rows.length === 0);
-      if (rows.length === 1) {
-        setSelectedHousehold(rows[0].household_id);
-        setHouseholdId(rows[0].household_id);
-        setLiveHouseholdId(rows[0].household_id);
+      const restored = rows.find((row) => row.household_id === restoredHouseholdId);
+      const initialSelection = restored ?? (rows.length === 1 ? rows[0] : undefined);
+      if (initialSelection) {
+        setSelectedHousehold(initialSelection.household_id);
+        setHouseholdId(initialSelection.household_id);
+        setLiveHouseholdId(initialSelection.household_id);
       }
     }).catch((error: unknown) => {
       if (!controller.signal.aborted) setMembershipError(error instanceof Error ? error.message : "Your households could not be loaded.");
     }).finally(() => { if (!controller.signal.aborted) setMembershipLoading(false); });
     return () => controller.abort();
-  }, [authState, setLiveHouseholdId, user]);
+  }, [authState, liveHousehold.householdId, setLiveHouseholdId, user]);
 
   const getIdToken = useCallback(async () => {
     if (!user)
@@ -286,10 +293,10 @@ export function AccountConnection() {
     liveHousehold.setHouseholdId("");
   }
 
-  function selectHousehold(value: string, message = "") {
-    if (busy || createRequestRef.current) return;
+  function selectHousehold(value: string, message = ""): boolean {
+    if (busy || createRequestRef.current) return false;
     const scope = value.trim();
-    if (!/^[A-Za-z0-9_-]{1,128}$/.test(scope)) return;
+    if (!/^[A-Za-z0-9_-]{1,128}$/.test(scope)) return false;
     householdScopeRevisionRef.current += 1;
     setHouseholdId(scope);
     setSelectedHousehold(scope);
@@ -297,6 +304,7 @@ export function AccountConnection() {
     setCreateHouseholdOpen(false);
     setRevision((current) => current + 1);
     clearRecords(message);
+    return true;
   }
 
   async function loadRecords(kind: "kitchen" | "shopping") {
@@ -743,10 +751,17 @@ export function AccountConnection() {
                   fullWidth
                   variant={selectedHousehold === membership.household_id ? "primary" : "secondary"}
                   onClick={() => {
-                    selectHousehold(
-                      membership.household_id,
-                      `${membership.name} selected. The household areas are ready to load.`,
-                    );
+                    if (
+                      !selectHousehold(
+                        membership.household_id,
+                        `${membership.name} selected. The household areas are ready to load.`,
+                      )
+                    ) {
+                      return;
+                    }
+                    const requested = new URLSearchParams(window.location.search).get("next");
+                    const next = safeWorkspaceReturnPath(requested, "personal");
+                    if (next) router.replace(next);
                   }}
                 >
                   {membership.name} {membership.address ? `(${membership.address.split(",")[0]})` : ""} · {membership.role.toLowerCase()}
@@ -792,8 +807,7 @@ export function AccountConnection() {
               No household membership yet. Create your household above to
               begin.
             </p>
-          )}
-        <form onSubmit={submitHousehold} className="space-y-3">
+          )}        <form onSubmit={submitHousehold} className="space-y-3">
           <label
             htmlFor="household-id"
             className="block text-sm font-semibold text-foreground"
@@ -1032,48 +1046,4 @@ function formatDate(value: string): string {
         dateStyle: "medium",
         timeStyle: "short",
       }).format(date);
-}
-
-function authMessage(error: unknown): string {
-  const code =
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    typeof error.code === "string"
-      ? error.code
-      : "";
-  const messages: Record<string, string> = {
-    "auth/app-not-authorized":
-      "This web app is not authorized for Firebase Authentication. Check its Firebase app registration and API key restrictions.",
-    "auth/cancelled-popup-request":
-      "Another sign-in popup is already open. Finish or close it, then try again.",
-    "auth/email-already-in-use":
-      "An account already uses this email. Sign in instead or use another email address.",
-    "auth/invalid-api-key":
-      "The Firebase web API key is missing or invalid for this app.",
-    "auth/invalid-credential": "The email or password is incorrect.",
-    "auth/invalid-email": "Enter a valid email address.",
-    "auth/network-request-failed":
-      "EcoLoop could not reach Firebase Authentication. Check the connection and try again.",
-    "auth/operation-not-allowed":
-      "This sign-in method is not enabled in Firebase Authentication settings.",
-    "auth/popup-blocked":
-      "The browser blocked the sign-in popup. Allow popups for this site, then try again.",
-    "auth/popup-closed-by-user":
-      "Sign-in was cancelled. You can continue when you are ready.",
-    "auth/too-many-requests":
-      "Firebase temporarily paused sign-in after too many attempts. Wait a bit, then retry.",
-    "auth/unauthorized-domain":
-      "This site is not authorized for Firebase sign-in. Add its hostname in Firebase Authentication settings.",
-    "auth/user-not-found": "The email or password is incorrect.",
-    "auth/weak-password":
-      "Choose a stronger password with at least six characters.",
-    "auth/wrong-password": "The email or password is incorrect.",
-  };
-  const message = messages[code] ??
-    "Firebase sign-in could not be completed. Check the Firebase Auth configuration and try again.";
-  const diagnosticCode = /^[a-z][a-z0-9-]*\/[a-z][a-z0-9-]*$/i.test(code)
-    ? ` (Firebase code: ${code})`
-    : "";
-  return `${message}${diagnosticCode}`;
 }

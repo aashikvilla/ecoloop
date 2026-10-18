@@ -58,6 +58,7 @@ jobs:
           FIREBASE_API_KEY: ${{ vars.FIREBASE_WEB_API_KEY }}
           FIREBASE_AUTH_DOMAIN: ${{ vars.FIREBASE_WEB_AUTH_DOMAIN }}
           FIREBASE_APP_ID: ${{ vars.FIREBASE_WEB_APP_ID }}
+          MAPS_API_KEY: ${{ vars.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
         run: |
           set -euo pipefail
           tag="${GITHUB_SHA::12}"
@@ -66,11 +67,13 @@ jobs:
           test -n "$FIREBASE_API_KEY"
           test -n "$FIREBASE_AUTH_DOMAIN"
           test -n "$FIREBASE_APP_ID"
+          test -n "$MAPS_API_KEY"
           docker build --platform linux/amd64 \
             --build-arg "NEXT_PUBLIC_FIREBASE_API_KEY=${FIREBASE_API_KEY}" \
             --build-arg "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN}" \
             --build-arg "NEXT_PUBLIC_FIREBASE_PROJECT_ID=${PROJECT_ID}" \
             --build-arg "NEXT_PUBLIC_FIREBASE_APP_ID=${FIREBASE_APP_ID}" \
+            --build-arg "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${MAPS_API_KEY}" \
             --build-arg "NEXT_PUBLIC_ECOLOOP_API_ORIGIN=${API_ORIGIN}" \
             --build-arg NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS=true \
             --build-arg NEXT_PUBLIC_ECOLOOP_ENABLE_HOUSEHOLD_CREATE=true \

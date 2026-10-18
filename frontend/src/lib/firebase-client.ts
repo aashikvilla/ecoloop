@@ -34,8 +34,8 @@ export async function getFirebaseClient(): Promise<FirebaseClient | null> {
     return {
       app,
       auth: authSdk.initializeAuth(app, {
-        // Keep sign-in through a same-tab reload; household membership and
-        // selection are still loaded from the API and remain in React state.
+			// Keep sign-in through a same-tab reload. The active household ID is a
+			// session-scoped hint and is revalidated against API memberships.
         persistence: authSdk.browserSessionPersistence,
         popupRedirectResolver: authSdk.browserPopupRedirectResolver,
       }),

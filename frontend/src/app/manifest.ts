@@ -3,10 +3,10 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "EcoLoop · My kitchen",
+    name: "EcoLoop",
     short_name: "EcoLoop",
-    description: "A private household kitchen and shopping assistant.",
-    start_url: "/",
+    description: "Keep household food in view and share surplus thoughtfully.",
+    start_url: "/home",
     scope: "/",
     display: "standalone",
     background_color: "#f3fbf6",

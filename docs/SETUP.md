@@ -4,7 +4,7 @@ Updated 17 October 2026. The household destinations now read only from the authe
 
 ## Run the local app
 
-From `frontend/`, install the locked dependencies with `npm ci`, then run `npm run dev -- --port 3002`. `frontend/.env.local` should set the existing Firebase Web configuration and `NEXT_PUBLIC_ECOLOOP_API_ORIGIN=http://localhost:8000`. The browser destinations never substitute local demo records for API data.
+From `frontend/`, install the locked dependencies with `npm ci`, then run `npm run dev -- --port 3002`. `frontend/.env.local` should set the existing Firebase Web configuration, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, and `NEXT_PUBLIC_ECOLOOP_API_ORIGIN=http://localhost:8000`. The Maps browser key is public in the built JavaScript; restrict it to the Maps JavaScript API and Places API (New), and to approved local and deployed web origins. The browser destinations never substitute local demo records for API data.
 
 ## Local FastAPI
 

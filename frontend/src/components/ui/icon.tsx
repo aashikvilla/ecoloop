@@ -2,6 +2,8 @@ import type { SVGProps } from "react";
 
 const paths: Record<string, React.ReactNode> = {
   home: <><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
+  organization: <><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 8h2M14 8h2M8 12h2M14 12h2M10 20v-4h4v4"/></>,
+  logout: <><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></>,
   kitchen: <><path d="M4 4h16v16H4z"/><path d="M4 11h16M10 11v9"/></>,
   ask: <><path d="m12 3 1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7L12 3Z"/><path d="m19 15 .8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15ZM5 14l.6 1.4L7 16l-1.4.6L5 18l-.6-1.4L3 16l1.4-.6L5 14Z"/></>,
   shop: <><path d="M3 4h2l2.2 11.1a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 1.9-1.5L20 9H6"/><circle cx="10" cy="20" r="1"/><circle cx="17" cy="20" r="1"/></>,

@@ -5,10 +5,11 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 import { useLiveHousehold } from "@/lib/live-household";
 
 const destinations = [
-  { href: "/", label: "Home", icon: "home" },
+  { href: "/home", label: "Home", icon: "home" },
   { href: "/kitchen", label: "Kitchen", icon: "kitchen" },
   { href: "/ask", label: "Ask", icon: "ask" },
   { href: "/shop", label: "Shop", icon: "shop" },
@@ -17,7 +18,7 @@ const destinations = [
 function DestinationNav({ pathname }: { pathname: string }) {
   return <nav aria-label="Main navigation" className="flex items-center justify-between gap-1 rounded-full border border-white/80 bg-white/95 p-1.5 shadow-card backdrop-blur-xl">
     {destinations.map(({ href, label, icon }) => {
-      const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+      const active = pathname === href || pathname.startsWith(`${href}/`);
       return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={`flex min-h-12 flex-1 flex-col items-center justify-center gap-0.5 rounded-full px-2 py-1 transition-colors ${active ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}>
         <Icon name={icon} size={21} />
         <span className="text-[11px] font-bold">{label}</span>
@@ -33,7 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const itemDetailPage = /^\/kitchen\/items\/[^/]+$/.test(pathname);
   const itemActionPage = /^\/kitchen\/items\/[^/]+\/(share|outcome)$/.test(pathname);
   const offersPage = pathname === "/offers" || pathname.startsWith("/offers/");
-  const canonicalPage = ["/", "/kitchen", "/ask", "/shop", "/activity"].includes(pathname) || itemDetailPage || itemActionPage || offersPage;
+  const canonicalPage = ["/home", "/kitchen", "/ask", "/shop", "/activity"].includes(pathname) || itemDetailPage || itemActionPage || offersPage;
   const settingsPage = pathname === "/settings";
   const intakePage = pathname === "/kitchen/add" || pathname === "/kitchen/review";
   const statusLabel = accountPage ? "HOUSEHOLD ACCOUNT" : offersPage ? "DONOR OFFERS" : canonicalPage ? "HOUSEHOLD DATA" : intakePage ? "KITCHEN INTAKE" : settingsPage ? "HOUSEHOLD SETTINGS" : "FEATURE UNAVAILABLE";
@@ -41,14 +42,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-full focus:bg-primary focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
     <header className="sticky top-0 z-30 border-b border-line/70 bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-4 md:px-7">
-        <Link href="/" aria-label="EcoLoop home" className="flex items-center gap-2.5 rounded-xl">
+        <Link href="/home" aria-label="EcoLoop home" className="flex items-center gap-2.5 rounded-xl">
           <span className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-primary"><Icon name="leaf" size={22} /></span>
           <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-tight text-primary">EcoLoop</span><span className="block text-[11px] font-medium text-muted">My kitchen</span></span>
         </Link>
         <div className="flex items-center gap-2">
-          <Badge tone="amber" className="text-[9px] md:text-xs">{statusLabel}</Badge>
+          <Badge tone="amber" className="hidden text-[9px] sm:inline-flex md:text-xs">{statusLabel}</Badge>
           <Link href="/offers" aria-label="Open my offerings" className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-xs font-bold md:hidden ${offersPage ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted"}`}><Icon name="leaf" size={17} />Offers</Link>
           <Link href="/settings" aria-label="Open settings" className={`flex size-11 items-center justify-center rounded-full transition-colors hover:bg-surface-muted ${pathname === "/settings" ? "bg-primary-soft text-primary" : "text-muted"}`}><Icon name="settings" size={20} /></Link>
+          <SignOutButton/>
         </div>
       </div>
     </header>
@@ -69,7 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <p className="mb-3 px-3 text-[10px] font-extrabold uppercase tracking-[.16em] text-muted">Your kitchen</p>
       <nav aria-label="Main navigation" className="space-y-1">
         {destinations.map(({ href, label, icon }) => {
-          const active = href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+          const active = pathname === href || pathname.startsWith(`${href}/`);
           return <Link key={href} href={href} aria-current={active ? "page" : undefined} className={`flex min-h-12 items-center gap-3 rounded-2xl px-3 text-sm font-semibold transition-colors ${active ? "bg-primary-soft text-primary" : "text-muted hover:bg-surface-muted hover:text-primary"}`}><Icon name={icon} size={19} />{label}</Link>;
         })}
       </nav>

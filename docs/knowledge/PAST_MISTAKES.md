@@ -1,5 +1,9 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-18 — Match embedded Places widgets to the page color scheme
+
+Observation: Google Places autocomplete rendered its prediction list in dark mode on EcoLoop's light page because the custom element has its own color-scheme behavior. Prevention: set `color-scheme: light` on the Places custom element and verify the open suggestions in a real browser; checking only the closed input misses the contrast failure.
+
 ## 2026-10-18 — Make manual map requirements visible before publish
 
 Observation: the donor wizard allowed manual address entry, but publishing also required latitude and longitude. Those coordinate inputs had no required marker or nearby explanation, so a complete-looking address form stopped before any API request. Prevention: label every required map field, explain whether GPS or manual coordinates are accepted, and render validation beside the field. Browser acceptance should include the manual-location route, not only GPS.
@@ -151,3 +155,7 @@ Observation: the browser used `localhost:3000`, but a stale production Next proc
 
 Observation: household history endpoints are paginated. A count or quantity from the first page can look like a complete household total if its coverage is not stated. Share offers also describe a different state from completed handovers.
 Pattern: summarize only fetched records, label the loaded-page scope and expose continuation when another page exists. Keep offers separate from outcome events, and add quantities only when their recorded measurement basis and units support the same total.
+
+## 2026-10-18 — Wrap client route hooks in Suspense for static builds
+
+Observation: after adding a protected App Router boundary that reads `usePathname`, Next.js compiled and typechecked but failed during static prerender because the hook was outside a Suspense boundary. Keep the boundary inside Suspense and run the production build after route-group changes; route moves can also leave stale `.next/dev/types` route validators, so regenerate route types before interpreting type errors.

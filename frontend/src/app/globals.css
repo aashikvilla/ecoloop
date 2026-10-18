@@ -46,6 +46,7 @@ a { color: inherit; text-decoration: none; }
 @layer components {
   .ecoloop-card { border-radius: var(--radius-card); background: var(--color-surface-card); box-shadow: var(--shadow-card); }
   .ecoloop-place-autocomplete {
+    color-scheme: light;
     position: relative;
     z-index: 50;
     display: block;

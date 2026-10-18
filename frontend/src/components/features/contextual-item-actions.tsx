@@ -39,7 +39,7 @@ export function OutcomeItem({ itemId, planId }: { itemId?: string; planId?: stri
   return <div className="mx-auto max-w-3xl space-y-5 px-4 pb-12 pt-6 sm:px-6 lg:pt-10">
     <PageIntro eyebrow="Kitchen · observed outcome" title={item ? `What happened to ${item.name}?` : "Record what happened"} description="Record an outcome you personally observed. Kitchen quantity changes only from the explicit outcome amount, compatible units, and current version." />
     <LiveDestinationNotice />
-    {itemId ? <QuietLink href={`/kitchen/items/${encodeURIComponent(itemId)}`}>Back to item details</QuietLink> : <QuietLink href="/">Back to Home</QuietLink>}
+    {itemId ? <QuietLink href={`/kitchen/items/${encodeURIComponent(itemId)}`}>Back to item details</QuietLink> : <QuietLink href="/home">Back to Home</QuietLink>}
     {itemId && <ItemContextSummary live={live} item={item} />}
     {ready && <div key={scopeKey}><OutcomeControls getIdToken={getIdToken} householdId={household.householdId} enabled={enabled} onCommitted={onCommitted} initialItemId={itemId} planId={planId} /></div>}
   </div>;
