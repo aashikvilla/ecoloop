@@ -1,9 +1,9 @@
 # EcoLoop implementation status
 
-## Upstream Maps autocomplete fix — local `main`
+## Upstream Maps autocomplete fix — deployed to `main` (18 October 2026)
 
-- Cherry-picked upstream code commit `0a44a5d` as `1c56006`, replacing the embedded Maps widget with accessible Places suggestions in the shared household/organization location input. Kept the existing Google Maps loading behavior by extracting it to `frontend/src/lib/google-maps-loader.ts` and updating the recipient map import.
-- Frontend `pnpm exec tsc --noEmit` and `pnpm lint` pass. The patch is local only: it has not been pushed or deployed. See [upstream Maps fix session](knowledge/sessions/2026-10-18-upstream-maps-autocomplete.md) and [shared loader decision](knowledge/DECISIONS.md#shared-google-maps-loader--2026-10-18).
+- Cherry-picked upstream code commit `0a44a5d` as `1c56006`, replacing the embedded Maps widget with accessible Places suggestions in the shared household/organization location input. Kept the existing Google Maps loading behavior by extracting it to `frontend/src/lib/google-maps-loader.ts` and updating the recipient map import. Pushed to `main` as `3814d24`.
+- Frontend `pnpm exec tsc --noEmit` and `pnpm lint` pass. Browser smoke with the organization demo login found Google Places suggestions for a synthetic `Mysuru, India` query; selecting a result filled the pickup area and coordinates without saving the profile. Nearby offers list showed one synthetic offer, and Map view rendered with visible map tiles. GitHub Actions run [39122071936](https://github.com/aashikvilla/ecoloop/actions/runs/39122071936) passed candidate smoke checks and promoted `ecoloop-api-00036-zoj` and `ecoloop-web-00020-vel` to 100% traffic. Deployed `/api/v1/health` and `/login?mode=organization` both returned HTTP 200. See [upstream Maps fix session](knowledge/sessions/2026-10-18-upstream-maps-autocomplete.md) and [shared loader decision](knowledge/DECISIONS.md#shared-google-maps-loader--2026-10-18).
 
 ## Main deployment and household creation follow-up — 18 October 2026
 
