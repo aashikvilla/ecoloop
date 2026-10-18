@@ -9,7 +9,7 @@ The owner requested merging the organization pickup feature to `main` and publis
 - Updated the root README to describe the current personal and organization flows, local startup, and the two configured Firebase demo accounts. The credential values are sourced from the ignored local `backend/.env`; the README documents the accounts as public demo-only credentials for the existing development Firebase project.
 - Corrected the previous live-acceptance note that said credentials were absent from documentation.
 - Updated the product snapshot, architecture summary, and status snapshot to reflect local acceptance and the planned merge.
-- The feature branch was pushed before merging. Because `origin/main` was an ancestor of the feature branch, integrate using a fast-forward and push `main` without rewriting history.
+- The feature branch was pushed before merging. Since `origin/main` was an ancestor of the feature branch, `main` was fast-forwarded and pushed to `origin` without rewriting history.
 
 ## Boundaries
 
