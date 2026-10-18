@@ -41,7 +41,6 @@ export function RecoveryAssistant({
 	const [diet, setDiet] = useState("");
 	const [radius, setRadius] = useState(String(profile.service_radius_km));
 	const [deadline, setDeadline] = useState(() => localDateTimeAfter(4));
-	const [deadlineEdited, setDeadlineEdited] = useState(false);
 	const [radiusEdited, setRadiusEdited] = useState(false);
 	const [origin, setOrigin] = useState<PickupBase | null>(profile.pickup_base);
 	const [originArea, setOriginArea] = useState(profile.pickup_base?.approximate_area ?? "");
@@ -79,7 +78,10 @@ export function RecoveryAssistant({
 					...(portionsPerPerson ? { portions_per_person: Number(portionsPerPerson) } : {}),
 					dietary_requirements: dietaryRequirements,
 					...(!message.trim() || radiusEdited ? { search_radius_km: radiusKm } : {}),
-					...(!message.trim() || deadlineEdited ? { pickup_deadline: deadlineDate.toISOString() } : {}),
+					// The visible pickup deadline is an explicit form value (including
+					// its default); keep it deterministic instead of asking Gemini to
+					// resolve locale-dependent phrases such as “tomorrow at 7 PM”.
+					pickup_deadline: deadlineDate.toISOString(),
 				},
 			});
 			setAssistantResult(result);
@@ -119,7 +121,7 @@ export function RecoveryAssistant({
 			<div className="grid grid-cols-2 gap-2"><label className="space-y-1 text-xs font-semibold text-primary">People to support<Input type="number" min={1} step={1} value={people} onChange={(event) => setPeople(event.target.value)} placeholder="Optional" /></label><label className="space-y-1 text-xs font-semibold text-primary">Portions per person<Input type="number" min={1} step={1} value={portionsPerPerson} onChange={(event) => setPortionsPerPerson(event.target.value)} placeholder="Clarify if needed" /></label></div>
 			<label className="space-y-1 text-xs font-semibold text-primary">Dietary tags (comma separated)<Input value={diet} maxLength={240} onChange={(event) => setDiet(event.target.value)} placeholder="vegetarian, dairy-free" /></label>
 			<label className="space-y-1 text-xs font-semibold text-primary">Search radius (km)<Input type="number" min={1} max={20} step="any" value={radius} onChange={(event) => { setRadiusEdited(true); setRadius(event.target.value); }} /></label>
-			<label className="space-y-1 text-xs font-semibold text-primary">Pickup before<Input type="datetime-local" value={deadline} onChange={(event) => { setDeadlineEdited(true); setDeadline(event.target.value); }} /></label>
+			<label className="space-y-1 text-xs font-semibold text-primary">Pickup before<Input type="datetime-local" value={deadline} onChange={(event) => setDeadline(event.target.value)} /></label>
 			<div className="space-y-1"><LocationAutocomplete idPrefix="recovery-origin" label="Pickup origin · Maps location" defaultValue={originArea} onLocationSelected={(location) => {
 				setOriginArea(location.address);
 				setOrigin(Number.isFinite(location.lat) && Number.isFinite(location.lng) ? { latitude: location.lat!, longitude: location.lng!, approximate_area: location.address.slice(0, 160) } : null);
