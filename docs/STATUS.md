@@ -1,6 +1,6 @@
 # EcoLoop implementation status
 
-## Organization pickup Phase 2 — local implementation on `feature/organization-pickup`
+## Organization pickup Phase 2 — implemented and locally accepted on `main`
 
 - Implemented the one-operator recipient journey: complete profile, nearby offer list/map and basic filters, editable multi-offer plans with unit-aware coverage, per-stop reservation, active-claim route, collection, recipient-confirmed receipt, and donor/organization receipt quantities. Exact pickup details are gated to active reservations. Donor-entered area text is not returned in public discovery; legacy standalone claim creation is retired so it cannot bypass the plan-linked receipt lifecycle.
 - Backend verification: `backend/.venv/Scripts/python.exe -m compileall -q app` passed; FastAPI OpenAPI import passed and all 7 key recipient paths are present; recipient domain imports passed; `firestore.indexes.json` parsed; all 13 deployed composite indexes are `READY`; authenticated API readback confirms one completed plan, two received claims, and two receipt records totaling 14 portions.
@@ -10,7 +10,7 @@
 - Organization workspace navigation now has separate Nearby offers, Collection plans, Received impact, and Pickup profile pages, with a persistent desktop menu and mobile bottom menu. The shared workspace remains mounted across navigation so a proposed selection survives when opening its plan page. The NGO browser account completed its pickup profile in the configured development Firebase project; manual area name and coordinates are available alongside optional place autocomplete. See [organization navigation journal](knowledge/sessions/2026-10-18-organization-navigation.md).
 - Before release, inspect for pre-existing standalone claims; they are not migrated to collection plans and are not routable through the new flow.
 
-Updated 18 October 2026 after recipient live acceptance. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
+Updated 18 October 2026 after recipient live acceptance and merge to `main`. This repository file is a snapshot, not the live MVPTasks Sheet; the Sheet remains the task-status authority.
 
 ## Social impact Phase 1 donor side — local fixes applied; G1 open
 

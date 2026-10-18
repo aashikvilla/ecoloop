@@ -11,7 +11,7 @@ Created or retained only synthetic demo data:
 - Two donor offers from that household: produce (`kmLt3SkYfaP1HwYzA0eR`, 10 portions) and bakery (`Y4i0k8iwTmhvPddYKePv`, 8 portions). Both are labelled synthetic and use demo pickup text/coordinates.
 - One saved two-stop plan. Both reservations and receipt records are intentionally retained for development/demo access.
 
-Passwords are stored only in ignored `backend/.env` variables `ECOLOOP_NGO_DEMO_EMAIL`, `ECOLOOP_NGO_DEMO_PASSWORD`, `ECOLOOP_CONSUMER_DEMO_EMAIL`, and `ECOLOOP_CONSUMER_DEMO_PASSWORD`. They are not included in tracked skills or documentation.
+The account values are held locally in ignored `backend/.env`; the owner later explicitly authorized publishing these shared demo-only credentials in the root `README.md` for reviewers. They are intended only for the configured development Firebase project and must not be reused elsewhere.
 
 ## Browser journey
 
