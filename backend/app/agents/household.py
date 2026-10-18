@@ -725,30 +725,34 @@ def _output_from_events(events: list[Any]) -> AgentOutput:
 
 def _validate_cards(validated: list[ProposalCard]) -> list[ProposalCard]:
     expected_actions = {
-        "MealSuggestion": {"APPROVE", "EDIT", "DISMISS"},
-        "PortionAdjustment": {"APPROVE", "EDIT", "DISMISS"},
-        "BuyCheck": {"ADD", "SKIP", "EDIT", "CONFIRM_STOCK"},
-        "FoodAction": {"USE", "STORE", "SHARE", "DISCARD", "COMPOST"},
-        "PreferenceConsent": {"CONSENT", "DISMISS"},
+        "MealSuggestion": ["APPROVE", "EDIT", "DISMISS"],
+        "PortionAdjustment": ["APPROVE", "EDIT", "DISMISS"],
+        "BuyCheck": None,
+        "FoodAction": None,
+        "PreferenceConsent": ["CONSENT", "DISMISS"],
     }
     proposal_ids: set[str] = set()
+    normalized: list[ProposalCard] = []
     for card in validated:
-        if not card.simulated or card.status != "PENDING" or card.scope != "HOUSEHOLD":
-            raise DomainError("AGENT_INVALID_RESPONSE", "The assistant suggested an invalid card. Please retry.", 502, True)
-        if card.proposal_id in proposal_ids:
-            raise DomainError("AGENT_INVALID_RESPONSE", "The assistant suggested an invalid card. Please retry.", 502, True)
-        proposal_ids.add(card.proposal_id)
-        if len(card.allowed_actions) != len(set(card.allowed_actions)) or not card.allowed_actions:
-            raise DomainError("AGENT_INVALID_RESPONSE", "The assistant suggested an invalid card. Please retry.", 502, True)
-        if card.type in {"MealSuggestion", "PortionAdjustment", "PreferenceConsent"}:
-            expected = expected_actions[card.type]
-        elif card.type == "BuyCheck":
-            expected = {card.shopping_action}
-        else:
-            expected = {card.action}
-        if set(card.allowed_actions) != expected:
-            raise DomainError("AGENT_INVALID_RESPONSE", "The assistant suggested an invalid card. Please retry.", 502, True)
-    return validated
+        proposal_id = card.proposal_id
+        if proposal_id in proposal_ids:
+            proposal_id = f"proposal-{uuid.uuid4().hex}"
+        proposal_ids.add(proposal_id)
+        actions = expected_actions[card.type]
+        if actions is None:
+            actions = [card.shopping_action] if card.type == "BuyCheck" else [card.action]
+
+        # Scope, lifecycle, simulation and available actions are server policy,
+        # not creative model output. Normalize them after the strict typed parse
+        # so harmless model variation cannot turn a grounded proposal into a 502.
+        normalized.append(card.model_copy(update={
+            "proposal_id": proposal_id,
+            "scope": "HOUSEHOLD",
+            "status": "PENDING",
+            "simulated": True,
+            "allowed_actions": actions,
+        }))
+    return normalized
 
 
 def _normalize_food_name(value: str) -> str:
