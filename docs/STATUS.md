@@ -1,5 +1,12 @@
 # EcoLoop implementation status
 
+## Main deployment and household creation follow-up — 18 October 2026
+
+- GitHub Actions run [39121041553](https://github.com/aashikvilla/ecoloop/actions/runs/39121041553) built, smoke-checked and promoted the `main` revision at `4e08b04` to the existing Cloud Run services. `ecoloop-api-00034-vam` and `ecoloop-web-00018-ful` each receive 100% of traffic. Live `/api/v1/health` and `/account` checks returned HTTP 200.
+- The owner approved the managed-context release gate. The API revision has Vertex AI, managed Sessions and Memory Bank enabled. Workflow health checks confirm configuration, not a live model turn or persistent managed-session/memory behavior; those remain unverified. Billing review found no credits, a ₹2,000 monthly alert and a configured ₹2,000 Gemini spend cap.
+- Household creation was disabled in the stale local `next start` bundle. Replaced the port-3000 frontend with `deploy/local.ps1` (household-creation flag enabled) and started the local API on port 8001; health returned 200. Signed in with the public consumer demo account on both local and deployed sites, opened the create-household form, and verified the final Create household control is enabled. Stopped before submitting, so no household was created by this check. See [deployment and household creation session](knowledge/sessions/2026-10-18-main-deploy-household-create.md).
+- No source-code changes were made for this deployment follow-up. The existing stale local bundle issue is documented in [Past Mistakes](knowledge/PAST_MISTAKES.md#2026-10-17-keep-local-app-port-cors-and-launcher-flags-in-sync).
+
 ## Organization pickup Phase 2 — implemented and locally accepted on `main`
 
 - Implemented the one-operator recipient journey: complete profile, nearby offer list/map and basic filters, editable multi-offer plans with unit-aware coverage, per-stop reservation, active-claim route, collection, recipient-confirmed receipt, and donor/organization receipt quantities. Exact pickup details are gated to active reservations. Donor-entered area text is not returned in public discovery; legacy standalone claim creation is retired so it cannot bypass the plan-linked receipt lifecycle.
