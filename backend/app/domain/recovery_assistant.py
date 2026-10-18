@@ -12,6 +12,7 @@ from app.core.config import settings
 from app.core.errors import DomainError
 from app.domain.ai_usage import claim_daily_ai_request
 from app.domain.offer_discovery import discover_offers
+from app.domain.recovery_routes import route_recovery_suggestion
 from app.schemas.recipient import (
     DiscoveredOffer,
     OfferDiscoveryQuery,
@@ -260,6 +261,12 @@ def suggest_recovery_plans(actor: Any, command: RecoveryAssistantRequest) -> Rec
         first, second = plans
         if sorted(stop.offer.offer_id for stop in first.stops) == sorted(stop.offer.offer_id for stop in second.stops):
             plans = plans[:1]
+    route_results = [
+        route_recovery_suggestion(actor.actor_id, command.origin, plan)
+        for plan in plans
+    ]
+    plans = [routed for routed, _available in route_results]
+    routes_available = bool(route_results) and all(available for _routed, available in route_results)
     canonical_need = PlanNeed(
         item_query=need.item_query,
         requested_quantity_minor=need.requested_quantity_minor,
@@ -271,4 +278,4 @@ def suggest_recovery_plans(actor: Any, command: RecoveryAssistantRequest) -> Rec
         portions_per_person=need.portions_per_person,
         target_portions=need.people_requested * need.portions_per_person if need.people_requested and need.portions_per_person and need.requested_unit == "portion" else None,
     )
-    return RecoveryAssistantResponse(status="plans", need=canonical_need, plans=plans, offers_capped=discovery.capped, route_status="unavailable")
+    return RecoveryAssistantResponse(status="plans", need=canonical_need, plans=plans, offers_capped=discovery.capped, route_status="available" if routes_available else "unavailable")

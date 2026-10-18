@@ -13,7 +13,7 @@ from app.core.errors import DomainError
 from app.core.firestore import get_firestore
 from app.core.identity import ActorContext
 from app.domain.recipient_access import assert_recipient_actor
-from app.schemas.recipient import CollectionRoute, RouteRequest, RouteStop
+from app.schemas.recipient import CollectionRoute, PickupBase, RecoveryPlanSuggestion, RouteRequest, RouteStop
 
 
 _DURATION = re.compile(r"^(\d+(?:\.\d+)?)s$")
@@ -58,11 +58,11 @@ def _route_response(
     origin: dict[str, Any],
     destination: dict[str, Any],
     claims: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], int | None, list[str], str]:
+) -> tuple[list[dict[str, Any]], int | None, int | None, list[str], str]:
     """Return optimized claim order and legs; provider failure remains explicit."""
     api_key = settings.GOOGLE_MAPS_ROUTES_API_KEY
     if not api_key:
-        return claims, None, ["ROUTES_PROVIDER_UNAVAILABLE"], "unavailable"
+        return claims, None, None, ["ROUTES_PROVIDER_UNAVAILABLE"], "unavailable"
     body = {
         "origin": _waypoint(float(origin["latitude"]), float(origin["longitude"])),
         "destination": _waypoint(float(destination["latitude"]), float(destination["longitude"])),
@@ -80,7 +80,7 @@ def _route_response(
             headers={
                 "Content-Type": "application/json",
                 "X-Goog-Api-Key": api_key.get_secret_value(),
-                "X-Goog-FieldMask": "routes.duration,routes.legs.duration,routes.optimizedIntermediateWaypointIndex",
+                "X-Goog-FieldMask": "routes.distanceMeters,routes.duration,routes.legs.duration,routes.optimizedIntermediateWaypointIndex",
             },
             timeout=8.0,
         )
@@ -99,15 +99,58 @@ def _route_response(
         if isinstance(legs, list):
             durations = [_duration_seconds(leg.get("duration")) if isinstance(leg, dict) else None for leg in legs]
         total = _duration_seconds(route.get("duration"))
+        distance = route.get("distanceMeters")
+        if isinstance(distance, bool) or not isinstance(distance, int) or distance < 0:
+            distance = None
         # Google returns the route legs in its optimized order: leg i ends at stop i.
         for index, item in enumerate(ordered):
             item["leg_duration_seconds"] = durations[index] if index < len(durations) else None
         warnings: list[str] = []
         if total is None or any(item.get("leg_duration_seconds") is None for item in ordered):
             warnings.append("TRAVEL_TIME_UNAVAILABLE")
-        return ordered, total, warnings, "google_routes"
+        return ordered, total, distance, warnings, "google_routes"
     except Exception:
-        return claims, None, ["ROUTES_PROVIDER_UNAVAILABLE"], "unavailable"
+        return claims, None, None, ["ROUTES_PROVIDER_UNAVAILABLE"], "unavailable"
+
+
+def route_recovery_suggestion(
+    org_id: str,
+    origin: PickupBase,
+    suggestion: RecoveryPlanSuggestion,
+) -> tuple[RecoveryPlanSuggestion, bool]:
+    """Order a proposed plan with Google Routes using only coarse public offer coordinates."""
+    if not settings.GOOGLE_MAPS_ROUTES_API_KEY or not suggestion.stops:
+        return suggestion, False
+    try:
+        _consume_route_quota(get_firestore(), org_id)
+    except DomainError as exc:
+        if exc.code == "ROUTE_DAILY_LIMIT":
+            return suggestion, False
+        raise
+    origin_data = origin.model_dump()
+    route_points = [
+        {
+            "offer_id": stop.offer.offer_id,
+            "latitude": stop.offer.approximate_latitude,
+            "longitude": stop.offer.approximate_longitude,
+        }
+        for stop in suggestion.stops
+    ]
+    ordered, duration, distance, _warnings, provider = _route_response(
+        suggestion.option_id, origin_data, origin_data, route_points
+    )
+    if provider != "google_routes" or len(ordered) != len(suggestion.stops):
+        return suggestion, False
+    by_offer_id = {stop.offer.offer_id: stop for stop in suggestion.stops}
+    try:
+        stops = [by_offer_id[point["offer_id"]] for point in ordered]
+    except (KeyError, TypeError):
+        return suggestion, False
+    return suggestion.model_copy(update={
+        "stops": stops,
+        "route_duration_seconds": duration,
+        "route_distance_meters": distance,
+    }), duration is not None and distance is not None
 
 
 def build_recovery_route(actor: ActorContext, command: RouteRequest) -> CollectionRoute:
@@ -188,7 +231,7 @@ def build_recovery_route(actor: ActorContext, command: RouteRequest) -> Collecti
             })
         if settings.GOOGLE_MAPS_ROUTES_API_KEY:
             _consume_route_quota(db, actor.actor_id)
-        ordered, total, warnings, provider = _route_response(command.plan_id, origin, destination, claims)
+        ordered, total, _distance, warnings, provider = _route_response(command.plan_id, origin, destination, claims)
         route_stops: list[RouteStop] = []
         for index, item in enumerate(ordered, 1):
             item["stop_order"] = index

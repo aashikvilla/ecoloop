@@ -59,6 +59,8 @@ export type RecoveryAssistantResult = {
 		shortfall_quantity_minor: number;
 		requested_quantity_minor: number;
 		unit: OfferUnit;
+		route_distance_meters: number | null;
+		route_duration_seconds: number | null;
 		stops: Array<{ offer: DiscoveredOffer; requested_quantity_minor: number }>;
 	}>;
 	offers_capped: boolean;

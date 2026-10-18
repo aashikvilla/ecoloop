@@ -16,6 +16,8 @@ export type RecoveryPlanOption = {
 	covered: number;
 	shortfall: number;
 	distanceKm: number;
+	routeDurationSeconds?: number | null;
+	routeIsGoogle?: boolean;
 	complete: boolean;
 };
 

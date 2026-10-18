@@ -114,6 +114,8 @@ class RecoveryPlanSuggestion(StrictModel):
     shortfall_quantity_minor: Annotated[StrictInt, Field(ge=0)]
     requested_quantity_minor: Annotated[StrictInt, Field(gt=0)]
     unit: OfferUnit
+    route_distance_meters: Annotated[StrictInt, Field(ge=0)] | None = None
+    route_duration_seconds: Annotated[StrictInt, Field(ge=0)] | None = None
     stops: list["RecoverySuggestionStop"] = Field(max_length=5)
 
 

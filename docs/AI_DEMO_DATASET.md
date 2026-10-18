@@ -2,6 +2,13 @@
 
 Updated 18 October 2026. The fixture prepares six synthetic household accounts and one synthetic NGO account for local product review in `ecoloop-staging-20261015`. All account emails and passwords are listed in the root [README demo account table](../README.md#demo-accounts). These are public demo credentials and must not be reused elsewhere.
 
+## Latest demo configuration update — 18 October 2026
+
+- The frontend Maps value and server `GOOGLE_MAPS_ROUTES_API_KEY` now use the same configured API key value. Secret Manager version 2 is mounted by the API candidate; only the API runtime identity can access that secret. The same key already permits Routes API calls. A direct Google Routes `computeRoutes` smoke returned 6,583 m and 1,321 seconds for two Bengaluru coordinates. See [Maps key configuration](implementation/google-maps-keys.md) for the hackathon-only restrictions and production replacement guidance.
+- The EcoLoop application limit is 300 AI requests per authenticated user per UTC day in the backend default, sample environment and Cloud Run workflow. Household assistant turns, photo identification and NGO request interpretation share the same Firestore counter. This is an app limit, not a Google model quota or spend cap.
+- The organization AI now sends each offer-backed plan through Google Routes for waypoint order, round-trip driving distance and duration. Route calculation uses the approximate public offer coordinates; it does not reveal exact pickup details. The assistant labels fallback plans as approximate if Routes is unavailable.
+- The live NGO search currently finds six spinach records, all explicitly synthetic rehearsal scenarios with unknown suitability/storage. No currently discoverable offer is eligible for a truthful reservation or receipt. Do not publish synthetic donor claims as real food or record a simulated pickup as recovery impact.
+
 ## Accounts and prepared kitchens
 
 | Consumer | Email | Bengaluru area | Kitchen focus |
