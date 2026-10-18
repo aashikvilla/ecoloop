@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { LocationAutocomplete } from "@/components/account/location-autocomplete";
 import { CollectionPlanCard } from "@/components/organization/collection-plan-card";
 import { RecipientOfferMap } from "@/components/organization/recipient-offer-map";
+import { RecoveryAssistant } from "@/components/organization/recovery-assistant";
+import type { RecoveryPlanOption, RecoveryRequest } from "@/components/organization/recovery-planning";
 import { fetchMyOrganizations, type OrganizationItem } from "@/lib/canonical-offers";
 import {
 	createRecipientOrganization,
@@ -105,7 +107,7 @@ function OfferCard({
 	return <Card className="space-y-4 p-4 sm:p-5">
 		<div className="flex flex-wrap items-start justify-between gap-3">
 			<div className="min-w-0 flex-1">
-				<div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">{offer.category}</span><span className="text-xs text-muted">{offer.approximate_distance_km.toFixed(1)} km away</span></div>
+				<div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-primary-soft px-3 py-1 text-xs font-bold text-primary">{offer.category}</span>{offer.demo_scenario && <span className="rounded-full bg-tertiary-soft px-3 py-1 text-xs font-bold text-tertiary">Rehearsal only</span>}<span className="text-xs text-muted">{offer.approximate_distance_km.toFixed(1)} km away</span></div>
 				<h3 className="mt-2 text-base font-bold text-primary">{offer.title}</h3>
 				<p className="mt-1 text-sm text-muted">{offer.approximate_area}</p>
 			</div>
@@ -115,6 +117,7 @@ function OfferCard({
 			<p><strong className="text-primary">Available:</strong> {quantity(offer.quantity_available_minor, offer.unit)}</p>
 			<p><strong className="text-primary">Pickup:</strong> {dateTime(offer.pickup_window_start)}–{new Intl.DateTimeFormat(undefined, { timeStyle: "short" }).format(new Date(offer.pickup_window_end))}</p>
 			<p><strong className="text-primary">Storage:</strong> {offer.storage_declaration === "UNKNOWN" ? "Not stated" : offer.storage_declaration.toLowerCase()}</p>
+			<p><strong className="text-primary">Condition:</strong> {offer.demo_scenario ? "Synthetic scenario; suitability unverified" : offer.condition_declaration === "DONOR_CONFIRMED_SUITABLE" ? "Donor confirmed suitable; not independently assessed" : "Not confirmed; cannot be planned"}</p>
 			<p><strong className="text-primary">Allergens:</strong> {offer.allergen_declaration === "UNKNOWN" ? "Not stated" : offer.allergen_declaration === "DONOR_DECLARED_NONE" ? "Donor declared none" : "Donor declared present"}</p>
 			<p className="sm:col-span-2"><strong className="text-primary">Food date:</strong> {expiry}</p>
 		</div>
@@ -154,6 +157,8 @@ export function OrganizationWorkspace({ view }: { view: OrganizationView }) {
 	const [collectionName, setCollectionName] = useState("");
 	const [people, setPeople] = useState("");
 	const [portionsPerPerson, setPortionsPerPerson] = useState("1");
+	const [recoveryNeed, setRecoveryNeed] = useState<PlanNeed | null>(null);
+	const [recoveryOrigin, setRecoveryOrigin] = useState<PickupBase | null>(null);
 	const [savingPlan, setSavingPlan] = useState(false);
 	const [notice, setNotice] = useState("");
 	const [reloading, setReloading] = useState(0);
@@ -306,15 +311,15 @@ export function OrganizationWorkspace({ view }: { view: OrganizationView }) {
 		try {
 			const token = await user.getIdToken();
 			const stops: PlanStop[] = selectedEntries.map(({ offer, quantity: value }) => makePlanStop(offer, Number(value)));
-			const need: PlanNeed | null = targetPortions ? { people_requested: Number(people), portions_per_person: Number(portionsPerPerson), target_portions: targetPortions } : null;
+			const need: PlanNeed | null = recoveryNeed ?? (targetPortions ? { people_requested: Number(people), portions_per_person: Number(portionsPerPerson), target_portions: targetPortions } : null);
 			const created = await createRecoveryPlan(token, { kind: "recipient_org", id: orgId }, {
 				name: collectionName.trim() || `Collection plan · ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`,
-				origin: profile.pickup_base,
+				origin: recoveryOrigin ?? profile.pickup_base,
 				destination: profile.pickup_base,
 				need,
 				stops,
 			});
-			setPlans((current) => [created, ...current]); setSelected({}); setCollectionName(""); setNotice("Collection plan saved. This plan records your selection; it does not reserve any food yet.");
+			setPlans((current) => [created, ...current]); setSelected({}); setCollectionName(""); setRecoveryNeed(null); setRecoveryOrigin(null); setNotice("Collection plan saved. This plan records your selection; it does not reserve any food yet.");
 		} catch (cause) { setNotice(cause instanceof Error ? cause.message : "The collection plan could not be saved."); }
 		finally { setSavingPlan(false); }
 	};
@@ -384,6 +389,12 @@ export function OrganizationWorkspace({ view }: { view: OrganizationView }) {
 		finally { setSavingPlan(false); }
 	};
 	const handleMapUnavailable = useCallback(() => setNotice("Map view is unavailable. Use List to continue browsing offers."), []);
+	const useRecoveryPlan = ({ option, origin, need, request }: { option: RecoveryPlanOption; origin: PickupBase; need: PlanNeed; request: RecoveryRequest }) => {
+		setSelected(Object.fromEntries(option.stops.map(({ offer, quantity: planned }) => [offer.offer_id, { offer, quantity: String(planned) }])));
+		setRecoveryNeed(need); setRecoveryOrigin(origin); setPeople(need.people_requested ? String(need.people_requested) : ""); setPortionsPerPerson(need.portions_per_person ? String(need.portions_per_person) : "1");
+		setCollectionName(`Recovery · ${request.itemQuery}`);
+		setNotice("Plan selected. Review its offers and quantities, then save it. No offer is reserved until you reserve a stop.");
+	};
 
 	if (phase === "loading") return <div className="mx-auto max-w-5xl"><Card role="status" className="p-5 text-sm text-muted">Loading your organization workspace…</Card></div>;
 	if (phase === "error") return <div className="mx-auto max-w-2xl"><Card role="alert" className="space-y-4 p-5"><Heading as="h1">Organization workspace unavailable</Heading><p className="text-sm leading-6 text-danger">{error}</p><Button variant="secondary" onClick={() => setReloading((value) => value + 1)}>Try again</Button></Card></div>;
@@ -402,6 +413,7 @@ export function OrganizationWorkspace({ view }: { view: OrganizationView }) {
 		{notice && <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white px-4 py-3 text-sm text-primary"><span>{notice}</span><button className="min-h-11 px-2 font-bold" aria-label="Dismiss message" onClick={() => setNotice("")}>Dismiss</button></div>}
 		{view === "offers" && <section id="nearby-offers" className="space-y-4">
 			<div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[.13em] text-secondary">Discovery</p><Heading as="h2" className="mt-1">Nearby offers</Heading><p className="mt-1 text-sm text-muted">Approximate locations and donor-declared details. Confirm conditions at handover.</p></div>{profile?.pickup_base && <a href={mapsSearch(profile.pickup_base.latitude, profile.pickup_base.longitude)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-full border border-line bg-white px-4 text-sm font-bold text-primary">Open search area in Maps</a>}</div>
+			{profile && orgId && user && <RecoveryAssistant profile={profile} actor={{ kind: "recipient_org", id: orgId }} getToken={() => user.getIdToken()} onUsePlan={useRecoveryPlan} />}
 			<Card className="grid gap-3 p-4 sm:grid-cols-2 sm:items-end xl:grid-cols-[minmax(0,1fr)_150px_120px_140px_auto]">
 				<label className="space-y-1 text-xs font-semibold text-primary">Search offers or categories<Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Bread, produce, pantry…" /></label>
 				<label className="space-y-1 text-xs font-semibold text-primary">Category<Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="Any category" /></label>
@@ -419,7 +431,7 @@ export function OrganizationWorkspace({ view }: { view: OrganizationView }) {
 			{selectedEntries.length > 0 && <Card className="space-y-4 p-4 sm:p-5">
 				<div className="flex flex-wrap items-center justify-between gap-2"><h3 className="font-bold text-primary">Proposed collection · {selectedEntries.length}/5 stops</h3>{selectedEntries.length >= 5 && <span className="text-xs text-muted">Maximum stops reached</span>}</div>
 				<div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1 text-xs font-semibold text-primary">Plan name <Input value={collectionName} maxLength={100} onChange={(event) => setCollectionName(event.target.value)} placeholder="Optional" /></label><label className="space-y-1 text-xs font-semibold text-primary">People to support (optional)<Input type="number" min={1} step={1} value={people} onChange={(event) => setPeople(event.target.value)} placeholder="Only if portion amounts apply" /></label>{people && <label className="space-y-1 text-xs font-semibold text-primary sm:col-span-2">Portions per person<Input type="number" min={1} max={100} step={1} value={portionsPerPerson} onChange={(event) => setPortionsPerPerson(event.target.value)} /></label>}</div>
-				{people && <div className="rounded-xl bg-surface-muted p-4 text-sm"><p className="font-bold text-primary">Coverage from portion offers: {selectedPortions} / {targetPortions} portions</p><p className="mt-1 text-xs text-muted">{selectedPortions === 0 ? "No portion-unit offers are selected; other units cannot be converted into people served." : portionGap > 0 ? `${portionGap} portions are still uncovered.` : "The stated portion target is covered by selected portion-unit offers."}</p></div>}
+				{recoveryNeed?.requested_quantity_minor ? <div className="rounded-xl bg-surface-muted p-4 text-sm"><p className="font-bold text-primary">Request: {recoveryNeed.item_query} · {selectedEntries.reduce((sum, entry) => sum + Number(entry.quantity || 0), 0)} / {recoveryNeed.requested_quantity_minor} {recoveryNeed.requested_unit}</p><p className="mt-1 text-xs text-muted">Quantities are grouped only for this requested item and unit. Donor declared tags: {recoveryNeed.dietary_requirements?.join(", ") || "none requested"}.</p></div> : people && <div className="rounded-xl bg-surface-muted p-4 text-sm"><p className="font-bold text-primary">Coverage from portion offers: {selectedPortions} / {targetPortions} portions</p><p className="mt-1 text-xs text-muted">{selectedPortions === 0 ? "No portion-unit offers are selected; other units cannot be converted into people served." : portionGap > 0 ? `${portionGap} portions are still uncovered.` : "The stated portion target is covered by selected portion-unit offers."}</p></div>}
 				<ul className="divide-y divide-line">{selectedEntries.map(({ offer, quantity: amount }) => <li key={offer.offer_id} className="flex items-center justify-between gap-3 py-2 text-sm"><span className="min-w-0 truncate font-semibold text-primary">{offer.title}</span><span className="shrink-0 text-muted">{amount} {offer.unit}</span></li>)}</ul>
 				<Button fullWidth disabled={savingPlan || selectedEntries.length > 5} onClick={() => void submitPlan()}>{savingPlan ? "Saving plan…" : "Save collection plan"}</Button>
 				<p className="text-xs leading-5 text-muted">Saving a plan records your proposal only. It does not reserve quantities or expose exact pickup addresses.</p>

@@ -41,7 +41,10 @@ export type SurplusOffer = {
   expiry_declaration: "UNKNOWN" | "DONOR_DECLARED";
   expiry_at?: string | null;
   storage_declaration: "UNKNOWN" | "AMBIENT" | "CHILLED" | "FROZEN" | "OTHER";
+  condition_declaration: "UNKNOWN" | "DONOR_CONFIRMED_SUITABLE";
   allergen_declaration: "UNKNOWN" | "DONOR_DECLARED_NONE" | "DONOR_DECLARED_PRESENT";
+  source_kitchen_item_id?: string | null;
+  source_kitchen_item_version?: number | null;
   pickup_window_start?: string | null;
   pickup_window_end?: string | null;
   approximate_area?: string | null;
@@ -67,7 +70,10 @@ export type OfferEditPayload = {
   expiry_declaration: "UNKNOWN" | "DONOR_DECLARED";
   expiry_at?: string | null;
   storage_declaration: "UNKNOWN" | "AMBIENT" | "CHILLED" | "FROZEN" | "OTHER";
+  condition_declaration: "UNKNOWN" | "DONOR_CONFIRMED_SUITABLE";
   allergen_declaration: "UNKNOWN" | "DONOR_DECLARED_NONE" | "DONOR_DECLARED_PRESENT";
+  source_kitchen_item_id?: string | null;
+  source_kitchen_item_version?: number | null;
   pickup_window_start: string;
   pickup_window_end: string;
   approximate_area: string;

@@ -61,6 +61,7 @@ class DiscoveredOffer(StrictModel):
     unit: OfferUnit
     expiry_declaration: Literal["UNKNOWN", "DONOR_DECLARED"]
     expiry_at: datetime | None = None
+    condition_declaration: Literal["UNKNOWN", "DONOR_CONFIRMED_SUITABLE"]
     storage_declaration: Literal["UNKNOWN", "AMBIENT", "CHILLED", "FROZEN", "OTHER"]
     allergen_declaration: Literal["UNKNOWN", "DONOR_DECLARED_NONE", "DONOR_DECLARED_PRESENT"]
     pickup_window_start: datetime
@@ -71,6 +72,7 @@ class DiscoveredOffer(StrictModel):
     approximate_distance_km: Annotated[StrictFloat, Field(ge=0)]
     status: Literal["OPEN", "PARTIALLY_RESERVED"]
     version: Annotated[StrictInt, Field(ge=1)]
+    demo_scenario: bool = False
 
 
 class DiscoveryResult(StrictModel):
@@ -79,10 +81,66 @@ class DiscoveryResult(StrictModel):
     capped: bool = False
 
 
+class RecoveryNeedInput(StrictModel):
+    item_query: Annotated[StrictStr, Field(min_length=2, max_length=80)] | None = None
+    requested_quantity_minor: Annotated[StrictInt, Field(gt=0, le=1_000_000_000)] | None = None
+    requested_unit: OfferUnit | None = None
+    people_requested: Annotated[StrictInt, Field(gt=0, le=100_000)] | None = None
+    portions_per_person: Annotated[StrictInt, Field(gt=0, le=100)] | None = None
+    dietary_requirements: list[Annotated[StrictStr, Field(min_length=2, max_length=40)]] = Field(default_factory=list, max_length=10)
+    search_radius_km: Annotated[StrictFloat, Field(ge=1, le=20)] | None = None
+    pickup_deadline: datetime | None = None
+
+    @model_validator(mode="after")
+    def valid_explicit_portion_basis(self) -> "RecoveryNeedInput":
+        if self.portions_per_person is not None and self.people_requested is None:
+            raise ValueError("people_requested is required with portions_per_person")
+        if self.pickup_deadline is not None and self.pickup_deadline.tzinfo is None:
+            raise ValueError("pickup deadline must include a timezone")
+        return self
+
+
+class RecoveryAssistantRequest(StrictModel):
+    message: Annotated[StrictStr, Field(min_length=2, max_length=2_000)]
+    origin: PickupBase
+    structured: RecoveryNeedInput | None = None
+
+
+class RecoveryPlanSuggestion(StrictModel):
+    option_id: Annotated[StrictStr, Field(min_length=1, max_length=32)]
+    strategy: Literal["coverage", "nearby"]
+    explanation: Annotated[StrictStr, Field(min_length=1, max_length=240)]
+    covered_quantity_minor: Annotated[StrictInt, Field(ge=0)]
+    shortfall_quantity_minor: Annotated[StrictInt, Field(ge=0)]
+    requested_quantity_minor: Annotated[StrictInt, Field(gt=0)]
+    unit: OfferUnit
+    stops: list["RecoverySuggestionStop"] = Field(max_length=5)
+
+
+class RecoverySuggestionStop(StrictModel):
+    offer: DiscoveredOffer
+    requested_quantity_minor: Annotated[StrictInt, Field(gt=0)]
+
+
+class RecoveryAssistantResponse(StrictModel):
+    status: Literal["needs_clarification", "plans"]
+    clarification: Annotated[StrictStr, Field(max_length=500)] | None = None
+    need: "PlanNeed | None" = None
+    plans: list[RecoveryPlanSuggestion] = Field(max_length=2)
+    offers_capped: bool = False
+    route_status: Literal["unavailable", "available"]
+
+
 class PlanNeed(StrictModel):
     people_requested: Annotated[StrictInt, Field(gt=0, le=100_000)] | None = None
     target_portions: Annotated[StrictInt, Field(gt=0, le=1_000_000)] | None = None
     portions_per_person: Annotated[StrictInt, Field(gt=0, le=100)] | None = None
+    item_query: Annotated[StrictStr, Field(min_length=2, max_length=80)] | None = None
+    requested_quantity_minor: Annotated[StrictInt, Field(gt=0, le=1_000_000_000)] | None = None
+    requested_unit: OfferUnit | None = None
+    dietary_requirements: list[Annotated[StrictStr, Field(min_length=2, max_length=40)]] = Field(default_factory=list, max_length=10)
+    pickup_deadline: datetime | None = None
+    search_radius_km: Annotated[StrictFloat, Field(gt=0, le=20)] | None = None
 
     @model_validator(mode="after")
     def explicit_people_conversion(self) -> "PlanNeed":
@@ -92,6 +150,11 @@ class PlanNeed(StrictModel):
             raise ValueError("people_requested is required when portions_per_person is supplied")
         if self.target_portions is not None and self.people_requested is not None and self.target_portions != self.people_requested * (self.portions_per_person or 0):
             raise ValueError("target_portions must match the explicit people conversion")
+        recovery_fields = (self.item_query, self.requested_quantity_minor, self.requested_unit, self.pickup_deadline, self.search_radius_km)
+        if any(value is not None for value in recovery_fields) and any(value is None for value in recovery_fields):
+            raise ValueError("recovery requests require an item, quantity, unit, pickup deadline, and search radius")
+        if self.pickup_deadline is not None and self.pickup_deadline.tzinfo is None:
+            raise ValueError("pickup deadline must include a timezone")
         return self
 
 
@@ -101,6 +164,7 @@ class PlanStop(StrictModel):
     requested_quantity_minor: Annotated[StrictInt, Field(gt=0, le=1_000_000_000)]
     unit: OfferUnit
     expected_offer_version: Annotated[StrictInt, Field(ge=1)]
+    demo_scenario: bool = False
     claim_id: Annotated[StrictStr, Field(min_length=1, max_length=128)] | None = None
     status: StopStatus = "SELECTED"
     available_quantity_minor: Annotated[StrictInt, Field(ge=0)] | None = None

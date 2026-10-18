@@ -9,6 +9,7 @@ import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import type { ShoppingEntry } from "@/lib/canonical-api";
 import { useLiveHousehold } from "@/lib/live-household";
+import { ShoppingPhotoCheck } from "./shopping-photo-check";
 
 export function ShoppingList() {
   const live = useLiveRecords("shopping");
@@ -21,6 +22,7 @@ export function ShoppingList() {
   return <div className="mx-auto max-w-4xl space-y-5 px-4 pb-12 pt-6 sm:px-6 lg:pt-10">
     <header><p className="text-xs font-bold uppercase tracking-wide text-muted">Shop</p><Heading as="h1" className="mt-1">Know what you need</Heading><p className="mt-2 text-sm leading-relaxed text-muted">Review and maintain the household shopping list. Entries are plans only; nothing is purchased automatically or counted as Kitchen stock.</p></header>
     <LiveDestinationNotice />
+    <ShoppingPhotoCheck />
     <div className="flex flex-wrap gap-2"><Button onClick={() => setEditingEntryId("")} disabled={!canEdit}>Add to list</Button>{editingEntryId !== null && <Button variant="secondary" onClick={() => setEditingEntryId(null)}>Close editor</Button>}</div>
     {live.phase === "loading" && <Card role="status" className="p-5 text-sm text-muted">Loading household shopping list…</Card>}
     {live.phase === "error" && <Card role="alert" className="space-y-3 p-5"><p className="text-sm text-danger">{live.error}</p><Button variant="secondary" onClick={live.refresh}>Retry</Button></Card>}

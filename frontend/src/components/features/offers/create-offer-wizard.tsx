@@ -29,11 +29,18 @@ function localDateTimeInput(date: Date): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
+function kitchenDateTypeLabel(dateType: string): string {
+  if (dateType === "USER_TARGET") return "Your reminder";
+  if (dateType === "UNKNOWN") return "Unknown";
+  return dateType.toLowerCase().replaceAll("_", " ");
+}
+
 export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const household = useLiveHousehold();
   const kitchenItemId = editOfferId ? null : searchParams.get("item");
+  const notCookingHandoff = searchParams.get("handoff") === "not-cooking";
   const routeActorKind = searchParams.get("actorKind");
   const routeActorId = searchParams.get("actorId");
 
@@ -48,6 +55,7 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [draftVersion, setDraftVersion] = useState<number>(1);
   const [editLoaded, setEditLoaded] = useState(!editOfferId);
+  const [sourceKitchenItem, setSourceKitchenItem] = useState<{ itemId: string; version: number } | null>(null);
   const [kitchenPrefill, setKitchenPrefill] = useState<{ key: string; phase: "ready" | "error"; item: KitchenObservation | null; message: string } | null>(null);
 
   // Photo & Analysis state
@@ -63,8 +71,9 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
   const [tagsInput, setTagsInput] = useState<string>("unserved");
   const [quantity, setQuantity] = useState<number | null>(5);
   const [unit, setUnit] = useState<OfferUnit>("portion");
-  const [storageCondition, setStorageCondition] = useState<"UNKNOWN" | "AMBIENT" | "CHILLED" | "FROZEN" | "OTHER">("AMBIENT");
-  const [allergenDeclaration, setAllergenDeclaration] = useState<"UNKNOWN" | "DONOR_DECLARED_NONE" | "DONOR_DECLARED_PRESENT">("DONOR_DECLARED_NONE");
+  const [storageCondition, setStorageCondition] = useState<"UNKNOWN" | "AMBIENT" | "CHILLED" | "FROZEN" | "OTHER">("UNKNOWN");
+  const [conditionConfirmed, setConditionConfirmed] = useState(false);
+  const [allergenDeclaration, setAllergenDeclaration] = useState<"UNKNOWN" | "DONOR_DECLARED_NONE" | "DONOR_DECLARED_PRESENT">("UNKNOWN");
   const [expiryDeclaration, setExpiryDeclaration] = useState<"UNKNOWN" | "DONOR_DECLARED">("UNKNOWN");
   const [expiryAt, setExpiryAt] = useState<string>("");
 
@@ -113,6 +122,8 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
           setUnit(item.unit as OfferUnit);
         }
         setStorageCondition("UNKNOWN");
+        setConditionConfirmed(false);
+        setSourceKitchenItem({ itemId: item.item_id, version: item.version });
         setAllergenDeclaration("UNKNOWN");
         setExpiryDeclaration("UNKNOWN");
         setExpiryAt("");
@@ -194,6 +205,10 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
         setQuantity(offer.quantity_total_minor || 1);
         setUnit(offer.unit || "portion");
         setStorageCondition(offer.storage_declaration);
+        setConditionConfirmed(offer.condition_declaration === "DONOR_CONFIRMED_SUITABLE");
+        setSourceKitchenItem(offer.source_kitchen_item_id && offer.source_kitchen_item_version
+          ? { itemId: offer.source_kitchen_item_id, version: offer.source_kitchen_item_version }
+          : null);
         setAllergenDeclaration(offer.allergen_declaration);
         setExpiryDeclaration(offer.expiry_declaration);
         setExpiryAt(offer.expiry_at ? localDateTimeInput(new Date(offer.expiry_at)) : "");
@@ -315,6 +330,10 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
     const errors: Record<string, string> = {};
     const offerQuantity = quantity;
 
+    if (validKitchenItemId && (!prefillMatches || kitchenPrefill?.phase !== "ready" || !kitchenPrefill.item)) {
+      errors.kitchenItem = "Reload the confirmed Kitchen item before preparing its offer.";
+    }
+
     if (!title.trim()) errors.title = "A descriptive food title is required.";
     if (offerQuantity === null || offerQuantity <= 0) errors.quantity = "Please specify a positive integer quantity.";
     if (!pickupStart) errors.pickupStart = "Pickup start time is required.";
@@ -334,6 +353,8 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
     if (expiryDeclaration === "DONOR_DECLARED" && expiryAt && pickupEnd && new Date(pickupEnd) > new Date(expiryAt)) {
       errors.pickupEnd = "Pickup must end before the donor-declared expiry time.";
     }
+    if (!["AMBIENT", "CHILLED", "FROZEN"].includes(storageCondition)) errors.storageCondition = "Select a known storage condition before offering food to recipients.";
+    if (!conditionConfirmed) errors.condition = "Inspect the food yourself and confirm it is unspoiled and suitable to offer.";
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -384,7 +405,10 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
           expiry_declaration: expiryDeclaration,
           expiry_at: expiryIso,
           storage_declaration: storageCondition,
+          condition_declaration: conditionConfirmed ? "DONOR_CONFIRMED_SUITABLE" : "UNKNOWN",
           allergen_declaration: allergenDeclaration,
+          source_kitchen_item_id: sourceKitchenItem?.itemId ?? null,
+          source_kitchen_item_version: sourceKitchenItem?.version ?? null,
           pickup_window_start: startIso,
           pickup_window_end: endIso,
           approximate_area: approximateArea.trim(),
@@ -463,10 +487,10 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
       {/* Title */}
       <div>
         <Heading as="h1" className="text-2xl sm:text-3xl">
-          {editOfferId ? "Edit Surplus Food Offer" : "Publish Surplus Food Offer"}
+          {notCookingHandoff ? "Share it instead?" : editOfferId ? "Edit Surplus Food Offer" : "Publish Surplus Food Offer"}
         </Heading>
         <p className="mt-1 text-sm text-muted">
-          Provide truthful declarations for unserved, peak-freshness surplus. Approved local non-profits and food banks will see your offer for scheduled pickup.
+          {notCookingHandoff ? "You chose not to prepare this item. Review the freshly loaded Kitchen record and confirm quantity, storage and condition yourself before deciding whether to publish." : kitchenItemId ? "Review this Kitchen record, then decide whether you want to offer the food. Confirm its current condition and complete each donor declaration yourself; the recorded date does not establish freshness or safety." : "Complete each donor declaration truthfully. Confirm the food's current condition yourself before publishing an offer."}
         </p>
       </div>
 
@@ -505,10 +529,11 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
       {kitchenItemId && !validKitchenItemId && <Card className="border border-danger/30 bg-danger-soft/30 p-4 text-sm text-danger" role="alert">This Kitchen item link is invalid. You can continue with a manual offer.</Card>}
       {validKitchenItemId && !prefillMatches && <Card className="p-4 text-sm text-muted" role="status">{household.auth === "signed-in" && household.householdId ? "Loading this confirmed Kitchen item…" : "Sign in and select its household to load this Kitchen item. You can continue with a manual offer."}</Card>}
       {prefillMatches && kitchenPrefill.phase === "error" && <Card className="border border-danger/30 bg-danger-soft/30 p-4 text-sm text-danger" role="alert">{kitchenPrefill.message}</Card>}
+      {fieldErrors.kitchenItem && <Card className="border border-danger/30 bg-danger-soft/30 p-4 text-sm text-danger" role="alert">{fieldErrors.kitchenItem}</Card>}
       {prefillMatches && kitchenPrefill.phase === "ready" && kitchenPrefill.item && <Card className="space-y-2 border border-primary/20 bg-primary-soft/20 p-4">
         <div><p className="text-xs font-bold uppercase tracking-wide text-primary">Kitchen item prefill · review required</p><p className="mt-1 text-sm text-ink">{kitchenPrefill.message}</p></div>
-        <dl className="grid grid-cols-2 gap-2 text-xs"><div><dt className="text-muted">Kitchen amount</dt><dd className="font-semibold text-ink">{kitchenPrefill.item.amount === null ? "Unknown" : `${kitchenPrefill.item.amount} ${kitchenPrefill.item.unit}`}</dd></div><div><dt className="text-muted">Recorded date</dt><dd className="font-semibold text-ink">{kitchenPrefill.item.date_value ? `${kitchenPrefill.item.date_type.toLowerCase().replaceAll("_", " ")} · ${kitchenPrefill.item.date_value}` : "Unknown"}</dd></div><div><dt className="text-muted">Storage note</dt><dd className="font-semibold text-ink">{kitchenPrefill.item.storage || "Unknown"}</dd></div><div><dt className="text-muted">Safety</dt><dd className="font-semibold text-ink">Not assessed</dd></div></dl>
-        <p className="text-xs leading-5 text-muted">This copies household observations into an editable offer draft only. It does not assess condition or safety. Dates without a time are not converted into an expiry time.</p>
+        <dl className="grid grid-cols-2 gap-2 text-xs"><div><dt className="text-muted">Kitchen amount</dt><dd className="font-semibold text-ink">{kitchenPrefill.item.amount === null ? "Unknown" : `${kitchenPrefill.item.amount} ${kitchenPrefill.item.unit}`}</dd></div><div><dt className="text-muted">Recorded date</dt><dd className="font-semibold text-ink">{kitchenPrefill.item.date_value ? `${kitchenDateTypeLabel(kitchenPrefill.item.date_type)} · ${kitchenPrefill.item.date_value}` : "Unknown"}</dd></div><div><dt className="text-muted">Storage note</dt><dd className="font-semibold text-ink">{kitchenPrefill.item.storage || "Unknown"}</dd></div><div><dt className="text-muted">Safety</dt><dd className="font-semibold text-ink">Not assessed</dd></div></dl>
+        <p className="text-xs leading-5 text-muted">This copies household observations into an editable offer draft only. It does not assess condition, freshness, suitability or safety. Your reminder is not an expiry date, and no date-only Kitchen fact is converted into an expiry time.</p>
       </Card>}
 
       {/* STEP 1: Choose Profile */}
@@ -759,6 +784,14 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
               </div>
             </div>
 
+            <div className="space-y-2 rounded-2xl border border-line bg-white p-4">
+              <label className="flex items-start gap-3 text-sm">
+                <input type="checkbox" checked={conditionConfirmed} onChange={(event) => setConditionConfirmed(event.target.checked)} className="mt-1 size-4" />
+                <span><strong>I inspected this food.</strong><span className="mt-1 block text-xs leading-relaxed text-muted">I observed no spoilage and believe it is suitable to offer in its current condition. This is my own declaration; photos and AI do not assess safety.</span></span>
+              </label>
+              {fieldErrors.condition && <p role="alert" className="text-xs font-semibold text-danger">{fieldErrors.condition}</p>}
+            </div>
+
             {/* Quantity and Unit */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
@@ -808,6 +841,7 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
                   </button>
                 ))}
               </div>
+              {fieldErrors.storageCondition && <p role="alert" className="text-xs font-semibold text-danger">{fieldErrors.storageCondition}</p>}
             </div>
 
             {/* Allergen Declaration */}
@@ -1068,8 +1102,8 @@ export function CreateOfferWizard({ editOfferId }: { editOfferId?: string }) {
                 onChange={(e) => setConfirmedTruthful(e.target.checked)}
                 className="mt-0.5 size-4 rounded text-primary focus:ring-primary/20"
               />
-              <span className="leading-snug">
-                I explicitly confirm these surplus food declarations are accurate, wholesome, and ready for recipient pickup during the stated window.
+          <span className="leading-snug">
+                I explicitly confirm the declarations are accurate and this food is ready for recipient pickup during the stated window. I am responsible for the condition declaration; the app does not certify safety.
               </span>
             </label>
           </div>

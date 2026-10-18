@@ -8,6 +8,7 @@ from app.core.errors import DomainError
 from app.core.identity import ActorContext, current_actor
 from app.domain.offer_discovery import discover_offers
 from app.domain.recovery_plans import create_recovery_plan, list_recovery_plans, read_recovery_plan, update_recovery_plan
+from app.domain.recovery_assistant import suggest_recovery_plans
 from app.schemas.household import ApiResult
 from app.schemas.recipient import (
     DiscoveryResult,
@@ -15,11 +16,25 @@ from app.schemas.recipient import (
     RecoveryPlanCreate,
     RecoveryPlanRecord,
     RecoveryPlanUpdate,
+    RecoveryAssistantRequest,
+    RecoveryAssistantResponse,
 )
 
 
 router = APIRouter(tags=["Recovery discovery and collections"])
 _IDEMPOTENCY_KEY = re.compile(r"^[A-Za-z0-9._:-]{8,128}$")
+
+
+@router.post("/recovery/assistant", response_model=ApiResult)
+def recovery_assistant(
+    request: Request,
+    response: Response,
+    command: RecoveryAssistantRequest,
+    actor: ActorContext = Depends(current_actor),
+) -> ApiResult:
+    response.headers["Cache-Control"] = "no-store"
+    result = RecoveryAssistantResponse.model_validate(suggest_recovery_plans(actor, command))
+    return ApiResult(request_id=request.state.request_id, result=result.model_dump(mode="json"))
 
 
 def _key(value: str) -> str:

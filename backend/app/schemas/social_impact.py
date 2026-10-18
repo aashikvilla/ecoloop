@@ -115,11 +115,15 @@ class OfferRecordBase(StrictModel):
     expiry_declaration: Literal["UNKNOWN", "DONOR_DECLARED"]
     expiry_at: datetime | None = None
     storage_declaration: Literal["UNKNOWN", "AMBIENT", "CHILLED", "FROZEN", "OTHER"]
+    condition_declaration: Literal["UNKNOWN", "DONOR_CONFIRMED_SUITABLE"] = "UNKNOWN"
     allergen_declaration: Literal["UNKNOWN", "DONOR_DECLARED_NONE", "DONOR_DECLARED_PRESENT"]
+    source_kitchen_item_id: Annotated[StrictStr, Field(min_length=1, max_length=128)] | None = None
+    source_kitchen_item_version: Annotated[StrictInt, Field(ge=1)] | None = None
     media_ids: list[Annotated[StrictStr, Field(min_length=1, max_length=128)]] = Field(default_factory=list, max_length=10)
     version: Annotated[StrictInt, Field(ge=1)]
     created_at: datetime
     updated_at: datetime
+    demo_scenario: bool = False
 
 
 class DraftSurplusOfferRecord(OfferRecordBase):
@@ -225,7 +229,10 @@ class OfferEdit(StrictModel):
     expiry_declaration: Literal["UNKNOWN", "DONOR_DECLARED"]
     expiry_at: datetime | None = None
     storage_declaration: Literal["UNKNOWN", "AMBIENT", "CHILLED", "FROZEN", "OTHER"]
+    condition_declaration: Literal["UNKNOWN", "DONOR_CONFIRMED_SUITABLE"] = "UNKNOWN"
     allergen_declaration: Literal["UNKNOWN", "DONOR_DECLARED_NONE", "DONOR_DECLARED_PRESENT"]
+    source_kitchen_item_id: Annotated[StrictStr, Field(min_length=1, max_length=128)] | None = None
+    source_kitchen_item_version: Annotated[StrictInt, Field(ge=1)] | None = None
     pickup_window_start: datetime
     pickup_window_end: datetime
     approximate_area: Annotated[StrictStr, Field(min_length=2, max_length=160)]
@@ -236,6 +243,8 @@ class OfferEdit(StrictModel):
 
     @model_validator(mode="after")
     def validate_declarations(self) -> "OfferEdit":
+        if (self.source_kitchen_item_id is None) != (self.source_kitchen_item_version is None):
+            raise ValueError("Kitchen source item and version must be provided together")
         if (self.expiry_declaration == "DONOR_DECLARED") != (self.expiry_at is not None):
             raise ValueError("expiry_at must be present only for a donor-declared expiry")
         if self.expiry_at is not None and (self.expiry_at.tzinfo is None or self.expiry_at.utcoffset() is None):
@@ -362,3 +371,4 @@ class OfferPublicView(StrictModel):
     exact_address: str | None = None
     pickup_instructions: str | None = None
     media_ids: list[str] = Field(default_factory=list)
+    demo_scenario: bool = False

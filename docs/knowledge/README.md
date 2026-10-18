@@ -1,9 +1,15 @@
 # Project knowledge
-Read [Architecture](ARCHITECTURE.md), [Past Mistakes](PAST_MISTAKES.md), [Decisions](DECISIONS.md), then [latest session](sessions/2026-10-18-organization-pickup-live-acceptance.md).
+Read [Architecture](ARCHITECTURE.md), [Past Mistakes](PAST_MISTAKES.md), [Decisions](DECISIONS.md), then [latest session](sessions/2026-10-18-ai-demo-data-preparation.md).
 
 Continue from the [docs entrypoint](../planning/00_START_HERE.md), [implementation status](../STATUS.md) and [owner setup guide](../SETUP.md). The live MVPTasks Sheet remains the only task-status authority. Prior sessions remain dated historical records.
 
 - [Agent Platform follow-up (17 Oct 2026)](sessions/2026-10-17-agent-platform-followup.md) — review findings and remaining local/cloud acceptance gates.
+- [Final demo flow review and remediation plan (18 Oct 2026)](sessions/2026-10-18-demo-flow-review.md) — D1–D5 implementation audit, live assistant 504 evidence, prepared consumer Kitchen records, upstream code comparison and linked implementation gates.
+- [Final demo flow implementation (18 Oct 2026)](sessions/2026-10-18-demo-flow-implementation.md) — local D1–D4 source changes, checks, donor account/Kitchen prep, honest AI/Routes/offer data limits and remaining acceptance gates.
+- [AI demo enablement and acceptance (18 Oct 2026)](sessions/2026-10-18-ai-demo-acceptance.md) — Vertex enabled locally; photo purchase check passed; household ADK timed out, with current organization, Routes and receipt acceptance gaps.
+- [Organization recovery assistant implementation (18 Oct 2026)](sessions/2026-10-18-organization-recovery-assistant.md) — typed request extraction, deterministic offer-based plans, clarification behavior, checks and live-data/provider acceptance gaps.
+- [AI demo fixes and local acceptance (18 Oct 2026)](sessions/2026-10-18-ai-demo-fix-acceptance.md) — repeated ADK tool-loop diagnosis and fix, successful meal proposal, working NGO portion clarification, surplus handoff review, and remaining offer/Routes gates.
+- [AI demo data preparation and local acceptance (18 Oct 2026)](sessions/2026-10-18-ai-demo-data-preparation.md) — six seeded Kitchens, twelve NGO rehearsal scenarios, authenticated Vertex Sessions and meal acceptance, two local recovery options, and the missing Routes key boundary.
 - [Public entry and role-based routing plan (18 Oct 2026)](sessions/2026-10-18-role-based-entry-planning.md) — proposed public entry, shared sign-in and protected workspace routes.
 - [Public entry and role-based routing implementation (18 Oct 2026)](sessions/2026-10-18-role-based-entry-implementation.md) — route split, persistent workspace restoration, verification and remaining live-account acceptance.
 - [Remote main commit migration feasibility (18 Oct 2026)](sessions/2026-10-18-phase2-remote-commit-feasibility.md) — commit range, replay result, conflicts, scope fit and deployment caveats.

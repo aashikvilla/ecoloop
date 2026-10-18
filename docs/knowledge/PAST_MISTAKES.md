@@ -1,5 +1,13 @@
 # Past mistakes and prevention patterns
 
+## 2026-10-18 — Keep provider JSON Schema hints within the SDK-supported subset
+
+Observation: a structurally valid Pydantic model generated a schema containing `additionalProperties`, which the Google GenAI request converter rejected with HTTP 400. Prevention: validate the complete provider request boundary, remove only unsupported generation hints in the adapter, retain strict local response validation, and verify an authenticated request against the provider. See [AI demo data preparation](sessions/2026-10-18-ai-demo-data-preparation.md).
+
+## 2026-10-18 — Reuse preloaded facts and bound ADK tool loops
+
+Observation: an authenticated household meal turn spent 60 seconds inside ADK and emitted 43 repeated reads of the same confirmed pantry tool; individual reads were fast, but the model never finished the suggestion. Prevention: when the API has already loaded an authorized, bounded snapshot for a selected item, use that snapshot directly instead of exposing a redundant read tool. Set a per-turn ADK model-call cap and log privacy-safe phase/event counts on timeout. Verify a full authenticated product turn; health and successful tool calls alone do not prove the agent completes. See [AI demo acceptance](sessions/2026-10-18-ai-demo-fix-acceptance.md).
+
 ## 2026-10-18 — Import Google Maps constructors from their owning library
 
 Observation: the recipient map requested `LatLngBounds` from the `maps` library, so choosing Map immediately failed and silently returned to List. The provider exposes that constructor from `core`. Prevention: check each Maps JS constructor against the library that owns it, test the rendered map with real markers, and keep a visible error with an explicit List fallback when initialization fails.

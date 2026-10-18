@@ -26,7 +26,7 @@ class RequestBoundaryMiddleware:
             None,
         )
         path = scope.get("path", "")
-        is_photo_upload = path.endswith("/intakes/photo") or (path.endswith("/media") and "/offers/" in path)
+        is_photo_upload = path.endswith("/intakes/photo") or path.endswith("/shopping/identify-photo") or (path.endswith("/media") and "/offers/" in path)
         request_limit = self.max_photo_bytes if is_photo_upload else self.max_request_bytes
         if content_length is not None:
             try:

@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import os
 from uuid import uuid4
@@ -20,6 +22,7 @@ from app.core.firestore import get_firestore
 from app.core.identity import ActorContext, organization_membership_document_id
 from app.domain.private_media import validate_media
 from app.domain.recipient_access import RECIPIENT_OPERATOR_PERMISSIONS, assert_recipient_actor
+from app.schemas.household import DateType
 from app.schemas.social_impact import (
     ClaimCreate,
     OfferAnalyzeRequest,
@@ -36,8 +39,8 @@ PUBLIC_OFFER_FIELDS = (
     "offer_id", "title", "category", "tags", "donor", "quantity_total_minor",
     "quantity_available_minor", "quantity_reserved_minor", "quantity_collected_minor",
     "quantity_received_minor", "unit", "expiry_declaration", "expiry_at",
-    "storage_declaration", "allergen_declaration", "pickup_window_start",
-    "pickup_window_end", "approximate_area", "visibility", "status", "version", "created_at", "updated_at",
+    "storage_declaration", "condition_declaration", "allergen_declaration", "pickup_window_start",
+    "pickup_window_end", "approximate_area", "visibility", "status", "version", "created_at", "updated_at", "demo_scenario",
 )
 
 
@@ -276,7 +279,10 @@ def create_offer(actor: ActorContext, title: str, category: str, idempotency_key
             "expiry_declaration": "UNKNOWN",
             "expiry_at": None,
             "storage_declaration": "UNKNOWN",
+            "condition_declaration": "UNKNOWN",
             "allergen_declaration": "UNKNOWN",
+            "source_kitchen_item_id": None,
+            "source_kitchen_item_version": None,
             "pickup_window_start": None,
             "pickup_window_end": None,
             "approximate_area": None,
@@ -389,6 +395,76 @@ def publish_offer(actor: ActorContext, offer_id: str, expected_version: int, ide
         expiry = offer.get("expiry_at")
         if expiry is not None and (not isinstance(expiry, datetime) or end > expiry):
             raise DomainError("INVALID_PICKUP_WINDOW", "The pickup window must end no later than the donor-declared expiry.", 422)
+        if offer.get("condition_declaration", "UNKNOWN") != "DONOR_CONFIRMED_SUITABLE":
+            raise DomainError("OFFER_INELIGIBLE", "Confirm that you inspected the food and it is unspoiled and suitable to offer. Photos and AI cannot make this assessment.", 422)
+        if offer.get("storage_declaration", "UNKNOWN") not in {"AMBIENT", "CHILLED", "FROZEN"}:
+            raise DomainError("OFFER_INELIGIBLE", "Declare how the food has been stored before publishing it for recipient collection.", 422)
+        offer_quantity = offer.get("quantity_total_minor")
+        if isinstance(offer_quantity, bool) or not isinstance(offer_quantity, int) or offer_quantity <= 0:
+            raise DomainError("INVALID_QUANTITY", "A positive integer offer quantity is required.", 422)
+
+        source_item_id = offer.get("source_kitchen_item_id")
+        source_item_version = offer.get("source_kitchen_item_version")
+        if source_item_id is not None or source_item_version is not None:
+            if actor.actor_kind != "household" or not isinstance(source_item_id, str) or not source_item_id or isinstance(source_item_version, bool) or not isinstance(source_item_version, int):
+                raise DomainError("OFFER_SOURCE_INVALID", "The linked Kitchen record is invalid. Reload it and review the offer again.", 409)
+            household_ref = db.collection("households").document(actor.actor_id)
+            household_snapshot = household_ref.get(transaction=transaction)
+            source_ref = household_ref.collection("food_observations").document(source_item_id)
+            source_snapshot = source_ref.get(transaction=transaction)
+            source_item = source_snapshot.to_dict() if source_snapshot.exists else None
+            if not source_item:
+                raise DomainError("OFFER_SOURCE_CHANGED", "The linked Kitchen item is no longer available. Reload Kitchen before publishing.", 409)
+            if source_item.get("household_id") != actor.actor_id or source_item.get("item_id") != source_item_id:
+                raise DomainError("OFFER_SOURCE_INVALID", "The linked Kitchen item has an invalid household scope. Reconcile it before sharing.", 409)
+            if _version(source_item) != source_item_version:
+                raise DomainError("OFFER_SOURCE_CHANGED", "The linked Kitchen item changed. Reload it and review the offer again.", 409)
+            source_amount = source_item.get("amount")
+            source_unit = source_item.get("unit")
+            if source_amount is not None:
+                if isinstance(source_amount, bool) or not isinstance(source_amount, (int, float)) or not math.isfinite(source_amount) or source_amount <= 0 or not isinstance(source_unit, str):
+                    raise DomainError("OFFER_SOURCE_INVALID", "The Kitchen quantity needs reconciliation before sharing.", 409)
+                normalized_units = {
+                    "g": ("g", 1.0), "kg": ("g", 1000.0),
+                    "ml": ("ml", 1.0), "l": ("ml", 1000.0),
+                    "portion": ("portion", 1.0), "portions": ("portion", 1.0),
+                    "item": ("item", 1.0), "piece": ("item", 1.0), "pieces": ("item", 1.0),
+                    "package": ("package", 1.0), "packages": ("package", 1.0),
+                }
+                source_normalized = normalized_units.get(source_unit.lower())
+                offer_normalized = normalized_units.get(offer.get("unit"))
+                if source_normalized is None or offer_normalized is None or source_normalized[0] != offer_normalized[0]:
+                    raise DomainError("OFFER_SOURCE_INVALID", "The offer quantity unit cannot be reconciled with confirmed Kitchen stock.", 409)
+                if offer_quantity > source_amount * source_normalized[1] / offer_normalized[1]:
+                    raise DomainError("OFFER_SOURCE_QUANTITY", "The offer quantity exceeds the linked Kitchen record. Reload Kitchen and review the amount.", 422)
+            raw_date_type = source_item.get("date_type", "UNKNOWN")
+            source_date = source_item.get("date_value")
+            try:
+                source_date_type = DateType(raw_date_type)
+            except (TypeError, ValueError):
+                raise DomainError("OFFER_SOURCE_INVALID", "The Kitchen date type needs reconciliation before sharing.", 409) from None
+            if (source_date_type == DateType.UNKNOWN) != (source_date is None):
+                raise DomainError("OFFER_SOURCE_INVALID", "The Kitchen date declaration conflicts with its recorded date. Reconcile it before sharing.", 409)
+            parsed_source_date: date | None = None
+            if source_date is not None:
+                if not isinstance(source_date, str):
+                    raise DomainError("OFFER_SOURCE_INVALID", "The Kitchen date needs reconciliation before sharing.", 409)
+                try:
+                    parsed_source_date = date.fromisoformat(source_date)
+                except ValueError:
+                    raise DomainError("OFFER_SOURCE_INVALID", "The Kitchen date needs reconciliation before sharing.", 409) from None
+                if parsed_source_date.isoformat() != source_date:
+                    raise DomainError("OFFER_SOURCE_INVALID", "The Kitchen date needs reconciliation before sharing.", 409)
+            if source_date_type in {DateType.USE_BY, DateType.EXPIRY} and parsed_source_date is not None:
+                try:
+                    zone_name = (household_snapshot.to_dict() or {}).get("time_zone") if household_snapshot.exists else None
+                    if not isinstance(zone_name, str) or not zone_name:
+                        raise ValueError("missing household time zone")
+                    local_today = now.astimezone(ZoneInfo(zone_name)).date()
+                except (ValueError, ZoneInfoNotFoundError):
+                    raise DomainError("OFFER_SOURCE_INVALID", "The Kitchen date or household time zone needs reconciliation before sharing.", 409) from None
+                if parsed_source_date < local_today:
+                    raise DomainError("OFFER_INELIGIBLE", "Food with a past use-by or expiry date cannot be offered.", 422)
         total = offer.get("quantity_total_minor")
         if isinstance(total, bool) or not isinstance(total, int) or total <= 0:
             raise DomainError("INVALID_QUANTITY", "A positive integer offer quantity is required.", 422)
@@ -711,6 +787,9 @@ def analyze_offer_media(actor: ActorContext, offer_id: str, media_ids: list[str]
 
 def _public_offer(offer: dict[str, Any]) -> dict[str, Any]:
     result = {field: offer.get(field) for field in PUBLIC_OFFER_FIELDS if field in offer}
+    # Earlier offer versions predate donor condition declarations; present them as
+    # unknown so clients can fail closed without breaking the owner history view.
+    result.setdefault("condition_declaration", "UNKNOWN")
     donor = offer.get("donor")
     if isinstance(donor, dict):
         result["donor"] = {"kind": donor.get("kind")}
@@ -747,12 +826,14 @@ def _assert_actor_read(db: Any, actor: ActorContext, required_permission: str | 
     return organization
 
 
-def _sanitize_offer(offer: dict[str, Any], include_private: bool = False) -> dict[str, Any]:
+def _sanitize_offer(offer: dict[str, Any], include_private: bool = False, include_source: bool = False) -> dict[str, Any]:
     output = _public_offer(offer)
     if include_private:
         output.update({key: offer.get(key) for key in ("exact_address", "pickup_instructions", "media_ids", "latitude", "longitude")})
     else:
         output.pop("media_ids", None)
+    if include_source:
+        output.update({key: offer.get(key) for key in ("source_kitchen_item_id", "source_kitchen_item_version")})
     return output
 
 
@@ -764,7 +845,13 @@ def list_public_offers(actor: ActorContext) -> dict[str, Any]:
         # Authorization and approval are rechecked before the query; no coordinates or private fields enter this response.
         _assert_actor_read(db, actor, "offer:search")
         results = db.collection("surplus_offers").where("visibility", "==", "PUBLIC").where("status", "==", "OPEN").order_by("created_at", direction=firestore.Query.DESCENDING).limit(50).stream()
-        return {"offers": [_sanitize_offer(snapshot.to_dict() or {}) for snapshot in results]}
+        visible = []
+        for snapshot in results:
+            offer = snapshot.to_dict() or {}
+            if offer.get("demo_scenario") is True and offer.get("demo_scenario_org_id") != actor.actor_id:
+                continue
+            visible.append(_sanitize_offer(offer))
+        return {"offers": visible}
     except DomainError:
         raise
     except Exception as exc:
@@ -780,7 +867,7 @@ def list_my_offers(actor: ActorContext) -> dict[str, Any]:
         _assert_actor_read(db, actor, "offer:read")
         donor_kind = "business" if actor.actor_kind == "business" else "household"
         results = db.collection("surplus_offers").where("donor.kind", "==", donor_kind).where("donor.owner_id", "==", actor.actor_id).order_by("created_at", direction=firestore.Query.DESCENDING).limit(50).stream()
-        return {"offers": [_sanitize_offer(snapshot.to_dict(), include_private=True) for snapshot in results]}
+        return {"offers": [_sanitize_offer(snapshot.to_dict(), include_private=True, include_source=True) for snapshot in results]}
     except DomainError:
         raise
     except Exception as exc:
@@ -798,12 +885,14 @@ def read_offer(actor: ActorContext, offer_id: str) -> dict[str, Any]:
         donor_kind = "business" if actor.actor_kind == "business" else "household"
         if actor.actor_kind != "recipient_org" and donor.get("kind") == donor_kind and donor.get("owner_id") == actor.actor_id:
             _assert_actor_read(db, actor, "offer:read")
-            return _sanitize_offer(offer, include_private=True)
+            return _sanitize_offer(offer, include_private=True, include_source=True)
         if offer.get("visibility") != "PUBLIC" or offer.get("status") not in {"OPEN", "PARTIALLY_RESERVED", "FULLY_RESERVED"}:
             raise DomainError("NOT_FOUND", "The offer was not found.", 404)
         if actor.actor_kind != "recipient_org":
             raise DomainError("NOT_FOUND", "The offer was not found.", 404)
         _assert_actor_read(db, actor, "offer:search")
+        if offer.get("demo_scenario") is True and offer.get("demo_scenario_org_id") != actor.actor_id:
+            raise DomainError("NOT_FOUND", "The offer was not found.", 404)
         claim_ref = db.collection("offer_claims").document(_stable_document_id("claim", offer_id, actor.actor_id))
         claim_snapshot = claim_ref.get()
         claim = claim_snapshot.to_dict() if claim_snapshot.exists else None

@@ -14,7 +14,8 @@ from time import monotonic
 from typing import Any, Annotated
 
 from google.adk.agents import LlmAgent
-from google.adk.runners import Runner
+from google.adk.models import Gemini
+from google.adk.runners import RunConfig, Runner
 from google.adk.sessions import BaseSessionService, InMemorySessionService, VertexAiSessionService
 from google.adk.tools import ToolContext
 from google.genai import types
@@ -46,7 +47,9 @@ TOOL_SCOPE_ROLE_KEY = "ecoloop_tool_role"
 _PROVIDER_LOCK = asyncio.Lock()
 _SESSION_LOCK = asyncio.Lock()
 _runner: Runner | None = None
+_context_runner: Runner | None = None
 _session_service: BaseSessionService | None = None
+_managed_sessions_verified = False
 _active_sessions: OrderedDict[tuple[str, str], float] = OrderedDict()
 _LOGGER = logging.getLogger(__name__)
 _OBSERVABLE_TOOL_NAMES = frozenset({
@@ -324,11 +327,15 @@ def _emit_turn_timing(
     payload_chars: int = 0,
     event_count: int = 0,
     first_event_ms: int | None = None,
+    last_event_ms: int | None = None,
+    event_kinds: list[str] | None = None,
     tool_calls: set[str] | None = None,
+    tool_durations_ms: dict[str, list[int]] | None = None,
     timeout_phase: str | None = None,
 ) -> None:
     """Emit bounded timings only; never log prompts, user IDs, or record values."""
-    _LOGGER.info(json.dumps({
+    log = _LOGGER.warning if result == "timeout" else _LOGGER.info
+    log(json.dumps({
         "event": "assistant_turn_timing",
         "request_id": request_id,
         "result": result,
@@ -341,7 +348,10 @@ def _emit_turn_timing(
         "payload_chars": payload_chars,
         "adk_event_count": event_count,
         "first_adk_event_ms": first_event_ms,
+        "last_adk_event_ms": last_event_ms,
+        "adk_event_kinds": (event_kinds or [])[:20],
         "tool_calls": sorted(tool_calls or set()),
+        "tool_durations_ms": tool_durations_ms or {},
     }, separators=(",", ":")))
 
 
@@ -391,13 +401,14 @@ def get_agent_provider_status() -> dict[str, str | bool]:
     provider = configuration[0] if configuration else None
     managed_sessions = _managed_session_configuration() is not None
     memory_status = memory_bank_status()["status"]
-    session_store = (
-        "vertex_ai_configured_unverified"
-        if managed_sessions
-        else "vertex_ai_unavailable"
-        if settings.AGENT_SESSION_STORE == "vertex_ai"
-        else "in_memory_unmanaged"
-    )
+    if managed_sessions and _managed_sessions_verified:
+        session_store = "vertex_ai_verified"
+    elif managed_sessions:
+        session_store = "vertex_ai_configured_unverified"
+    elif settings.AGENT_SESSION_STORE == "vertex_ai":
+        session_store = "vertex_ai_unavailable"
+    else:
+        session_store = "in_memory_unmanaged"
     return {
         "provider": {
             "gemini_api": "gemini_developer_api",
@@ -413,7 +424,7 @@ def get_agent_provider_status() -> dict[str, str | bool]:
         "runtime_check": "not_performed",
         "session_store": session_store,
         "managed_sessions_configured": managed_sessions,
-        "managed_sessions": False,
+        "managed_sessions": managed_sessions and _managed_sessions_verified,
         "memory_bank": memory_status,
         "managed_memory_configured": memory_status == "configured_unverified",
         "managed_memory": False,
@@ -435,13 +446,15 @@ def _provider() -> tuple[str, str, str | None]:
     return configuration
 
 
-async def _get_runner() -> tuple[Runner, BaseSessionService]:
-    global _runner, _session_service
-    if _runner is not None and _session_service is not None:
-        return _runner, _session_service
+async def _get_runner(*, tools_enabled: bool = True) -> tuple[Runner, BaseSessionService]:
+    global _runner, _context_runner, _session_service
+    current_runner = _runner if tools_enabled else _context_runner
+    if current_runner is not None and _session_service is not None:
+        return current_runner, _session_service
     async with _PROVIDER_LOCK:
-        if _runner is not None and _session_service is not None:
-            return _runner, _session_service
+        current_runner = _runner if tools_enabled else _context_runner
+        if current_runner is not None and _session_service is not None:
+            return current_runner, _session_service
         provider, credential, location = _provider()
         managed_session_config = _managed_session_configuration()
         if settings.AGENT_SESSION_STORE == "vertex_ai" and managed_session_config is None:
@@ -463,13 +476,32 @@ async def _get_runner() -> tuple[Runner, BaseSessionService]:
                     503,
                     True,
                 )
+            # A Developer API key may be present in the local environment even
+            # when Vertex was explicitly selected. ADK's implicit GenAI client
+            # reads both the key and project/location from process env; remove
+            # API keys so Vertex uses Application Default Credentials only.
+            os.environ.pop("GOOGLE_API_KEY", None)
+            os.environ.pop("GEMINI_API_KEY", None)
             os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "true"
             os.environ["GOOGLE_CLOUD_PROJECT"] = credential
             os.environ["GOOGLE_CLOUD_LOCATION"] = location
 
         agent = LlmAgent(
             name="ecoloop_household_agent",
-            model=settings.AGENT_MODEL,
+            # Keep provider retries inside a bounded model-call budget. ADK's
+            # implicit model client otherwise inherits the SDK retry behavior,
+            # which can consume the whole API turn deadline before the agent
+            # yields an event. The outer turn timeout remains the final guard.
+            model=Gemini(
+                model=settings.AGENT_MODEL,
+                retry_options=types.HttpRetryOptions(attempts=1),
+                client_kwargs={
+                    "http_options": types.HttpOptions(
+                        timeout=min(settings.AGENT_REQUEST_TIMEOUT_SECONDS * 1_000, 30_000),
+                        retry_options=types.HttpRetryOptions(attempts=1),
+                    )
+                },
+            ),
             description="Suggests household food decisions from confirmed kitchen observations.",
             # Keep the schema in trusted instructions because provider schema
             # conversion rejects parts of this JSON Schema; local validation below
@@ -482,13 +514,22 @@ async def _get_runner() -> tuple[Runner, BaseSessionService]:
             output_key="assistant_result",
             generate_content_config=types.GenerateContentConfig(
                 temperature=0.2,
-                max_output_tokens=settings.AGENT_MAX_OUTPUT_TOKENS,
+                # The validated assistant payload is deliberately small; a
+                # tighter ceiling reduces the chance that speculative reasoning
+                # consumes the demo's request budget.
+                max_output_tokens=min(settings.AGENT_MAX_OUTPUT_TOKENS, 1_536),
                 response_mime_type="application/json",
                 thinking_config=types.ThinkingConfig(thinking_level=settings.AGENT_THINKING_LEVEL),
             ),
-            tools=[read_confirmed_pantry, read_active_shopping_list, read_active_meal_plans],
+            # A selected-item turn already receives a fresh, authorized Kitchen
+            # snapshot in its bounded prompt. Keep its model pass focused and
+            # avoid repeated reads of the same item; uncached turns retain the
+            # scoped read-only tools for older records and list/plan questions.
+            tools=[read_confirmed_pantry, read_active_shopping_list, read_active_meal_plans] if tools_enabled else [],
         )
-        if managed_session_config is not None:
+        if _session_service is not None:
+            sessions = _session_service
+        elif managed_session_config is not None:
             project, session_location, engine_id = managed_session_config
             # VertexAiSessionService stores session state and history in the existing
             # Agent Engine resource; no new runtime is provisioned by this code path.
@@ -499,9 +540,13 @@ async def _get_runner() -> tuple[Runner, BaseSessionService]:
             )
         else:
             sessions = InMemorySessionService()
-        _runner = Runner(agent=agent, app_name=APP_NAME, session_service=sessions)
+        runner = Runner(agent=agent, app_name=APP_NAME, session_service=sessions)
+        if tools_enabled:
+            _runner = runner
+        else:
+            _context_runner = runner
         _session_service = sessions
-        return _runner, sessions
+        return runner, sessions
 
 
 async def _prepare_session(
@@ -512,6 +557,7 @@ async def _prepare_session(
     principal: Principal,
 ) -> None:
     """Create a scoped session and bound in-memory sessions and history."""
+    global _managed_sessions_verified
     now = monotonic()
     key = (user_id, session_id)
     async with _SESSION_LOCK:
@@ -562,6 +608,10 @@ async def _prepare_session(
             while len(_active_sessions) > MAX_IN_MEMORY_SESSIONS:
                 evicted, _ = _active_sessions.popitem(last=False)
                 await sessions.delete_session(app_name=APP_NAME, user_id=evicted[0], session_id=evicted[1])
+        else:
+            # Mark verification only after the managed service successfully
+            # read or created this scope-bound session. Health never probes it.
+            _managed_sessions_verified = True
 
 
 def _iso(value: Any) -> str | None:
@@ -577,6 +627,7 @@ def _kitchen_query(
     item_ids: list[str],
     *,
     max_items: int = MAX_KITCHEN_CONTEXT_ITEMS,
+    include_recent: bool = False,
 ) -> list[dict[str, Any]]:
     """Read and minimize only the caller's verified household observations."""
     observations = (
@@ -585,19 +636,34 @@ def _kitchen_query(
         .document(principal.household_id)
         .collection("food_observations")
     )
+    snapshots: list[Any] = []
     if item_ids:
         # Resolve selected context directly within the authorized household and
-        # retain caller order. Deduplicating preserves the prior set semantics.
-        snapshots = (
+        # retain caller order, including records older than the recent window.
+        # Meal requests also include a small recent snapshot so the model can
+        # build a suggestion from the user's actual pantry, not just the item
+        # that launched the flow.
+        snapshots.extend(
             observations.document(item_id).get()
-            for item_id in dict.fromkeys(item_ids[:MAX_KITCHEN_CONTEXT_ITEMS])
+            for item_id in dict.fromkeys(item_ids[:max_items])
         )
+        if include_recent and len(snapshots) < max_items:
+            snapshots.extend(
+                observations.order_by("observed_at", direction="DESCENDING")
+                .limit(max_items)
+                .stream()
+            )
     else:
-        snapshots = observations.order_by("observed_at", direction="DESCENDING").limit(max_items).stream()
+        snapshots.extend(
+            observations.order_by("observed_at", direction="DESCENDING")
+            .limit(max_items)
+            .stream()
+        )
 
     rows: list[dict[str, Any]] = []
+    included_ids: set[str] = set()
     for snapshot in snapshots:
-        if not snapshot.exists:
+        if not snapshot.exists or snapshot.id in included_ids:
             continue
         data = snapshot.to_dict() or {}
         name = data.get("name")
@@ -637,6 +703,7 @@ def _kitchen_query(
                 "condition": "UNKNOWN",
             }
         )
+        included_ids.add(snapshot.id)
         if len(rows) >= max_items:
             break
     return rows
@@ -682,6 +749,10 @@ def _validate_cards(validated: list[ProposalCard]) -> list[ProposalCard]:
         if set(card.allowed_actions) != expected:
             raise DomainError("AGENT_INVALID_RESPONSE", "The assistant suggested an invalid card. Please retry.", 502, True)
     return validated
+
+
+def _normalize_food_name(value: str) -> str:
+    return re.sub(r"[^\w]", "", value.casefold(), flags=re.UNICODE)
 
 
 def _verify_portion_adjustment_plan(
@@ -754,7 +825,12 @@ async def generate_household_turn(
     phases_ms: dict[str, int] = {}
     phase_started = monotonic()
     try:
-        kitchen = await asyncio.to_thread(_kitchen_query, principal, request.context_item_ids)
+        kitchen = await asyncio.to_thread(
+            _kitchen_query,
+            principal,
+            request.context_item_ids,
+            include_recent=bool(request.context_item_ids),
+        )
         phases_ms["kitchen_read"] = round((monotonic() - phase_started) * 1_000)
         phase_started = monotonic()
         preferences = await asyncio.to_thread(list_preferences, principal.uid)
@@ -811,7 +887,11 @@ async def generate_household_turn(
     user_id = f"household:{user_scope}"
     events: list[Any] = []
     tool_calls: set[str] = set()
+    event_kinds: list[str] = []
+    tool_durations_ms: dict[str, list[int]] = {}
+    open_tool_calls: dict[str, float] = {}
     first_event_ms: int | None = None
+    last_event_ms: int | None = None
     active_phase = "runner_setup"
     kitchen_count = len(kitchen)
     plan_count = len(saved_plans)
@@ -819,7 +899,7 @@ async def generate_household_turn(
     payload_chars = len(user_payload)
     try:
         phase_started = monotonic()
-        runner, sessions = await _get_runner()
+        runner, sessions = await _get_runner(tools_enabled=not bool(request.context_item_ids))
         phases_ms["runner_setup"] = round((monotonic() - phase_started) * 1_000)
         if isinstance(sessions, VertexAiSessionService) and not re.fullmatch(r"[A-Za-z0-9_-]+", session_id):
             managed_session_id = "s-" + hashlib.sha256(session_id.encode("utf-8")).hexdigest()
@@ -838,16 +918,33 @@ async def generate_household_turn(
                 user_id=user_id,
                 session_id=managed_session_id,
                 new_message=types.Content(role="user", parts=[types.Part(text=user_payload)]),
+                run_config=RunConfig(max_llm_calls=8),
             ):
                 if first_event_ms is None:
                     first_event_ms = round((monotonic() - run_started) * 1_000)
+                last_event_ms = round((monotonic() - run_started) * 1_000)
                 events.append(event)
                 content = getattr(event, "content", None)
+                event_kind = "other"
                 for part in getattr(content, "parts", None) or []:
                     function_call = getattr(part, "function_call", None)
                     name = getattr(function_call, "name", None)
                     if name in _OBSERVABLE_TOOL_NAMES:
                         tool_calls.add(name)
+                        event_kind = "tool_call"
+                        open_tool_calls[name] = monotonic()
+                    function_response = getattr(part, "function_response", None)
+                    response_name = getattr(function_response, "name", None)
+                    if response_name in _OBSERVABLE_TOOL_NAMES:
+                        event_kind = "tool_response"
+                        started = open_tool_calls.pop(response_name, None)
+                        if started is not None:
+                            tool_durations_ms.setdefault(response_name, []).append(
+                                round((monotonic() - started) * 1_000)
+                            )
+                    if getattr(part, "text", None):
+                        event_kind = "text"
+                event_kinds.append(event_kind)
         phases_ms["adk_run"] = round((monotonic() - run_started) * 1_000)
     except TimeoutError as exc:
         if active_phase == "adk_run":
@@ -863,7 +960,10 @@ async def generate_household_turn(
             payload_chars=payload_chars,
             event_count=len(events),
             first_event_ms=first_event_ms,
+            last_event_ms=last_event_ms,
+            event_kinds=event_kinds,
             tool_calls=tool_calls,
+            tool_durations_ms=tool_durations_ms,
             timeout_phase=active_phase,
         )
         raise DomainError("AGENT_TIMEOUT", "The assistant took too long to respond. Please retry.", 504, True) from exc
@@ -876,14 +976,36 @@ async def generate_household_turn(
     phase_started = monotonic()
     output = _output_from_events(events)
     validated_cards = _validate_cards(output.cards)
-    context_ids = {item["item_id"] for item in kitchen}
+    context_by_id = {item["item_id"]: item for item in kitchen}
+    context_ids = set(context_by_id)
     request_plans = {plan["plan_id"]: plan for plan in saved_plans}
     for index, card in enumerate(validated_cards):
         references: list[str] = list(card.source_refs)
         if card.type == "FoodAction":
             references.append(card.item_id)
         elif card.type == "MealSuggestion":
-            references.extend(item.item_id for item in card.ingredients if item.item_id is not None)
+            # Resolve ingredient availability against the confirmed snapshot. Model
+            # names alone never establish pantry stock; a linked item must match the
+            # canonical item name. Exact normalized names can be linked only when the
+            # household has one unambiguous record for that food.
+            normalized_items: dict[str, list[dict[str, Any]]] = {}
+            for item in kitchen:
+                normalized_items.setdefault(_normalize_food_name(item["name"]), []).append(item)
+            ingredients = []
+            for ingredient in card.ingredients:
+                matched = context_by_id.get(ingredient.item_id) if ingredient.item_id is not None else None
+                name_matches = normalized_items.get(_normalize_food_name(ingredient.name), [])
+                if matched is not None and _normalize_food_name(matched["name"]) != _normalize_food_name(ingredient.name):
+                    matched = None
+                if matched is None and len(name_matches) == 1:
+                    matched = name_matches[0]
+                if matched is None:
+                    ingredients.append(ingredient.model_copy(update={"item_id": None, "uncertain": True}))
+                    continue
+                ingredients.append(ingredient.model_copy(update={"item_id": matched["item_id"], "name": matched["name"]}))
+                references.append(matched["item_id"])
+            card = card.model_copy(update={"ingredients": ingredients})
+            validated_cards[index] = card
         elif card.type == "PortionAdjustment":
             verified_title = await asyncio.to_thread(
                 _verify_portion_adjustment_plan, principal, card, request_plans
@@ -912,7 +1034,10 @@ async def generate_household_turn(
             payload_chars=payload_chars,
             event_count=len(events),
             first_event_ms=first_event_ms,
+            last_event_ms=last_event_ms,
+            event_kinds=event_kinds,
             tool_calls=tool_calls,
+            tool_durations_ms=tool_durations_ms,
         )
         return envelope
     except Exception as exc:

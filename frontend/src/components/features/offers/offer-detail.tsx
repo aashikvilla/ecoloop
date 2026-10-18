@@ -290,6 +290,8 @@ export function OfferDetail({ offerId, actorKind, actorId }: { offerId: string; 
 
         {/* Declarations Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          {offer.source_kitchen_item_id && <div className="space-y-1 sm:col-span-2"><span className="font-bold text-muted uppercase">Donor source record:</span><p className="font-semibold text-ink"><Link href={`/kitchen/items/${encodeURIComponent(offer.source_kitchen_item_id)}`} className="min-h-11 inline-flex items-center text-primary underline">Open linked Kitchen item</Link>{offer.source_kitchen_item_version ? ` · Kitchen version ${offer.source_kitchen_item_version} at publication` : ""}</p></div>}
+          <div className="space-y-1"><span className="font-bold text-muted uppercase">Condition declaration:</span><p className="font-semibold text-ink">{offer.condition_declaration === "DONOR_CONFIRMED_SUITABLE" ? "Donor inspected and reports no spoilage observed" : "Unknown / not confirmed by donor"}</p><p className="text-muted">This is a donor statement, not an independent safety assessment.</p></div>
           <div className="space-y-1">
             <span className="font-bold text-muted uppercase">Storage Requirement:</span>
             <p className="font-semibold text-ink">{offer.storage_declaration}</p>

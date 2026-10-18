@@ -27,6 +27,7 @@ export type DiscoveredOffer = {
 	unit: OfferUnit;
 	expiry_declaration: "UNKNOWN" | "DONOR_DECLARED";
 	expiry_at: string | null;
+	condition_declaration: "UNKNOWN" | "DONOR_CONFIRMED_SUITABLE";
 	storage_declaration: "UNKNOWN" | "AMBIENT" | "CHILLED" | "FROZEN" | "OTHER";
 	allergen_declaration: "UNKNOWN" | "DONOR_DECLARED_NONE" | "DONOR_DECLARED_PRESENT";
 	pickup_window_start: string;
@@ -37,15 +38,39 @@ export type DiscoveredOffer = {
 	approximate_distance_km: number;
 	status: "OPEN" | "PARTIALLY_RESERVED";
 	version: number;
+	demo_scenario: boolean;
 };
 
-export type PlanNeed = { people_requested?: number | null; target_portions?: number | null; portions_per_person?: number | null };
+export type PlanNeed = {
+	people_requested?: number | null; target_portions?: number | null; portions_per_person?: number | null;
+	item_query?: string | null; requested_quantity_minor?: number | null; requested_unit?: OfferUnit | null;
+	dietary_requirements?: string[]; pickup_deadline?: string | null; search_radius_km?: number | null;
+};
+
+export type RecoveryAssistantResult = {
+	status: "needs_clarification" | "plans";
+	clarification: string | null;
+	need: PlanNeed | null;
+	plans: Array<{
+		option_id: string;
+		strategy: "coverage" | "nearby";
+		explanation: string;
+		covered_quantity_minor: number;
+		shortfall_quantity_minor: number;
+		requested_quantity_minor: number;
+		unit: OfferUnit;
+		stops: Array<{ offer: DiscoveredOffer; requested_quantity_minor: number }>;
+	}>;
+	offers_capped: boolean;
+	route_status: "unavailable" | "available";
+};
 export type PlanStop = {
 	stop_id: string;
 	offer_id: string;
 	requested_quantity_minor: number;
 	unit: OfferUnit;
 	expected_offer_version: number;
+	demo_scenario?: boolean;
 	claim_id?: string | null;
 	status: "SELECTED" | "RESERVED" | "COLLECTED" | "RECEIVED" | "UNAVAILABLE" | "CANCELLED" | "EXPIRED";
 	available_quantity_minor?: number | null;
@@ -212,6 +237,14 @@ export function discoverRecipientOffers(token: string, actor: RecipientActor, pr
 	return request(`/api/v1/recovery/offers?${params.toString()}`, token, { actor, signal });
 }
 
+export function requestRecoveryPlans(token: string, actor: RecipientActor, input: {
+	message: string;
+	origin: PickupBase;
+	structured?: Partial<PlanNeed>;
+}, signal?: AbortSignal): Promise<RecoveryAssistantResult> {
+	return request("/api/v1/recovery/assistant", token, { method: "POST", actor, body: input, signal });
+}
+
 export function listRecoveryPlans(token: string, actor: RecipientActor, signal?: AbortSignal): Promise<{ plans?: RecoveryPlan[] } | RecoveryPlan[]> {
 	return request("/api/v1/recovery/plans?limit=25", token, { actor, signal });
 }
@@ -270,7 +303,7 @@ export function updateRecipientClaim(token: string, actor: RecipientActor, claim
 export function makePlanStop(offer: DiscoveredOffer, requestedQuantity: number): PlanStop {
 	return {
 		stop_id: crypto.randomUUID(), offer_id: offer.offer_id, requested_quantity_minor: requestedQuantity,
-		unit: offer.unit, expected_offer_version: offer.version, status: "SELECTED", version: 1,
+		unit: offer.unit, expected_offer_version: offer.version, demo_scenario: offer.demo_scenario, status: "SELECTED", version: 1,
 	};
 }
 

@@ -50,6 +50,8 @@ export type IntakeResult = {
   candidates: IntakeCandidate[];
 };
 
+export type ShoppingPhotoCandidate = { name: string };
+
 const MAX_ENTRIES = 10;
 const dateTypes = new Set<IntakeDateType>(["USE_BY", "EXPIRY", "BEST_BEFORE", "USER_TARGET", "UNKNOWN"]);
 const uncertainties = new Set(["AMOUNT_UNKNOWN", "DATE_UNKNOWN", "STORAGE_UNKNOWN"]);
@@ -218,10 +220,10 @@ async function readJson(response: Response): Promise<unknown> {
   try { return JSON.parse(text) as unknown; } catch { throw new CanonicalApiError("invalid_response", "The household service returned unreadable data."); }
 }
 
-async function requestIntake<T>(path: string, token: string, householdId: string, options: { method: "GET" | "POST"; body?: unknown; rawBody?: BodyInit; rawContentType?: string; idempotencyKey?: string; timeoutMs?: number; signal?: AbortSignal; parse: (payload: unknown) => T }): Promise<T> {
+async function requestIntake<T>(path: string, token: string, householdId: string, options: { method: "GET" | "POST"; body?: unknown; rawBody?: BodyInit; rawContentType?: string; idempotencyKey?: string; timeoutMs?: number; signal?: AbortSignal; sideEffectFree?: boolean; parse: (payload: unknown) => T }): Promise<T> {
   if (!token || token.length > 8192 || /[\r\n]/.test(token)) throw new CanonicalApiError("unauthenticated", "Sign in before accessing household records.");
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(householdId)) throw new CanonicalApiError("validation", "Enter a valid household ID.");
-  if (options.method === "POST" && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS !== "true") {
+  if (options.method === "POST" && !options.sideEffectFree && process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS !== "true") {
     throw new CanonicalApiError("not_configured", "Household changes are not enabled for this app yet.");
   }
   const controller = new AbortController();
@@ -244,15 +246,15 @@ async function requestIntake<T>(path: string, token: string, householdId: string
       cache: "no-store", credentials: "omit", redirect: "error", signal: controller.signal,
     });
     const payload = await readJson(response);
-    if (!response.ok) throw responseError(response.status, options.method === "POST", payload);
+    if (!response.ok) throw responseError(response.status, options.method === "POST" && !options.sideEffectFree, payload);
     return parseEnvelope(payload, options.parse);
   } catch (error) {
     if (controller.signal.aborted) {
       if (options.signal?.aborted) throw new DOMException("Request cancelled", "AbortError");
-      throw new CanonicalApiError("timeout", options.method === "POST" ? "The request timed out. Keep the original retry key when trying again." : "Loading took too long. Try again.");
+      throw new CanonicalApiError("timeout", options.method === "POST" && !options.sideEffectFree ? "The request timed out. Keep the original retry key when trying again." : "The request timed out. Try again.");
     }
     if (error instanceof CanonicalApiError) throw error;
-    throw new CanonicalApiError("network", options.method === "POST" ? "The response could not be confirmed. Keep the original retry key when trying again." : "The intake could not be loaded. Check your connection and try again.");
+    throw new CanonicalApiError("network", options.method === "POST" && !options.sideEffectFree ? "The response could not be confirmed. Keep the original retry key when trying again." : "The request could not be completed. Check your connection and try again.");
   } finally {
     clearTimeout(timeout);
     options.signal?.removeEventListener("abort", abort);
@@ -279,6 +281,27 @@ export function submitPhotoIntake(token: string, householdId: string, file: File
     timeoutMs: 45_000,
     signal,
     parse: parseResult,
+  });
+}
+
+export function identifyShoppingPhoto(token: string, householdId: string, file: File, signal?: AbortSignal): Promise<ShoppingPhotoCandidate> {
+  const supportedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+  if (!supportedTypes.has(file.type) || file.size < 1 || file.size > 2_000_000) {
+    return Promise.reject(new CanonicalApiError("validation", "Choose a JPEG, PNG, or WebP photo up to 2 MB."));
+  }
+  return requestIntake("shopping/identify-photo", token, householdId, {
+    method: "POST",
+    rawBody: file,
+    rawContentType: file.type,
+    timeoutMs: 45_000,
+    sideEffectFree: true,
+    signal,
+    parse: (result) => {
+      if (!object(result) || typeof result.name !== "string" || !result.name.trim() || result.name.length > 120) {
+        throw new CanonicalApiError("invalid_response", "The product identification response was not in the supported format.");
+      }
+      return { name: result.name.trim() };
+    },
   });
 }
 

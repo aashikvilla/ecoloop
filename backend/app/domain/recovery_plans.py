@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from datetime import datetime, timezone
 from typing import Any
 
@@ -10,7 +11,7 @@ from firebase_admin import firestore
 from app.core.errors import DomainError
 from app.core.firestore import get_firestore
 from app.core.identity import ActorContext
-from app.schemas.recipient import PlanStop, RecoveryPlanCreate, RecoveryPlanRecord, RecoveryPlanUpdate
+from app.schemas.recipient import PickupBase, PlanNeed, PlanStop, RecoveryPlanCreate, RecoveryPlanRecord, RecoveryPlanUpdate
 
 
 def _hash(value: Any) -> str:
@@ -44,8 +45,21 @@ def _assert_actor(transaction: Any, db: Any, actor: ActorContext, permission: st
     return assert_recipient_actor(transaction, db, actor, permission)
 
 
-def _validate_stops(transaction: Any, db: Any, stops: list[PlanStop]) -> None:
+def _distance_km(origin: PickupBase, latitude: float, longitude: float) -> float:
+    lat1, lon1 = math.radians(origin.latitude), math.radians(origin.longitude)
+    lat2, lon2 = math.radians(latitude), math.radians(longitude)
+    delta_lat, delta_lon = lat2 - lat1, lon2 - lon1
+    value = math.sin(delta_lat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(delta_lon / 2) ** 2
+    return 6371.0088 * 2 * math.atan2(math.sqrt(value), math.sqrt(max(0.0, 1 - value)))
+
+
+def _normalized(value: Any) -> str:
+    return " ".join("".join(char.lower() if char.isalnum() else " " for char in str(value)).split())
+
+
+def _validate_stops(transaction: Any, db: Any, stops: list[PlanStop], need: PlanNeed | None, origin: PickupBase, org_id: str) -> None:
     now = datetime.now(timezone.utc)
+    planned_total = 0
     for stop in stops:
         ref = db.collection("surplus_offers").document(stop.offer_id)
         snapshot = ref.get(transaction=transaction)
@@ -54,6 +68,13 @@ def _validate_stops(transaction: Any, db: Any, stops: list[PlanStop]) -> None:
             raise DomainError("OFFER_UNAVAILABLE", "One selected offer is no longer available.", 409)
         if offer.get("status") not in {"OPEN", "PARTIALLY_RESERVED"}:
             raise DomainError("OFFER_UNAVAILABLE", "One selected offer is no longer available.", 409)
+        is_demo = offer.get("demo_scenario") is True
+        if stop.demo_scenario != is_demo:
+            raise DomainError("DEMO_SCENARIO_MISMATCH", "Reload this offer so the plan reflects whether it is rehearsal data.", 409)
+        if is_demo and offer.get("demo_scenario_org_id") != org_id:
+            raise DomainError("OFFER_UNAVAILABLE", "This rehearsal offer is not available to the selected organization.", 404)
+        if not is_demo and (offer.get("condition_declaration") != "DONOR_CONFIRMED_SUITABLE" or offer.get("storage_declaration") not in {"AMBIENT", "CHILLED", "FROZEN"}):
+            raise DomainError("OFFER_NOT_ELIGIBLE", "A selected offer needs a donor suitability declaration and known storage before planning.", 409)
         version = offer.get("version")
         if isinstance(version, bool) or not isinstance(version, int) or version != stop.expected_offer_version:
             raise DomainError("OFFER_VERSION_CONFLICT", "A selected offer changed. Refresh it before saving.", 409)
@@ -66,6 +87,26 @@ def _validate_stops(transaction: Any, db: Any, stops: list[PlanStop]) -> None:
         expiry = offer.get("expiry_at")
         if not isinstance(end, datetime) or end.tzinfo is None or end <= now or (expiry is not None and (not isinstance(expiry, datetime) or expiry.tzinfo is None or expiry <= now)):
             raise DomainError("OFFER_EXPIRED", "A selected offer has passed its pickup or expiry time.", 409)
+        if need and need.item_query:
+            searchable = _normalized(f"{offer.get('title', '')} {offer.get('category', '')}")
+            if not all(term in searchable for term in _normalized(need.item_query).split()):
+                raise DomainError("RECOVERY_CONSTRAINT_CONFLICT", "A selected offer does not match the requested food.", 409)
+            if stop.unit != need.requested_unit:
+                raise DomainError("RECOVERY_CONSTRAINT_CONFLICT", "A selected offer does not use the requested quantity unit.", 409)
+            pickup_end = offer.get("pickup_window_end")
+            if not isinstance(pickup_end, datetime) or pickup_end.tzinfo is None or pickup_end > need.pickup_deadline:
+                raise DomainError("RECOVERY_CONSTRAINT_CONFLICT", "A selected offer is not available within the requested pickup deadline.", 409)
+            latitude, longitude = offer.get("latitude"), offer.get("longitude")
+            if isinstance(latitude, bool) or not isinstance(latitude, (int, float)) or isinstance(longitude, bool) or not isinstance(longitude, (int, float)):
+                raise DomainError("RECOVERY_CONSTRAINT_CONFLICT", "A selected offer has no usable pickup location.", 409)
+            if _distance_km(origin, float(latitude), float(longitude)) > need.search_radius_km:
+                raise DomainError("RECOVERY_CONSTRAINT_CONFLICT", "A selected offer is outside the requested search radius.", 409)
+            tags = {_normalized(tag) for tag in offer.get("tags", []) if isinstance(tag, str)}
+            if any(_normalized(requirement) not in tags for requirement in need.dietary_requirements):
+                raise DomainError("RECOVERY_CONSTRAINT_CONFLICT", "A selected offer does not declare every requested dietary requirement.", 409)
+            planned_total += stop.requested_quantity_minor
+    if need and need.requested_quantity_minor is not None and planned_total > need.requested_quantity_minor:
+        raise DomainError("RECOVERY_CONSTRAINT_CONFLICT", "Selected quantities exceed the requested amount.", 409)
 
 
 def _record(
@@ -113,7 +154,7 @@ def create_recovery_plan(actor: ActorContext, command: RecoveryPlanCreate, idemp
         saved_base = organization.get("pickup_base")
         if not isinstance(saved_base, dict) or command.destination.model_dump(mode="json") != saved_base:
             raise DomainError("PROFILE_BASE_CONFLICT", "The collection destination must match the current organization pickup base.", 409)
-        _validate_stops(transaction, db, command.stops)
+        _validate_stops(transaction, db, command.stops, command.need, command.origin, actor.actor_id)
         value = _record(plan_ref.id, actor.actor_id, actor.uid, command, 1, now, now)
         result = _validated_plan(plan_ref.id, value)
         value["created_at"] = firestore.SERVER_TIMESTAMP
@@ -196,7 +237,7 @@ def update_recovery_plan(actor: ActorContext, plan_id: str, command: RecoveryPla
         if any(stop.status != "SELECTED" or stop.claim_id for stop in command.stops if stop.stop_id not in old_stops or old_stops.get(stop.stop_id, {}).get("status") not in {"RESERVED", "COLLECTED", "RECEIVED"}):
             raise DomainError("PLAN_STOP_CONFLICT", "Collection stop lifecycle changes require an explicit reservation or outcome action.", 409)
         editable = [stop for stop in command.stops if stop.status == "SELECTED" and not stop.claim_id]
-        _validate_stops(transaction, db, editable)
+        _validate_stops(transaction, db, editable, command.need, command.origin, actor.actor_id)
         value = _record(plan_id, actor.actor_id, actor.uid, command, current + 1, now, old.get("created_at", now), old)
         # Preserve lifecycle state for linked stops and derive progress from those stops.
         value["stops"] = [

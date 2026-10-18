@@ -50,8 +50,10 @@ function ScopedAskAssistant() {
   const requestController = useRef<AbortController | null>(null);
   const readyToAsk = auth === "signed-in" && Boolean(user) && Boolean(householdId);
   useEffect(() => {
-    if (intent && askIntents[intent]) setPrompt(askIntents[intent]);
-  }, [intent]);
+    if (intent === "meal" && itemId && /^[A-Za-z0-9._:-]{1,128}$/.test(itemId)) {
+      setPrompt("Prioritize the selected Kitchen item in a meal suggestion. Use confirmed foods from my Kitchen, link available items by their actual record IDs, and clearly identify any ingredients that are not confirmed in my Kitchen.");
+    } else if (intent && askIntents[intent]) setPrompt(askIntents[intent]);
+  }, [intent, itemId]);
   useEffect(() => {
     const controller = new AbortController();
     historyController.current = controller;
@@ -203,6 +205,6 @@ function ScopedAskAssistant() {
     </Card>
     {auth === "signed-in" && preferenceLoadState === "loading" && <p role="status" className="text-sm text-muted">Checking private saved preferences…</p>}
     {auth === "signed-in" && preferenceLoadState === "error" && <div role="alert" className="flex flex-wrap items-center gap-3 text-sm text-danger"><span>Saved preferences could not be checked, so preference cards are unavailable until they can be checked.</span><Button variant="secondary" onClick={() => setPreferenceReload((current) => current + 1)}>Retry checking preferences</Button></div>}
-    {assistantResponse && <AssistantCards envelope={assistantResponse} rejectedCards={rejectedCards} resolutions={resolutions} privatePreferences={privatePreferences} preferenceLoadState={preferenceLoadState} preferenceErrors={preferenceErrors} onAction={act} onMealAction={actMeal} onConsent={consentToPreference} actionBusy={actionBusy} actionsEnabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"} />}
+    {assistantResponse && <AssistantCards envelope={assistantResponse} rejectedCards={rejectedCards} contextItemId={itemId} resolutions={resolutions} privatePreferences={privatePreferences} preferenceLoadState={preferenceLoadState} preferenceErrors={preferenceErrors} onAction={act} onMealAction={actMeal} onConsent={consentToPreference} actionBusy={actionBusy} actionsEnabled={process.env.NEXT_PUBLIC_ECOLOOP_ENABLE_COMMANDS === "true"} />}
   </div>;
 }

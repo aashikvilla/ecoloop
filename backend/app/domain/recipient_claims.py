@@ -182,6 +182,10 @@ def reserve_plan_stop(actor: ActorContext, plan_id: str, stop_id: str, command: 
             raise DomainError("CLAIM_CONFLICT", "This stop is no longer available to reserve.", 409)
         if current_offer.get("visibility") != "PUBLIC" or current_offer.get("status") not in {"OPEN", "PARTIALLY_RESERVED"}:
             raise DomainError("OFFER_STATUS_CONFLICT", "The offer is not available for reservation.", 409)
+        if current_offer.get("demo_scenario") is True:
+            raise DomainError("DEMO_SCENARIO_NOT_CLAIMABLE", "This rehearsal offer is simulated. It can be used to review a plan, but it cannot be reserved or recorded as recovered food.", 409)
+        if current_offer.get("condition_declaration") != "DONOR_CONFIRMED_SUITABLE" or current_offer.get("storage_declaration") not in {"AMBIENT", "CHILLED", "FROZEN"}:
+            raise DomainError("OFFER_NOT_ELIGIBLE", "This offer needs a donor suitability declaration and known storage before it can be reserved.", 409)
         offer_version = _version(current_offer)
         if offer_version != command.expected_offer_version or current_stop.get("expected_offer_version") != command.expected_offer_version:
             raise DomainError("OFFER_VERSION_CONFLICT", "The offer changed. Refresh before reserving.", 409)

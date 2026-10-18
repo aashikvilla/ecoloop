@@ -138,18 +138,25 @@ def _public_discovered(offer: dict[str, Any], distance: float) -> dict[str, Any]
         "unit": offer.get("unit"),
         "expiry_declaration": offer.get("expiry_declaration", "UNKNOWN"),
         "expiry_at": offer.get("expiry_at"),
+        "condition_declaration": offer.get("condition_declaration", "UNKNOWN"),
         "storage_declaration": offer.get("storage_declaration", "UNKNOWN"),
         "allergen_declaration": offer.get("allergen_declaration", "UNKNOWN"),
         "pickup_window_start": offer.get("pickup_window_start"),
         "pickup_window_end": offer.get("pickup_window_end"),
-        # Donor-entered area text is not reliably coarse; never echo it before a claim.
-        "approximate_area": "Approximate pickup area",
+        # Synthetic fixture areas are reviewed coarse labels; arbitrary donor
+        # text remains hidden until a claim is active.
+        "approximate_area": (
+            offer.get("approximate_area", "Bengaluru demo area")
+            if offer.get("demo_scenario") is True
+            else "Approximate pickup area"
+        ),
         # Rounded coordinates are coarse discovery markers, never route coordinates.
         "approximate_latitude": round(float(latitude), 2),
         "approximate_longitude": round(float(longitude), 2),
         "approximate_distance_km": round(distance, 1),
         "status": offer.get("status"),
         "version": offer.get("version"),
+        "demo_scenario": offer.get("demo_scenario") is True,
     }
 
 
@@ -208,10 +215,16 @@ def discover_offers(actor: ActorContext, query: OfferDiscoveryQuery) -> Discover
         capped = len(documents) > _SCAN_LIMIT or legacy_capped
         candidates: list[tuple[float, str, dict[str, Any]]] = []
         needle = (query.query or "").strip().casefold()
+        query_terms = [part for part in needle.split() if part]
         for offer_id, offer in documents.items():
             if offer.get("offer_id", offer_id) != offer_id or offer.get("visibility") != "PUBLIC":
                 continue
+            if offer.get("demo_scenario") is True and offer.get("demo_scenario_org_id") != actor.actor_id:
+                continue
             if offer.get("status") not in {"OPEN", "PARTIALLY_RESERVED"}:
+                continue
+            demo_scenario = offer.get("demo_scenario") is True
+            if not demo_scenario and (offer.get("condition_declaration") != "DONOR_CONFIRMED_SUITABLE" or offer.get("storage_declaration") not in {"AMBIENT", "CHILLED", "FROZEN"}):
                 continue
             available = offer.get("quantity_available_minor")
             if isinstance(available, bool) or not isinstance(available, int) or available <= 0:
@@ -224,7 +237,8 @@ def discover_offers(actor: ActorContext, query: OfferDiscoveryQuery) -> Discover
                 continue
             if query.category and str(offer.get("category", "")).casefold() != query.category.casefold():
                 continue
-            if needle and needle not in (str(offer.get("title", "")) + " " + str(offer.get("category", ""))).casefold():
+            searchable = (str(offer.get("title", "")) + " " + str(offer.get("category", ""))).casefold()
+            if needle and not all(term in searchable for term in query_terms):
                 continue
             if not _pickup_state_matches(offer, query.pickup_state, now):
                 continue
